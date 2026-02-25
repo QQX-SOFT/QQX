@@ -1,12 +1,13 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../index';
-import { z } from 'zod';
+import { TenantRequest } from '../middleware/tenantMiddleware';
 
 const router = Router();
 
 // GET report for a driver in a date range
-router.get('/driver/:id', async (req: Request, res: Response) => {
+router.get('/driver/:id', async (req: TenantRequest, res: Response) => {
     const { start, end } = req.query;
+    const { tenantId } = req;
 
     if (!start || !end) {
         return res.status(400).json({ error: 'Bezugszeitraum fehlt (start/end)' });
@@ -16,6 +17,7 @@ router.get('/driver/:id', async (req: Request, res: Response) => {
         const entries = await prisma.timeEntry.findMany({
             where: {
                 driverId: req.params.id,
+                driver: { tenantId: tenantId }, // Security check
                 startTime: {
                     gte: new Date(start as string),
                     lte: new Date(end as string)
@@ -27,7 +29,7 @@ router.get('/driver/:id', async (req: Request, res: Response) => {
 
         // Simple aggregation
         let totalMinutes = 0;
-        const reportData = entries.map(entry => {
+        const reportData = entries.map((entry: any) => {
             const durationMs = entry.endTime!.getTime() - entry.startTime.getTime();
             const mins = Math.max(0, Math.floor(durationMs / 60000) - entry.pauseDuration);
             totalMinutes += mins;
@@ -45,7 +47,7 @@ router.get('/driver/:id', async (req: Request, res: Response) => {
             summary: {
                 totalHours: (totalMinutes / 60).toFixed(2),
                 totalDays: entries.length,
-                period: `${new Date(start as string).toLocaleDateString()} - ${new Date(end as string).toLocaleDateString()}`
+                period: `${new Date(start as string).toLocaleDateString('de-DE')} - ${new Date(end as string).toLocaleDateString('de-DE')}`
             },
             entries: reportData
         });

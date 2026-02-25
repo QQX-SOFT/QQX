@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
+import { TenantRequest } from '../middleware/tenantMiddleware';
 
 const router = Router();
 
@@ -12,54 +13,41 @@ const vehicleSchema = z.object({
     nextMaintenance: z.string().optional().nullable(), // ISO String
 });
 
-// Helper to get tenant from header
-const getTenantId = async (subdomain: string) => {
-    const tenant = await prisma.tenant.findUnique({
-        where: { subdomain }
-    });
-    return tenant?.id;
-};
-
 // GET all vehicles for a specific tenant
-router.get('/', async (req: Request, res: Response) => {
-    const subdomain = req.headers['x-tenant-subdomain'] as string;
+router.get('/', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
 
-    if (!subdomain) {
-        return res.status(400).json({ error: 'Tenant context missing' });
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
     }
 
     try {
-        const tenantId = await getTenantId(subdomain);
-        if (!tenantId) return res.status(404).json({ error: 'Tenant not found' });
-
         const vehicles = await prisma.vehicle.findMany({
             where: { tenantId },
             orderBy: { createdAt: 'desc' }
         });
         res.json(vehicles);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch vehicles' });
+        res.status(500).json({ error: 'Fahrzeuge konnten nicht geladen werden' });
     }
 });
 
 // POST create vehicle
-router.post('/', async (req: Request, res: Response) => {
-    const subdomain = req.headers['x-tenant-subdomain'] as string;
+router.post('/', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
 
-    if (!subdomain) {
-        return res.status(400).json({ error: 'Tenant context missing' });
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
     }
 
     try {
         const validatedData = vehicleSchema.parse(req.body);
-        const tenantId = await getTenantId(subdomain);
-        if (!tenantId) return res.status(404).json({ error: 'Tenant not found' });
 
         const vehicle = await prisma.vehicle.create({
             data: {
                 ...validatedData,
                 nextMaintenance: validatedData.nextMaintenance ? new Date(validatedData.nextMaintenance) : null,
-                tenantId,
+                tenantId: tenantId!,
             }
         });
 
@@ -68,7 +56,7 @@ router.post('/', async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ errors: error.errors });
         }
-        res.status(500).json({ error: 'Failed to create vehicle' });
+        res.status(500).json({ error: 'Fahrzeug konnte nicht erstellt werden' });
     }
 });
 

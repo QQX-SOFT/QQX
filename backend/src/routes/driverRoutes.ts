@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
+import { TenantRequest } from '../middleware/tenantMiddleware';
 
 const router = Router();
 
@@ -10,26 +11,15 @@ const driverSchema = z.object({
     phone: z.string().optional(),
 });
 
-// Helper to get tenant from header
-const getTenantId = async (subdomain: string) => {
-    const tenant = await prisma.tenant.findUnique({
-        where: { subdomain }
-    });
-    return tenant?.id;
-};
-
 // GET all drivers
-router.get('/', async (req: Request, res: Response) => {
-    const subdomain = req.headers['x-tenant-subdomain'] as string;
+router.get('/', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
 
-    if (!subdomain) {
-        return res.status(400).json({ error: 'Tenant context missing' });
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
     }
 
     try {
-        const tenantId = await getTenantId(subdomain);
-        if (!tenantId) return res.status(404).json({ error: 'Tenant not found' });
-
         const drivers = await prisma.driver.findMany({
             where: { tenantId },
             orderBy: { createdAt: 'desc' },
@@ -39,26 +29,24 @@ router.get('/', async (req: Request, res: Response) => {
         });
         res.json(drivers);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch drivers' });
+        res.status(500).json({ error: 'Fahrer konnten nicht geladen werden' });
     }
 });
 
 // POST create driver
-router.post('/', async (req: Request, res: Response) => {
-    const subdomain = req.headers['x-tenant-subdomain'] as string;
+router.post('/', async (req: TenantRequest, res: Response) => {
+    const { tenantId, subdomain } = req;
 
-    if (!subdomain) {
-        return res.status(400).json({ error: 'Tenant context missing' });
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
     }
 
     try {
         const validatedData = driverSchema.parse(req.body);
-        const tenantId = await getTenantId(subdomain);
-        if (!tenantId) return res.status(404).json({ error: 'Tenant not found' });
 
         const user = await prisma.user.create({
             data: {
-                email: `${validatedData.firstName.toLowerCase()}.${validatedData.lastName.toLowerCase()}@${subdomain}.local`,
+                email: `${validatedData.firstName.toLowerCase()}.${validatedData.lastName.toLowerCase()}@${subdomain || 'qqx'}.local`,
                 clerkId: `manual-${Date.now()}`,
                 role: 'DRIVER',
                 tenantId
@@ -68,8 +56,11 @@ router.post('/', async (req: Request, res: Response) => {
         const driver = await prisma.driver.create({
             data: {
                 ...validatedData,
-                tenantId,
+                tenantId: tenantId!,
                 userId: user.id
+            },
+            include: {
+                user: true
             }
         });
 
@@ -78,8 +69,7 @@ router.post('/', async (req: Request, res: Response) => {
         if (error instanceof z.ZodError) {
             return res.status(400).json({ errors: error.errors });
         }
-        console.error(error);
-        res.status(500).json({ error: 'Failed to create driver' });
+        res.status(500).json({ error: 'Fahrer konnte nicht erstellt werden' });
     }
 });
 

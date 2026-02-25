@@ -1,6 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
+import { TenantRequest } from '../middleware/tenantMiddleware';
 
 const router = Router();
 
@@ -11,32 +12,35 @@ const invoiceSchema = z.object({
 });
 
 // GET all invoices for a tenant
-router.get('/', async (req: Request, res: Response) => {
-    const subdomain = req.headers['x-tenant-subdomain'] as string;
+router.get('/', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+    }
 
     try {
-        const tenant = await prisma.tenant.findUnique({ where: { subdomain } });
-        if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
-
         const invoices = await prisma.invoice.findMany({
-            where: { tenantId: tenant.id },
+            where: { tenantId: tenantId },
             include: { driver: true },
             orderBy: { createdAt: 'desc' }
         });
         res.json(invoices);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch invoices' });
+        res.status(500).json({ error: 'Fehler beim Abrufen der Rechnungen' });
     }
 });
 
 // POST create invoice
-router.post('/', async (req: Request, res: Response) => {
-    const subdomain = req.headers['x-tenant-subdomain'] as string;
+router.post('/', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+    }
 
     try {
         const { driverId, amount, period } = invoiceSchema.parse(req.body);
-        const tenant = await prisma.tenant.findUnique({ where: { subdomain } });
-        if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
 
         const invoice = await prisma.invoice.create({
             data: {
@@ -44,14 +48,17 @@ router.post('/', async (req: Request, res: Response) => {
                 period,
                 status: 'PENDING',
                 driverId,
-                tenantId: tenant.id,
+                tenantId: tenantId,
                 invoiceNumber: `INV-${Date.now()}`
             }
         });
 
         res.status(201).json(invoice);
     } catch (error) {
-        res.status(500).json({ error: 'Failed to create invoice' });
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
+        res.status(500).json({ error: 'Fehler beim Erstellen der Rechnung' });
     }
 });
 

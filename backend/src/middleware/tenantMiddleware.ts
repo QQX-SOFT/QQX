@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 export interface TenantRequest extends Request {
     tenantId?: string;
+    subdomain?: string;
 }
 
 export const tenantMiddleware = async (req: TenantRequest, res: Response, next: NextFunction) => {
@@ -24,8 +25,9 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
             return res.status(404).json({ error: 'Mandant (Tenant) nicht gefunden.' });
         }
 
-        // Attach tenantId to request for use in routes
+        // Attach tenantId and subdomain to request for use in routes
         req.tenantId = tenant.id;
+        req.subdomain = subdomain;
         next();
     } catch (error) {
         console.error('Tenant Middleware Error:', error);
