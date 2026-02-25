@@ -1,12 +1,12 @@
-services:
-  # 1. Die Datenbank (PostgreSQL)
-  - type: database
-    name: qqx-db
+databases:
+  - name: qqx-db
     region: frankfurt
     databaseName: qqx
     user: qqx_admin
+    plan: free
 
-  # 2. Der Express API Service
+services:
+  # Der Express API Service
   - type: web
     name: qqx-backend
     env: node
