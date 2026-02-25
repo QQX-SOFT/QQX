@@ -96,13 +96,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
 
                 <div className="p-6 mt-auto">
-                    <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition duration-700"></div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Aktueller Plan</p>
-                        <h4 className="font-black text-xl mb-4">Enterprise Plus</h4>
-                        <button className="w-full py-3 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg shadow-white/5">Upgrade</button>
-                    </div>
-
                     <button className="w-full mt-6 py-4 flex items-center gap-4 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition duration-300 font-bold group">
                         <LogOut size={20} className="group-hover:-translate-x-1 transition" />
                         <span>Abmelden</span>
