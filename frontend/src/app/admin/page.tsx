@@ -19,6 +19,7 @@ import api from "@/lib/api";
 export default function Dashboard() {
     const [statsData, setStatsData] = useState<any>(null);
     const [locations, setLocations] = useState<any[]>([]);
+    const [activities, setActivities] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -26,6 +27,8 @@ export default function Dashboard() {
             try {
                 const { data } = await api.get("/dashboard/stats");
                 setStatsData(data);
+                const actRes = await api.get("/dashboard/activities");
+                setActivities(actRes.data);
             } catch (e) {
                 console.error("Failed to fetch dashboard stats", e);
             } finally {
@@ -66,7 +69,7 @@ export default function Dashboard() {
         },
         {
             label: "Lieferungen heute",
-            value: "1.204", // This would need another aggregate in real app
+            value: statsData?.ordersToday !== undefined ? statsData.ordersToday.toString() : "0",
             trend: "+5.4%",
             color: "slate",
             icon: Clock
@@ -241,18 +244,14 @@ export default function Dashboard() {
                                 <p className="text-sm font-medium text-slate-500 leading-relaxed">{locations.length} Einheiten befinden sich aktuell im Einsatz.</p>
                             </div>
                         )}
-                        {[
-                            { title: "Fahrzeug 102 - Wartung", time: "vor 2 Min.", desc: "Einheit #102 ist zur Wartung gemeldet.", type: "alert" },
-                            { title: "Demo Fahrer", time: "vor 15 Min.", desc: "Max Mustermann hat seine Schicht gestartet.", type: "success" },
-                            { title: "Routen-Abrechnung", time: "vor 3 Std.", desc: "Monatsbericht für Region Berlin Mitte generiert.", type: "notif" },
-                        ].map((item, i) => (
-                            <div key={i} className="relative pl-8 group">
+                        {activities.map((item, i) => (
+                            <div key={item.id} className="relative pl-8 group">
                                 <div className={cn(
                                     "absolute left-0 top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm transition-all duration-300 group-hover:scale-150",
                                     item.type === "alert" ? "bg-red-500 ring-4 ring-red-50" : item.type === "success" ? "bg-green-500 ring-4 ring-green-50" : "bg-blue-500 ring-4 ring-blue-50"
                                 )}></div>
-                                {(i < 2 || (locations.length > 0 && i < 3)) && <div className="absolute left-[4.5px] top-6 bottom-[-30px] w-0.5 bg-slate-50"></div>}
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{item.time}</p>
+                                {(i < activities.length - 1) && <div className="absolute left-[4.5px] top-6 bottom-[-30px] w-0.5 bg-slate-50"></div>}
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{new Date(item.date).toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })}</p>
                                 <h4 className="font-black text-slate-900 mb-1 flex items-center gap-2">
                                     {item.title}
                                     <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition" />

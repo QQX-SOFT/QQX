@@ -17,6 +17,11 @@ model Tenant {
   subdomain  String   @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  // Settings
+  notificationsEnabled Boolean @default(true)
+  autoAssignDrivers    Boolean @default(false)
+  currency             String  @default("EUR")
+  timezone             String  @default("Europe/Berlin")
 
   users      User[]
   drivers    Driver[]

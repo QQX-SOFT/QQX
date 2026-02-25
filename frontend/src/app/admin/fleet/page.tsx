@@ -86,9 +86,9 @@ export default function FleetPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
                     { label: "Gesamt Fuhrpark", value: vehicles.length.toString(), icon: Car, color: "blue" },
-                    { label: "In Wartung", value: "0", icon: Wrench, color: "red" },
-                    { label: "Verfügbar", value: vehicles.length.toString(), icon: CheckCircle, color: "green" },
-                    { label: "Durchschn. Alter", value: "1.2 J.", icon: Calendar, color: "slate" },
+                    { label: "In Wartung", value: vehicles.filter(v => v.status === 'MAINTENANCE').length.toString(), icon: Wrench, color: "red" },
+                    { label: "Verfügbar", value: vehicles.filter(v => ['AVAILABLE', 'ACTIVE'].includes(v.status)).length.toString(), icon: CheckCircle, color: "green" },
+                    { label: "Durchschn. Alter", value: "Neu", icon: Calendar, color: "slate" },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                         <div className={cn(

@@ -29,7 +29,7 @@ const mainLinks = [
 
 const operationsLinks = [
     { name: "Aufträge", icon: ClipboardList, href: "/admin/orders" },
-    { name: "Fahrzeuge", icon: Car, href: "/admin/vehicles" },
+    { name: "Fahrzeuge", icon: Car, href: "/admin/fleet" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
     { name: "Dokumente", icon: FileText, href: "/admin/documents" },
 ];
