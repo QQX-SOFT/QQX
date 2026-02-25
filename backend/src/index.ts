@@ -1,3 +1,4 @@
+import { Request, Response } from 'express';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -18,7 +19,7 @@ app.use(express.json());
 app.use('/api/tenants', tenantRoutes);
 app.use('/api/drivers', driverRoutes);
 
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
