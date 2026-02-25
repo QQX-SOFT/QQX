@@ -5,14 +5,12 @@
   "workspaces": [
     "web",
     "mobile",
-    "shared/*",
-    "frontend"
+    "shared/*"
   ],
   "scripts": {
     "dev:web": "npm run dev --workspace=web",
     "dev:mobile": "npm run start --workspace=mobile",
     "build:web": "npm run build --workspace=web",
-    "build:frontend": "npm run build --workspace=frontend",
     "db:generate": "prisma generate --schema=./shared/db/prisma/schema.prisma",
     "db:push": "prisma db push --schema=./shared/db/prisma/schema.prisma"
   },

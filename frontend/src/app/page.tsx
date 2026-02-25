@@ -1,64 +1,217 @@
-import { Truck, Clock, Shield, MapPin } from 'lucide-react'
+"use client";
 
-export default function ComingSoon() {
-    return (
-        <div className="relative min-h-screen bg-slate-950 flex flex-col items-center justify-center overflow-hidden font-sans">
-            {/* Background Glows */}
-            <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] -translate-y-1/2"></div>
-            <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] translate-y-1/2"></div>
+import { motion } from "framer-motion";
+import { Truck, Shield, Calendar, BarChart3, ChevronRight, Globe, Lock, Zap } from "lucide-react";
+import Link from "next/link";
 
-            <div className="relative z-10 text-center px-4 max-w-4xl">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-8 animate-pulse">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                    </span>
-                    Next-Gen Fleet Management
-                </div>
-
-                <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter mb-6">
-                    QQ<span className="text-blue-600">X</span>
-                </h1>
-
-                <p className="text-xl md:text-2xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
-                    Die modernste SaaS-Plattform für Zeiterfassung, GPS-Tracking und Fleet-Management.
-                    <span className="text-white"> Demnächst verfügbar.</span>
-                </p>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-                    {[
-                        { icon: Clock, label: "Zeit" },
-                        { icon: MapPin, label: "GPS" },
-                        { icon: Shield, label: "Sicher" },
-                        { icon: Truck, label: "Fleet" }
-                    ].map((item, i) => (
-                        <div key={i} className="p-6 rounded-3xl bg-white/5 border border-white/10 flex flex-col items-center gap-3 backdrop-blur-sm">
-                            <item.icon className="text-blue-500" size={32} />
-                            <span className="text-slate-300 font-semibold">{item.label}</span>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-                    <div className="flex items-center bg-white/5 border border-white/10 rounded-2xl p-1 w-full md:w-auto">
-                        <input
-                            type="email"
-                            placeholder="E-Mail Adresse"
-                            className="bg-transparent border-none focus:ring-0 text-white px-4 py-3 w-full outline-none"
-                        />
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition whitespace-nowrap">
-                            Benachrichtigen
-                        </button>
-                    </div>
-                </div>
-
-                <div className="mt-20 text-slate-500 text-sm uppercase tracking-widest font-bold">
-                    Powered by QQX-Soft
-                </div>
-            </div>
-
-            {/* Grid Pattern */}
-            <div className="absolute inset-0 z-0 opacity-10 [mask-image:radial-gradient(ellipse_at_center,black,transparent)] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+export default function LandingPage() {
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-200">
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full z-50 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black animate-pulse">Q</div>
+          <span className="text-2xl font-black tracking-tighter text-white">QQX</span>
         </div>
-    )
+        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+          <a href="#features" className="hover:text-blue-500 transition">Features</a>
+          <a href="#solutions" className="hover:text-blue-500 transition">Solutions</a>
+          <a href="#about" className="hover:text-blue-500 transition">About</a>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link href="/login" className="px-5 py-2 rounded-xl border border-white/10 hover:bg-white/5 transition font-semibold text-sm">Sign In</Link>
+          <Link href="/demo" className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition font-semibold text-sm shadow-lg shadow-blue-900/40">Request Demo</Link>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative pt-40 pb-20 px-6 overflow-hidden">
+        {/* Background Gradients */}
+        <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-[120px] -z-10"></div>
+        <div className="absolute bottom-[20%] right-[-5%] w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-[100px] -z-10"></div>
+
+        <div className="max-w-6xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold uppercase tracking-widest mb-8"
+          >
+            <Zap size={14} className="fill-blue-400" />
+            Empowering the Future of Logistics
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-5xl md:text-8xl font-black text-white tracking-tight mb-8 leading-[1.1]"
+          >
+            Streamline Your Fleet <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-400">With QQX Intelligence</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed"
+          >
+            The comprehensive SaaS platform for high-performance fleet management.
+            Real-time tracking, automated scheduling, and deep predictive analytics in one place.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+          >
+            <Link href="/signup" className="px-8 py-4 rounded-2xl bg-white text-slate-950 font-black flex items-center justify-center gap-2 hover:bg-slate-200 transition group shadow-xl shadow-white/10">
+              Start Building Now
+              <ChevronRight size={20} className="group-hover:translate-x-1 transition" />
+            </Link>
+            <Link href="/pricing" className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black flex items-center justify-center gap-2 hover:bg-white/10 transition">
+              View Pricing
+            </Link>
+          </motion.div>
+        </div>
+
+        {/* Hero Visual */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 40 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.4 }}
+          className="mt-24 max-w-5xl mx-auto relative"
+        >
+          <div className="aspect-video rounded-3xl overflow-hidden glass border border-white/10 shadow-2xl p-4">
+            <div className="w-full h-full bg-slate-900 rounded-2xl relative overflow-hidden flex flex-col">
+              {/* Mock Dashboard Header */}
+              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/40"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40"></div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/40"></div>
+                </div>
+                <div className="px-3 py-1 bg-white/5 rounded-lg text-[10px] text-slate-500 font-mono tracking-wider">DASHBOARD-STAGING-V4</div>
+              </div>
+              {/* Mock Dashboard Content */}
+              <div className="flex-1 p-8 grid grid-cols-3 gap-6">
+                <div className="col-span-2 space-y-6">
+                  <div className="h-32 bg-blue-600/10 rounded-2xl border border-blue-500/10 flex items-center p-8 gap-6 animate-pulse">
+                    <div className="w-16 h-16 bg-blue-600 rounded-xl"></div>
+                    <div className="space-y-3 flex-1">
+                      <div className="h-4 bg-white/10 rounded-full w-1/3"></div>
+                      <div className="h-2 bg-white/5 rounded-full w-full"></div>
+                      <div className="h-2 bg-white/5 rounded-full w-2/3"></div>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="h-40 bg-white/5 rounded-2xl p-6 space-y-4">
+                      <div className="h-2.5 bg-white/10 rounded-full w-1/2"></div>
+                      <div className="h-12 bg-white/5 rounded-xl"></div>
+                      <div className="flex gap-2">
+                        <div className="h-1.5 bg-green-500/20 rounded-full w-12"></div>
+                        <div className="h-1.5 bg-green-500/20 rounded-full w-8"></div>
+                      </div>
+                    </div>
+                    <div className="h-40 bg-white/5 rounded-2xl p-6 space-y-4">
+                      <div className="h-2.5 bg-white/10 rounded-full w-1/2"></div>
+                      <div className="h-12 bg-white/5 rounded-xl"></div>
+                      <div className="flex gap-2">
+                        <div className="h-1.5 bg-blue-500/20 rounded-full w-12"></div>
+                        <div className="h-1.5 bg-blue-500/20 rounded-full w-8"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-2xl p-6 space-y-6 border border-white/5">
+                  <div className="h-2.5 bg-white/10 rounded-full w-2/3"></div>
+                  <div className="space-y-4">
+                    {Array(4).fill(0).map((_, i) => (
+                      <div key={i} className="flex gap-3 items-center">
+                        <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/5"></div>
+                        <div className="space-y-1.5 flex-1">
+                          <div className="h-1.5 bg-white/5 rounded-full w-1/2"></div>
+                          <div className="h-1.5 bg-white/5 rounded-full w-full"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Decorative Elements */}
+          <div className="absolute -top-12 -right-12 w-24 h-24 bg-blue-600/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-indigo-600/20 rounded-full blur-3xl"></div>
+        </motion.div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 border-y border-white/5 bg-white/2">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-2 lg:grid-cols-4 gap-12 text-center">
+          {[
+            { value: "12,000+", label: "Vehicles Managed" },
+            { value: "99.99%", label: "Uptime SLA" },
+            { value: "35%", label: "Average Efficiency Boost" },
+            { value: "$250M+", label: "Freight Value Tracked" }
+          ].map((stat, i) => (
+            <div key={i}>
+              <div className="text-3xl md:text-4xl font-black text-white mb-2">{stat.value}</div>
+              <div className="text-sm font-bold text-slate-500 uppercase tracking-widest">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Features Grid */}
+      <section id="features" className="py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-24">
+            <h2 className="text-sm font-black text-blue-500 uppercase tracking-[0.2em] mb-4">Core Infrastructure</h2>
+            <p className="text-4xl md:text-5xl font-black text-white leading-tight">Everything you need to <br /> scale your operations.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Truck, title: "Real-time Fleet Tracking", desc: "Precision GPS tracking with sub-second updates and historical route replay." },
+              { icon: Calendar, title: "Intelligent Dispatch", desc: "AI-driven scheduling that optimizes routes based on traffic, load, and driver hours." },
+              { icon: Shield, title: "Compliance Automations", desc: "Tachograph management and ELD compliance integrated directly into your workflow." },
+              { icon: BarChart3, title: "Advanced Analytics", desc: "Deep operational insights and predictive maintenance alerts before trouble strikes." },
+              { icon: Lock, title: "Enterprise Security", desc: "Role-based access control, SSO, and audit logs for your entire organization." },
+              { icon: Globe, title: "Multinational Support", desc: "Handle cross-border logistics with multicurrency and multi-language capabilities." },
+            ].map((feature, i) => (
+              <div key={i} className="group p-10 rounded-[2.5rem] bg-white/2 border border-white/5 hover:bg-white/5 hover:border-white/10 transition duration-500">
+                <div className="w-14 h-14 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-500 mb-8 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition duration-500 shadow-lg shadow-blue-900/0 group-hover:shadow-blue-600/40">
+                  <feature.icon size={28} strokeWidth={2.5} />
+                </div>
+                <h3 className="text-xl font-black text-white mb-4">{feature.title}</h3>
+                <p className="text-slate-400 leading-relaxed font-medium">{feature.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="mt-auto py-20 px-6 border-t border-white/5 bg-slate-950">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">Q</div>
+            <span className="text-xl font-black tracking-tighter text-white">QQX</span>
+          </div>
+          <div className="flex gap-12 text-sm font-bold text-slate-500 uppercase tracking-widest">
+            <a href="#" className="hover:text-white transition">Terms</a>
+            <a href="#" className="hover:text-white transition">Privacy</a>
+            <a href="#" className="hover:text-white transition">Status</a>
+            <a href="#" className="hover:text-white transition">Support</a>
+          </div>
+          <p className="text-slate-500 text-sm font-medium">
+            © 2026 QQX-Soft Intelligence. All rights reserved.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
 }
