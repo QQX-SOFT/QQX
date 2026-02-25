@@ -1,9 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import express, { Response, NextFunction } from 'express';
+import { prisma } from '../index';
 
-const prisma = new PrismaClient();
-
-export interface TenantRequest extends Request {
+export interface TenantRequest extends express.Request {
     tenantId?: string;
     subdomain?: string;
 }

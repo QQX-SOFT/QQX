@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import express, { Router, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
 
@@ -10,7 +10,7 @@ const tenantSchema = z.object({
 });
 
 // GET all tenants
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: express.Request, res: Response) => {
     try {
         const tenants = await prisma.tenant.findMany({
             include: {
@@ -27,7 +27,7 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // POST create tenant
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: express.Request, res: Response) => {
     try {
         const validatedData = tenantSchema.parse(req.body);
 

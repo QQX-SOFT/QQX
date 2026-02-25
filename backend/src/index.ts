@@ -1,5 +1,4 @@
-import { Request, Response } from 'express';
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
@@ -34,7 +33,7 @@ app.use('/api/ratings', ratingRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
