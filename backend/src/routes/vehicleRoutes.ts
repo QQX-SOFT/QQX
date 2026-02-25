@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import express, { Router, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
 import { TenantRequest } from '../middleware/tenantMiddleware';
