@@ -9,6 +9,7 @@ import vehicleRoutes from './routes/vehicleRoutes';
 import timeRoutes from './routes/timeRoutes';
 import reportRoutes from './routes/reportRoutes';
 import ratingRoutes from './routes/ratingRoutes';
+import invoiceRoutes from './routes/invoiceRoutes';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/time-entries', timeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ratings', ratingRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
