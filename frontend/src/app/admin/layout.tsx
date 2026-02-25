@@ -57,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span className="text-xl font-black tracking-tight text-slate-900">QQX CONTROL</span>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-8 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-hide">
+                <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide">
                     <div>
                         <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Hauptmenü</div>
                         <div className="space-y-1">
@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
 
                 <div className="p-6 mt-auto">
-                    <button className="w-full mt-6 py-4 flex items-center gap-4 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition duration-300 font-bold group">
+                    <button className="w-full py-4 flex items-center gap-4 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition duration-300 font-bold group">
                         <LogOut size={20} className="group-hover:-translate-x-1 transition" />
                         <span>Abmelden</span>
                     </button>
