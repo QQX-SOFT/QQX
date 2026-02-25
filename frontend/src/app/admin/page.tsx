@@ -14,10 +14,10 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 const stats = [
-    { label: "Active Vehicles", value: "842", trend: "+12.5%", color: "blue", icon: Truck },
-    { label: "Online Drivers", value: "312", trend: "+3.2%", color: "indigo", icon: Users },
-    { label: "Deliveries Today", value: "1,204", trend: "-1.4%", color: "slate", icon: Clock },
-    { label: "Pending Alerts", value: "14", trend: "Critical", color: "red", icon: AlertCircle },
+    { label: "Aktive Fahrzeuge", value: "842", trend: "+12.5%", color: "blue", icon: Truck },
+    { label: "Fahrer Online", value: "312", trend: "+3.2%", color: "indigo", icon: Users },
+    { label: "Lieferungen heute", value: "1.204", trend: "-1.4%", color: "slate", icon: Clock },
+    { label: "Offene Warnungen", value: "14", trend: "Kritisch", color: "red", icon: AlertCircle },
 ] as const;
 
 export default function Dashboard() {
@@ -26,12 +26,12 @@ export default function Dashboard() {
             {/* Welcome Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Fleet Overview</h1>
-                    <p className="text-slate-500 font-medium">Welcome back, here's what's happening with your fleet today.</p>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Flottenübersicht</h1>
+                    <p className="text-slate-500 font-medium">Willkommen zurück! Hier ist der aktuelle Status Ihrer Flotte.</p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-6 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition">Export PDF</button>
-                    <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200">New Deployment</button>
+                    <button className="px-6 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition">PDF Export</button>
+                    <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200">Neuer Einsatz</button>
                 </div>
             </header>
 
@@ -40,7 +40,7 @@ export default function Dashboard() {
                 {stats.map((stat, i) => {
                     const Icon = stat.icon;
                     const isNegative = stat.trend.startsWith("-");
-                    const isCritical = stat.trend === "Critical";
+                    const isCritical = stat.trend === "Kritisch";
 
                     return (
                         <motion.div
@@ -90,14 +90,14 @@ export default function Dashboard() {
                                 <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 mb-4 mx-auto animate-pulse">
                                     <MapPin size={32} />
                                 </div>
-                                <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Live Tracking Map Engine Loading...</p>
+                                <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Live-Tracking Map Engine wird geladen...</p>
                             </div>
                         </div>
 
                         {/* Map Overlays */}
                         <div className="absolute top-8 left-8 flex flex-col gap-3">
                             <div className="glass bg-white/80 p-5 rounded-3xl border border-white shadow-xl min-w-[200px]">
-                                <h4 className="font-black text-sm mb-3">Active Units</h4>
+                                <h4 className="font-black text-sm mb-3">Aktive Einheiten</h4>
                                 <div className="space-y-4">
                                     {[1, 2, 3].map(i => (
                                         <div key={i} className="flex gap-3 items-center">
@@ -116,15 +116,15 @@ export default function Dashboard() {
                 {/* Sidebar Activity */}
                 <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10">
                     <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center justify-between">
-                        Recent Activity
-                        <button className="text-xs font-bold text-blue-600 uppercase tracking-widest hover:underline">See All</button>
+                        Letzte Aktivitäten
+                        <button className="text-xs font-bold text-blue-600 uppercase tracking-widest hover:underline">Alle ansehen</button>
                     </h3>
                     <div className="space-y-10">
                         {[
-                            { title: "Vehicle 402 - Engine Check", time: "2 min ago", desc: "Predictive maintenance triggered for Unit#402.", type: "alert" },
-                            { title: "New Driver Onboarded", time: "15 min ago", desc: "Marco K. has joined the Frankfurt fleet.", type: "notif" },
-                            { title: "Delivery Optimized", time: "1 hr ago", desc: "AI optimization saved 24km on Route B4.", type: "success" },
-                            { title: "Route Delay Detected", time: "3 hr ago", desc: "Heavy traffic in Berlin affected 4 units.", type: "alert" },
+                            { title: "Fahrzeug 402 - Motorsatcheck", time: "vor 2 Min.", desc: "Präventive Wartung für Einheit #402 ausgelöst.", type: "alert" },
+                            { title: "Neuer Fahrer an Bord", time: "vor 15 Min.", desc: "Marco K. ist der Frankfurter Flotte beigetreten.", type: "notif" },
+                            { title: "Lieferung optimiert", time: "vor 1 Std.", desc: "KI-Optimierung sparte 24km auf Route B4.", type: "success" },
+                            { title: "Routenverzögerung", time: "vor 3 Std.", desc: "Starker Verkehr in Berlin betrifft 4 Einheiten.", type: "alert" },
                         ].map((item, i) => (
                             <div key={i} className="relative pl-8 group">
                                 <div className={cn(
@@ -144,8 +144,8 @@ export default function Dashboard() {
 
                     <div className="mt-12 p-8 bg-blue-50 rounded-[2rem] border border-blue-100 relative overflow-hidden">
                         <div className="relative z-10">
-                            <h4 className="font-black text-blue-900 mb-2">Weekly Summary</h4>
-                            <p className="text-xs font-bold text-blue-700/60 leading-relaxed">Your fleet efficiency is up 14% compared to last week. Great job!</p>
+                            <h4 className="font-black text-blue-900 mb-2">Wochenübersicht</h4>
+                            <p className="text-xs font-bold text-blue-700/60 leading-relaxed">Ihre Flotteneffizienz ist im Vergleich zur Vorwoche um 14% gestiegen. Gute Arbeit!</p>
                         </div>
                         <TrendingUp className="absolute bottom-[-20px] right-[-20px] text-blue-600/10" size={100} />
                     </div>

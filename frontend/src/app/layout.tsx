@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "QQX | Fleet Architecture",
-  description: "Enterprise-grade logistics and fleet management platform.",
+  title: "QQX | Flotten-Architektur",
+  description: "Enterprise-Lösungen für Logistik und Flottenmanagement.",
 };
 
 export default function RootLayout({
@@ -15,7 +15,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="de" className="dark">
       <body className={`${inter.className} antialiased`}>
         {children}
       </body>

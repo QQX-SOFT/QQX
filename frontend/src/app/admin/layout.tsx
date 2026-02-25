@@ -17,10 +17,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
-    { name: "Overview", icon: LayoutDashboard, href: "/admin" },
-    { name: "Vehicles", icon: Car, href: "/admin/vehicles" },
-    { name: "Drivers", icon: Users, href: "/admin/drivers" },
-    { name: "Analytics", icon: LineChart, href: "/admin/analytics" },
+    { name: "Übersicht", icon: LayoutDashboard, href: "/admin" },
+    { name: "Fahrzeuge", icon: Car, href: "/admin/vehicles" },
+    { name: "Fahrer", icon: Users, href: "/admin/drivers" },
+    { name: "Analysen", icon: LineChart, href: "/admin/analytics" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
 
                 <nav className="flex-1 px-4 space-y-1">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Main Menu</div>
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Hauptmenü</div>
                     {sidebarLinks.map((link) => {
                         const isActive = pathname === link.href;
                         return (
@@ -63,14 +63,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="p-6 mt-auto">
                     <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/20 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition duration-700"></div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Current Plan</p>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Aktueller Plan</p>
                         <h4 className="font-black text-xl mb-4">Enterprise Plus</h4>
                         <button className="w-full py-3 bg-white text-slate-950 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg shadow-white/5">Upgrade</button>
                     </div>
 
                     <button className="w-full mt-6 py-4 flex items-center gap-4 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition duration-300 font-bold group">
                         <LogOut size={20} className="group-hover:-translate-x-1 transition" />
-                        <span>Sign Out</span>
+                        <span>Abmelden</span>
                     </button>
                 </div>
             </aside>
@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <Search size={18} className="text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Search anything..."
+                            placeholder="Suche..."
                             className="bg-transparent border-none outline-none text-sm font-medium w-full text-slate-600 placeholder:text-slate-400"
                         />
                     </div>
@@ -104,7 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <div className="flex items-center gap-3 text-left group cursor-pointer">
                             <div className="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-100 group-hover:scale-105 transition">AD</div>
                             <div className="hidden sm:block">
-                                <p className="text-sm font-black text-slate-900 leading-none mb-1">Admin User</p>
+                                <p className="text-sm font-black text-slate-900 leading-none mb-1">Admin Benutzer</p>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Master</p>
                             </div>
                         </div>
