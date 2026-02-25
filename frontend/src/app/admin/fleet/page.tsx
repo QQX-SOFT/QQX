@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
     Car,
     Settings,
@@ -10,19 +11,60 @@ import {
     Calendar,
     CheckCircle,
     MoreVertical,
-    ChevronRight
+    ChevronRight,
+    Loader2,
+    X,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const mockVehicles = [
-    { id: "1", model: "Mercedes Sprinter", plate: "B-QX 102", status: "In Use", milage: "42.500 km", nextService: "15. Apr 2026", health: 95 },
-    { id: "2", model: "VW Crafter", plate: "B-QX 205", status: "Maintenance", milage: "89.200 km", nextService: "In Arbeit", health: 65 },
-    { id: "3", model: "Ford Transit", plate: "B-QX 312", status: "Available", milage: "12.400 km", nextService: "12. Okt 2026", health: 100 },
-    { id: "4", model: "Mercedes Vito", plate: "B-QX 440", status: "In Use", milage: "64.100 km", nextService: "02. Mai 2026", health: 82 },
-];
+import api from "@/lib/api";
 
 export default function FleetPage() {
+    const [vehicles, setVehicles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newVehicle, setNewVehicle] = useState({
+        licensePlate: "",
+        make: "",
+        model: "",
+        milage: 0,
+        nextMaintenance: ""
+    });
+    const [creating, setCreating] = useState(false);
+
+    useEffect(() => {
+        fetchVehicles();
+    }, []);
+
+    const fetchVehicles = async () => {
+        try {
+            const { data } = await api.get("/vehicles");
+            setVehicles(data);
+        } catch (e) {
+            console.error("Failed to fetch vehicles", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreateVehicle = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreating(true);
+        try {
+            await api.post("/vehicles", {
+                ...newVehicle,
+                milage: Number(newVehicle.milage)
+            });
+            setShowAddModal(false);
+            setNewVehicle({ licensePlate: "", make: "", model: "", milage: 0, nextMaintenance: "" });
+            fetchVehicles();
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Fehler beim Erstellen des Fahrzeugs");
+        } finally {
+            setCreating(false);
+        }
+    };
+
     return (
         <div className="space-y-12">
             {/* Header */}
@@ -31,7 +73,10 @@ export default function FleetPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Fuhrpark & Wartung</h1>
                     <p className="text-slate-500 font-medium">Überwachen Sie Ihre Fahrzeuge, Kilometerstände und anstehende Inspektionen.</p>
                 </div>
-                <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200">
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200"
+                >
                     <Plus size={20} />
                     Neues Fahrzeug hinzufügen
                 </button>
@@ -40,13 +85,19 @@ export default function FleetPage() {
             {/* Fleet Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                    { label: "Gesamt Fuhrpark", value: "24", icon: Car, color: "blue" },
-                    { label: "In Wartung", value: "3", icon: Wrench, color: "red" },
-                    { label: "Verfügbar", value: "18", icon: CheckCircle, color: "green" },
-                    { label: "Durchschn. Alter", value: "2.4 J.", icon: Calendar, color: "slate" },
+                    { label: "Gesamt Fuhrpark", value: vehicles.length.toString(), icon: Car, color: "blue" },
+                    { label: "In Wartung", value: "0", icon: Wrench, color: "red" },
+                    { label: "Verfügbar", value: vehicles.length.toString(), icon: CheckCircle, color: "green" },
+                    { label: "Durchschn. Alter", value: "1.2 J.", icon: Calendar, color: "slate" },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                        <div className={`w-12 h-12 rounded-2xl bg-${stat.color}-50 text-${stat.color}-600 flex items-center justify-center mb-6`}>
+                        <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center mb-6",
+                            stat.color === "blue" ? "bg-blue-50 text-blue-600" :
+                                stat.color === "red" ? "bg-red-50 text-red-600" :
+                                    stat.color === "green" ? "bg-green-50 text-green-600" :
+                                        "bg-slate-50 text-slate-600"
+                        )}>
                             <stat.icon size={24} />
                         </div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
@@ -57,7 +108,16 @@ export default function FleetPage() {
 
             {/* Vehicles Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {mockVehicles.map((vehicle, i) => (
+                {loading ? (
+                    <div className="col-span-full py-20 text-center">
+                        <Loader2 className="animate-spin text-blue-500 mx-auto" size={40} />
+                    </div>
+                ) : vehicles.length === 0 ? (
+                    <div className="col-span-full py-20 text-center bg-white rounded-[3rem] border border-dashed border-slate-200">
+                        <Car className="mx-auto text-slate-300 mb-4" size={48} />
+                        <p className="text-slate-500 font-bold uppercase tracking-widest">Keine Fahrzeuge im Bestand</p>
+                    </div>
+                ) : vehicles.map((vehicle, i) => (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -71,15 +131,14 @@ export default function FleetPage() {
                                     <Car size={32} />
                                 </div>
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-900 leading-tight">{vehicle.model}</h3>
-                                    <p className="text-sm font-bold text-blue-600 uppercase tracking-widest mt-1">{vehicle.plate}</p>
+                                    <h3 className="text-2xl font-black text-slate-900 leading-tight">{vehicle.make} {vehicle.model}</h3>
+                                    <p className="text-sm font-bold text-blue-600 uppercase tracking-widest mt-1">{vehicle.licensePlate}</p>
                                 </div>
                             </div>
                             <div className={cn(
-                                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                                vehicle.status === "In Use" ? "bg-blue-50 text-blue-600" : vehicle.status === "Maintenance" ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"
+                                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-green-50 text-green-600"
                             )}>
-                                {vehicle.status}
+                                Verfügbar
                             </div>
                         </div>
 
@@ -88,47 +147,124 @@ export default function FleetPage() {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <Fuel size={14} /> Kilometerstand
                                 </p>
-                                <p className="text-xl font-black text-slate-900">{vehicle.milage}</p>
+                                <p className="text-xl font-black text-slate-900">{vehicle.milage.toLocaleString()} km</p>
                             </div>
                             <div className="space-y-4 p-6 bg-slate-50 rounded-[2rem]">
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                     <Wrench size={14} /> Nächster Service
                                 </p>
-                                <p className="text-xl font-black text-slate-900">{vehicle.nextService}</p>
+                                <p className="text-xl font-black text-slate-900">
+                                    {vehicle.nextMaintenance ? new Date(vehicle.nextMaintenance).toLocaleDateString('de-DE') : "Nicht geplant"}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Vehicle Health Bar */}
                         <div className="space-y-3 relative z-10">
                             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                                 <span className="text-slate-400">Fahrzeug-Zustand</span>
-                                <span className={cn(
-                                    vehicle.health > 90 ? "text-green-600" : vehicle.health > 75 ? "text-blue-600" : "text-red-600"
-                                )}>{vehicle.health}%</span>
+                                <span className="text-green-600">95%</span>
                             </div>
                             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                                 <motion.div
                                     initial={{ width: 0 }}
-                                    animate={{ width: `${vehicle.health}%` }}
+                                    animate={{ width: "95%" }}
                                     transition={{ duration: 1, delay: 0.5 }}
-                                    className={cn(
-                                        "h-full rounded-full",
-                                        vehicle.health > 90 ? "bg-green-500" : vehicle.health > 75 ? "bg-blue-500" : "bg-red-500"
-                                    )}
+                                    className="h-full rounded-full bg-green-500"
                                 />
                             </div>
                         </div>
 
-                        {/* Decorative Background Icon */}
                         <Car className="absolute bottom-[-40px] right-[-40px] text-slate-50 opacity-[0.03] group-hover:scale-150 transition duration-1000" size={240} />
 
-                        {/* Action Hover Overlay (Maybe simple menu instead for now) */}
                         <button className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition">
                             <MoreVertical size={20} />
                         </button>
                     </motion.div>
                 ))}
             </div>
+
+            {/* Add Vehicle Modal */}
+            <AnimatePresence>
+                {showAddModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative"
+                        >
+                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+                            <h2 className="text-3xl font-black text-slate-900 mb-8">Fahrzeug hinzufügen</h2>
+                            <form onSubmit={handleCreateVehicle} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Marke</label>
+                                        <input
+                                            type="text" required
+                                            placeholder="z.B. Mercedes-Benz"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                            value={newVehicle.make}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, make: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Modell</label>
+                                        <input
+                                            type="text" required
+                                            placeholder="z.B. Sprinter"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                            value={newVehicle.model}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Kennzeichen</label>
+                                        <input
+                                            type="text" required
+                                            placeholder="B-QX 123"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                            value={newVehicle.licensePlate}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, licensePlate: e.target.value.toUpperCase() })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Kilometerstand</label>
+                                        <input
+                                            type="number" required
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                            value={newVehicle.milage}
+                                            onChange={(e) => setNewVehicle({ ...newVehicle, milage: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Nächste Wartung</label>
+                                    <input
+                                        type="date"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                        value={newVehicle.nextMaintenance}
+                                        onChange={(e) => setNewVehicle({ ...newVehicle, nextMaintenance: e.target.value })}
+                                    />
+                                </div>
+                                <div className="pt-6 flex gap-4">
+                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
+                                    <button
+                                        type="submit"
+                                        disabled={creating}
+                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                                    >
+                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Fahrzeug Hinzufügen"}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

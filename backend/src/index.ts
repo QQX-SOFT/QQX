@@ -10,6 +10,7 @@ import timeRoutes from './routes/timeRoutes';
 import reportRoutes from './routes/reportRoutes';
 import ratingRoutes from './routes/ratingRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
 
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 
@@ -31,6 +32,7 @@ app.use('/api/time-entries', timeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

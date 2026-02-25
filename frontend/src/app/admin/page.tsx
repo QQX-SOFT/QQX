@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
     TrendingUp,
     TrendingDown,
@@ -8,19 +9,62 @@ import {
     MapPin,
     AlertCircle,
     Clock,
-    ChevronRight
+    ChevronRight,
+    Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const stats = [
-    { label: "Aktive Fahrzeuge", value: "842", trend: "+12.5%", color: "blue", icon: Truck },
-    { label: "Fahrer Online", value: "312", trend: "+3.2%", color: "indigo", icon: Users },
-    { label: "Lieferungen heute", value: "1.204", trend: "-1.4%", color: "slate", icon: Clock },
-    { label: "Offene Warnungen", value: "14", trend: "Kritisch", color: "red", icon: AlertCircle },
-] as const;
+import api from "@/lib/api";
 
 export default function Dashboard() {
+    const [statsData, setStatsData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const { data } = await api.get("/dashboard/stats");
+                setStatsData(data);
+            } catch (e) {
+                console.error("Failed to fetch dashboard stats", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const stats = [
+        {
+            label: "Aktive Fahrzeuge",
+            value: statsData?.vehicles || "0",
+            trend: statsData?.trends?.vehicles || "+0%",
+            color: "blue",
+            icon: Truck
+        },
+        {
+            label: "Fahrer Online",
+            value: statsData?.activeDrivers || "0",
+            trend: statsData?.trends?.drivers || "+0%",
+            color: "indigo",
+            icon: Users
+        },
+        {
+            label: "Lieferungen heute",
+            value: "1.204", // This would need another aggregate in real app
+            trend: "+5.4%",
+            color: "slate",
+            icon: Clock
+        },
+        {
+            label: "Kritische Warnungen",
+            value: statsData?.alerts || "0",
+            trend: statsData?.trends?.alerts || "Normal",
+            color: "red",
+            icon: AlertCircle
+        },
+    ] as const;
+
     return (
         <div className="space-y-12">
             {/* Welcome Header */}
@@ -37,9 +81,13 @@ export default function Dashboard() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, i) => {
+                {loading ? (
+                    Array(4).fill(0).map((_, i) => (
+                        <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-pulse h-40"></div>
+                    ))
+                ) : stats.map((stat, i) => {
                     const Icon = stat.icon;
-                    const isNegative = stat.trend.startsWith("-");
+                    const isPositive = stat.trend.startsWith("+");
                     const isCritical = stat.trend === "Kritisch";
 
                     return (
@@ -62,16 +110,15 @@ export default function Dashboard() {
                                 </div>
                                 <div className={cn(
                                     "flex items-center gap-1 text-xs font-black px-2 py-1 rounded-full",
-                                    stat.trend.startsWith("+") ? "text-green-600 bg-green-50" : isCritical ? "text-red-600 bg-red-50" : "text-slate-400 bg-slate-50"
+                                    isPositive ? "text-green-600 bg-green-50" : isCritical ? "text-red-600 bg-red-50" : "text-slate-400 bg-slate-50"
                                 )}>
-                                    {stat.trend.startsWith("+") ? <TrendingUp size={12} /> : isNegative ? <TrendingDown size={12} /> : null}
+                                    {isPositive ? <TrendingUp size={12} /> : null}
                                     {stat.trend}
                                 </div>
                             </div>
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
                             <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
 
-                            {/* Decorative Background Icon */}
                             <Icon className="absolute bottom-[-20px] right-[-20px] text-slate-50 opacity-[0.03] group-hover:scale-150 transition duration-1000" size={160} />
                         </motion.div>
                     );
@@ -84,7 +131,6 @@ export default function Dashboard() {
                 <div className="xl:col-span-2 space-y-8">
                     <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-4 relative h-[600px] overflow-hidden group">
                         <div className="absolute inset-0 bg-slate-100 flex items-center justify-center">
-                            {/* Mock Map Background */}
                             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:20px_20px]"></div>
                             <div className="relative text-center">
                                 <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 mb-4 mx-auto animate-pulse">
@@ -121,7 +167,7 @@ export default function Dashboard() {
                     </h3>
                     <div className="space-y-10">
                         {[
-                            { title: "Fahrzeug 402 - Motorsatcheck", time: "vor 2 Min.", desc: "Präventive Wartung für Einheit #402 ausgelöst.", type: "alert" },
+                            { title: "Fahrzeug 402 - Motorencheck", time: "vor 2 Min.", desc: "Präventive Wartung für Einheit #402 ausgelöst.", type: "alert" },
                             { title: "Neuer Fahrer an Bord", time: "vor 15 Min.", desc: "Marco K. ist der Frankfurter Flotte beigetreten.", type: "notif" },
                             { title: "Lieferung optimiert", time: "vor 1 Std.", desc: "KI-Optimierung sparte 24km auf Route B4.", type: "success" },
                             { title: "Routenverzögerung", time: "vor 3 Std.", desc: "Starker Verkehr in Berlin betrifft 4 Einheiten.", type: "alert" },

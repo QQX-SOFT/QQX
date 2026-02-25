@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Users,
     Search,
@@ -12,56 +12,56 @@ import {
     Download,
     Mail,
     Phone,
-    ChevronRight
+    ChevronRight,
+    Loader2,
+    X,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
-const mockDrivers = [
-    {
-        id: "1",
-        name: "Marco Reus",
-        email: "marco.r@logistic.de",
-        status: "Active",
-        rating: 4.8,
-        totalHours: 164,
-        deliveries: 412,
-        avatar: "MR"
-    },
-    {
-        id: "2",
-        name: "Sarah Meyer",
-        email: "s.meyer@logistic.de",
-        status: "Active",
-        rating: 4.9,
-        totalHours: 152,
-        deliveries: 389,
-        avatar: "SM"
-    },
-    {
-        id: "3",
-        name: "Thomas Müller",
-        email: "t.mueller@logistic.de",
-        status: "Inactive",
-        rating: 4.5,
-        totalHours: 120,
-        deliveries: 245,
-        avatar: "TM"
-    },
-    {
-        id: "4",
-        name: "Lena Fischer",
-        email: "l.fischer@logistic.de",
-        status: "Active",
-        rating: 4.7,
-        totalHours: 178,
-        deliveries: 456,
-        avatar: "LF"
-    },
-];
+import api from "@/lib/api";
 
 export default function DriversPage() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [drivers, setDrivers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newDriver, setNewDriver] = useState({ firstName: "", lastName: "", phone: "" });
+    const [creating, setCreating] = useState(false);
+
+    useEffect(() => {
+        fetchDrivers();
+    }, []);
+
+    const fetchDrivers = async () => {
+        try {
+            const { data } = await api.get("/drivers");
+            setDrivers(data);
+        } catch (e) {
+            console.error("Failed to fetch drivers", e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreateDriver = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setCreating(true);
+        try {
+            await api.post("/drivers", newDriver);
+            setShowAddModal(false);
+            setNewDriver({ firstName: "", lastName: "", phone: "" });
+            fetchDrivers();
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Fehler beim Erstellen des Fahrers");
+        } finally {
+            setCreating(false);
+        }
+    };
+
+    const filteredDrivers = drivers.filter(d =>
+        `${d.firstName} ${d.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.user?.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="space-y-12">
@@ -71,7 +71,10 @@ export default function DriversPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Fahrer-Management</h1>
                     <p className="text-slate-500 font-medium">Verwalten Sie Ihre Fahrer, prüfen Sie Bewertungen und erstellen Sie Berichte.</p>
                 </div>
-                <button className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200">
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200"
+                >
                     <Plus size={20} />
                     Neuen Fahrer hinzufügen
                 </button>
@@ -79,7 +82,7 @@ export default function DriversPage() {
 
             {/* Filters & Search */}
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 bg-white border border-slate-200 p-2 rounded-2xl flex items-center gap-2 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+                <div className="flex-1 bg-white border border-slate-200 p-2 rounded-2xl flex items-center gap-2 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all shadow-sm">
                     <div className="p-3">
                         <Search size={20} className="text-slate-400" />
                     </div>
@@ -91,7 +94,7 @@ export default function DriversPage() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <button className="px-6 py-2 bg-white border border-slate-200 rounded-2xl flex items-center gap-3 font-bold text-slate-600 hover:bg-slate-50 transition">
+                <button className="px-6 py-2 bg-white border border-slate-200 rounded-2xl flex items-center gap-3 font-bold text-slate-600 hover:bg-slate-50 transition shadow-sm">
                     <Filter size={18} />
                     Filter
                 </button>
@@ -99,7 +102,16 @@ export default function DriversPage() {
 
             {/* Drivers List */}
             <div className="grid grid-cols-1 gap-6">
-                {mockDrivers.map((driver, i) => (
+                {loading ? (
+                    <div className="py-20 text-center">
+                        <Loader2 className="animate-spin text-blue-500 mx-auto" size={40} />
+                    </div>
+                ) : filteredDrivers.length === 0 ? (
+                    <div className="py-20 text-center bg-white rounded-[2rem] border border-dashed border-slate-200">
+                        <Users className="mx-auto text-slate-300 mb-4" size={48} />
+                        <p className="text-slate-500 font-bold uppercase tracking-widest">Keine Fahrer gefunden</p>
+                    </div>
+                ) : filteredDrivers.map((driver, i) => (
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -110,17 +122,17 @@ export default function DriversPage() {
                         {/* Profile Info */}
                         <div className="flex items-center gap-6 min-w-[300px]">
                             <div className="w-16 h-16 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-100">
-                                {driver.avatar}
+                                {driver.firstName[0]}{driver.lastName[0]}
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition">{driver.name}</h3>
+                                <h3 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition">{driver.firstName} {driver.lastName}</h3>
                                 <div className="flex items-center gap-3 mt-1 text-slate-400 text-sm font-medium">
                                     <span className="flex items-center gap-1.5">
-                                        <div className={cn("w-1.5 h-1.5 rounded-full", driver.status === "Active" ? "bg-green-500" : "bg-slate-300")} />
-                                        {driver.status}
+                                        <div className={cn("w-1.5 h-1.5 rounded-full bg-green-500")} />
+                                        Active
                                     </span>
                                     <span>•</span>
-                                    <span>{driver.email}</span>
+                                    <span>{driver.user?.email || "Keine E-Mail"}</span>
                                 </div>
                             </div>
                         </div>
@@ -131,16 +143,16 @@ export default function DriversPage() {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bewertung</p>
                                 <div className="flex items-center justify-center lg:justify-start gap-1 text-yellow-500 font-black">
                                     <Star size={16} className="fill-current" />
-                                    <span>{driver.rating}</span>
+                                    <span>4.8</span>
                                 </div>
                             </div>
                             <div className="text-center lg:text-left">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Stunden</p>
-                                <p className="font-black text-slate-900">{driver.totalHours}h</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                                <p className="font-black text-slate-900 text-sm uppercase tracking-tighter">Bereit</p>
                             </div>
                             <div className="text-center lg:text-left">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Lieferungen</p>
-                                <p className="font-black text-slate-900">{driver.deliveries}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Telefon</p>
+                                <p className="font-black text-slate-900">{driver.phone || "-"}</p>
                             </div>
                         </div>
 
@@ -153,14 +165,75 @@ export default function DriversPage() {
                                 <Download size={20} />
                             </button>
                             <div className="h-8 w-px bg-slate-100 mx-2" />
-                            <button className="px-6 py-3 bg-slate-50 text-slate-900 rounded-2xl font-black text-sm flex items-center gap-2 hover:bg-slate-900 hover:text-white transition">
+                            <button className="px-6 py-3 bg-slate-50 text-slate-900 rounded-2xl font-black text-sm flex items-center gap-2 hover:bg-slate-900 hover:text-white transition group/btn">
                                 Profil
-                                <ChevronRight size={16} />
+                                <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
                             </button>
                         </div>
                     </motion.div>
                 ))}
             </div>
+
+            {/* Add Driver Modal */}
+            <AnimatePresence>
+                {showAddModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative"
+                        >
+                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+                            <h2 className="text-3xl font-black text-slate-900 mb-8">Fahrer einstellen</h2>
+                            <form onSubmit={handleCreateDriver} className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Vorname</label>
+                                        <input
+                                            type="text" required
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                            value={newDriver.firstName}
+                                            onChange={(e) => setNewDriver({ ...newDriver, firstName: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Nachname</label>
+                                        <input
+                                            type="text" required
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                            value={newDriver.lastName}
+                                            onChange={(e) => setNewDriver({ ...newDriver, lastName: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Telefonnummer</label>
+                                    <input
+                                        type="tel"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
+                                        value={newDriver.phone}
+                                        placeholder="+49 123 456789"
+                                        onChange={(e) => setNewDriver({ ...newDriver, phone: e.target.value })}
+                                    />
+                                </div>
+                                <div className="pt-6 flex gap-4">
+                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
+                                    <button
+                                        type="submit"
+                                        disabled={creating}
+                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                                    >
+                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Fahrer Anlegen"}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
