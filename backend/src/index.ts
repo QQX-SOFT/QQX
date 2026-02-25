@@ -11,6 +11,8 @@ import reportRoutes from './routes/reportRoutes';
 import ratingRoutes from './routes/ratingRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
 
+import { tenantMiddleware } from './middleware/tenantMiddleware';
+
 dotenv.config();
 
 const app = express();
@@ -19,6 +21,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
+app.use(tenantMiddleware as any);
 
 // Routes
 app.use('/api/tenants', tenantRoutes);
