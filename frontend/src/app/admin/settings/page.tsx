@@ -59,8 +59,8 @@ export default function SettingsPage() {
         setSaving(true);
         try {
             // Wait, we only made an endpoint for name in PATCH /settings!
-            await api.patch("/settings", { name: formData.name });
-            setSettings((prev: any) => ({ ...prev, name: formData.name }));
+            await api.patch("/settings", formData);
+            setSettings((prev: any) => ({ ...prev, ...formData }));
         } catch (error) {
             console.error("Failed to update settings", error);
         } finally {
@@ -160,7 +160,10 @@ export default function SettingsPage() {
                             <Shield className="text-blue-500" /> Automatisierung
                         </h3>
                         <div className="space-y-4">
-                            <label className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 transition cursor-pointer">
+                            <div
+                                onClick={() => setFormData({ ...formData, autoAssignDrivers: !formData.autoAssignDrivers })}
+                                className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 transition cursor-pointer"
+                            >
                                 <div>
                                     <h4 className="font-bold text-slate-900 mb-1">Automatische Fahrerzuweisung</h4>
                                     <p className="text-xs font-medium text-slate-500">Wenn aktiviert, werden Aufträge automatisch dem nächsten freien Fahrer zugewiesen.</p>
@@ -168,9 +171,12 @@ export default function SettingsPage() {
                                 <div className={cn("w-12 h-6 rounded-full flex items-center p-1 transition-colors", formData.autoAssignDrivers ? "bg-blue-600 justify-end" : "bg-slate-200 justify-start")}>
                                     <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
                                 </div>
-                            </label>
+                            </div>
 
-                            <label className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 transition cursor-pointer">
+                            <div
+                                onClick={() => setFormData({ ...formData, notificationsEnabled: !formData.notificationsEnabled })}
+                                className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:bg-slate-50 transition cursor-pointer"
+                            >
                                 <div>
                                     <h4 className="font-bold text-slate-900 mb-1">Systembenachrichtigungen</h4>
                                     <p className="text-xs font-medium text-slate-500">Erhalt von täglichen Reports und Alarmmeldungen via E-Mail.</p>
@@ -178,7 +184,7 @@ export default function SettingsPage() {
                                 <div className={cn("w-12 h-6 rounded-full flex items-center p-1 transition-colors", formData.notificationsEnabled ? "bg-blue-600 justify-end" : "bg-slate-200 justify-start")}>
                                     <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
                                 </div>
-                            </label>
+                            </div>
                         </div>
                     </div>
 
