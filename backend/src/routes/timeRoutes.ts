@@ -81,4 +81,35 @@ router.patch('/stop/:id', async (req: Request, res: Response) => {
     }
 });
 
+// GET latest location of all active drivers for a tenant
+router.get('/locations', async (req: Request, res: Response) => {
+    const subdomain = req.headers['x-tenant-subdomain'] as string;
+    try {
+        const tenant = await prisma.tenant.findUnique({ where: { subdomain } });
+        if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
+
+        const activeEntries = await prisma.timeEntry.findMany({
+            where: {
+                driver: { tenantId: tenant.id },
+                status: 'RUNNING'
+            },
+            include: {
+                driver: true
+            }
+        });
+
+        const locations = activeEntries.map(entry => ({
+            id: entry.id,
+            driverName: `${entry.driver.firstName} ${entry.driver.lastName}`,
+            lat: entry.startLat, // In a real app, we would have a separate 'currentLat/Lng' updated via heartbeats
+            lng: entry.startLng,
+            startTime: entry.startTime
+        }));
+
+        res.json(locations);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch locations' });
+    }
+});
+
 export default router;
