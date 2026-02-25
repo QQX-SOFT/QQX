@@ -10,6 +10,10 @@ import reportRoutes from './routes/reportRoutes';
 import ratingRoutes from './routes/ratingRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
 import dashboardRoutes from './routes/dashboardRoutes';
+import orderRoutes from './routes/orderRoutes';
+import complaintRoutes from './routes/complaintRoutes';
+import documentRoutes from './routes/documentRoutes';
+import walletRoutes from './routes/walletRoutes';
 
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 
@@ -32,6 +36,10 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/ratings', ratingRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/complaints', complaintRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/wallet', walletRoutes);
 
 app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

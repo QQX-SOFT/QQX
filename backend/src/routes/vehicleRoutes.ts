@@ -67,7 +67,7 @@ router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
 
     try {
         const vehicle = await prisma.vehicle.update({
-            where: { id: req.params.id, tenantId },
+            where: { id: req.params.id as string, tenantId: tenantId as string },
             data: {
                 status: status,
                 ...(nextMaintenance && { nextMaintenance: new Date(nextMaintenance) })

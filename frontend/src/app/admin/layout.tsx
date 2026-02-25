@@ -12,15 +12,37 @@ import {
     Search,
     Bell,
     Menu,
-    ChevronRight
+    ChevronRight,
+    ClipboardList,
+    Wallet,
+    AlertCircle,
+    FileText,
+    MapPin,
+    Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const sidebarLinks = [
+const mainLinks = [
     { name: "Übersicht", icon: LayoutDashboard, href: "/admin" },
+    { name: "Live Tracking", icon: MapPin, href: "/admin/tracking" },
+];
+
+const operationsLinks = [
+    { name: "Aufträge", icon: ClipboardList, href: "/admin/orders" },
     { name: "Fahrzeuge", icon: Car, href: "/admin/vehicles" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
-    { name: "Analysen", icon: LineChart, href: "/admin/analytics" },
+    { name: "Dokumente", icon: FileText, href: "/admin/documents" },
+];
+
+const financeLinks = [
+    { name: "Buchhaltung", icon: Wallet, href: "/admin/accounting" },
+    { name: "Auszahlungen", icon: Calendar, href: "/admin/payouts" },
+];
+
+const analyticLinks = [
+    { name: "KPI Dashboard", icon: LineChart, href: "/admin/analytics" },
+    { name: "Reklamationen", icon: AlertCircle, href: "/admin/complaints" },
+    { name: "Einstellungen", icon: Settings, href: "/admin/settings" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -35,29 +57,42 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <span className="text-xl font-black tracking-tight text-slate-900">QQX CONTROL</span>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-1">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Hauptmenü</div>
-                    {sidebarLinks.map((link) => {
-                        const isActive = pathname === link.href;
-                        return (
-                            <Link
-                                key={link.name}
-                                href={link.href}
-                                className={cn(
-                                    "flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group",
-                                    isActive
-                                        ? "bg-blue-600 text-white shadow-xl shadow-blue-200"
-                                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                                )}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                                    <span className="font-bold text-[15px]">{link.name}</span>
-                                </div>
-                                {isActive && <ChevronRight size={16} className="opacity-50" />}
-                            </Link>
-                        );
-                    })}
+                <nav className="flex-1 px-4 space-y-8 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-hide">
+                    <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Hauptmenü</div>
+                        <div className="space-y-1">
+                            {mainLinks.map((link) => (
+                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Operationen</div>
+                        <div className="space-y-1">
+                            {operationsLinks.map((link) => (
+                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Finanzen</div>
+                        <div className="space-y-1">
+                            {financeLinks.map((link) => (
+                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-4 mb-3">Analyse & Support</div>
+                        <div className="space-y-1">
+                            {analyticLinks.map((link) => (
+                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
+                            ))}
+                        </div>
+                    </div>
                 </nav>
 
                 <div className="p-6 mt-auto">
@@ -117,5 +152,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </main>
             </div>
         </div>
+    );
+}
+
+function SidebarLink({ link, isActive }: { link: any, isActive: boolean }) {
+    return (
+        <Link
+            href={link.href}
+            className={cn(
+                "flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 group",
+                isActive
+                    ? "bg-blue-600 text-white shadow-xl shadow-blue-200"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+            )}
+        >
+            <div className="flex items-center gap-4">
+                <link.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                <span className="font-bold text-[15px]">{link.name}</span>
+            </div>
+            {isActive && <ChevronRight size={16} className="opacity-50" />}
+        </Link>
     );
 }
