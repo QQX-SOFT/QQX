@@ -16,6 +16,11 @@ const stopSchema = z.object({
     lng: z.number().optional(),
 });
 
+const locationUpdateSchema = z.object({
+    lat: z.number(),
+    lng: z.number(),
+});
+
 // GET active entry for a driver
 router.get('/active/:driverId', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
@@ -107,6 +112,37 @@ router.patch('/stop/:id', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// PATCH current location
+router.patch('/location/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    try {
+        const { lat, lng } = locationUpdateSchema.parse(req.body);
+
+        const existing = await prisma.timeEntry.findFirst({
+            where: {
+                id: req.params.id,
+                driver: { tenantId }
+            }
+        });
+
+        if (!existing) {
+            return res.status(404).json({ error: 'Zeiteintrag nicht gefunden' });
+        }
+
+        const entry = await prisma.timeEntry.update({
+            where: { id: req.params.id },
+            data: {
+                currentLat: lat,
+                currentLng: lng
+            }
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Standort-Update fehlgeschlagen' });
+    }
+});
+
 // GET latest location of all active drivers for a tenant
 router.get('/locations', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
@@ -128,9 +164,10 @@ router.get('/locations', async (req: TenantRequest, res: Response) => {
 
         const locations = activeEntries.map((entry: any) => ({
             id: entry.id,
+            driverId: entry.driverId,
             driverName: `${entry.driver.firstName} ${entry.driver.lastName}`,
-            lat: entry.startLat,
-            lng: entry.startLng,
+            lat: entry.currentLat || entry.startLat,
+            lng: entry.currentLng || entry.startLng,
             startTime: entry.startTime
         }));
 

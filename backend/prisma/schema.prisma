@@ -120,6 +120,9 @@ model TimeEntry {
   endTime       DateTime?
   endLat        Float?
   endLng        Float?
+
+  currentLat    Float?
+  currentLng    Float?
   
   pauseDuration Int      @default(0) // In Minutes
   status        TimeStatus @default(RUNNING)

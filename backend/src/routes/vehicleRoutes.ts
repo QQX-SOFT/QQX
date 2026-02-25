@@ -60,4 +60,23 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// PATCH update vehicle status
+router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { status, nextMaintenance } = req.body;
+
+    try {
+        const vehicle = await prisma.vehicle.update({
+            where: { id: req.params.id, tenantId },
+            data: {
+                status: status,
+                ...(nextMaintenance && { nextMaintenance: new Date(nextMaintenance) })
+            }
+        });
+        res.json(vehicle);
+    } catch (error) {
+        res.status(500).json({ error: 'Fahrzeugstatus konnte nicht aktualisiert werden' });
+    }
+});
+
 export default router;

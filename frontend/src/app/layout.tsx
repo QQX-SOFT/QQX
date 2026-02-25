@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import DevToolbar from "@/components/DevToolbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export default function RootLayout({
     <html lang="de" className="dark">
       <body className={`${inter.className} antialiased`}>
         {children}
+        <DevToolbar />
       </body>
     </html>
   );

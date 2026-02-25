@@ -70,6 +70,16 @@ export default function AccountingPage() {
         }
     };
 
+    const handleUpdateStatus = async (id: string, currentStatus: string) => {
+        const nextStatus = currentStatus === "PAID" ? "PENDING" : "PAID";
+        try {
+            await api.patch(`/invoices/${id}/status`, { status: nextStatus });
+            fetchInvoices();
+        } catch (e) {
+            console.error("Failed to update invoice status", e);
+        }
+    };
+
     const totalRevenue = invoices.reduce((acc, inv) => acc + (inv.status === 'PAID' ? inv.amount : 0), 0);
     const pendingAmount = invoices.reduce((acc, inv) => acc + (inv.status === 'PENDING' ? inv.amount : 0), 0);
 
@@ -164,13 +174,16 @@ export default function AccountingPage() {
                                         <span className="font-black text-slate-900">€{inv.amount.toLocaleString('de-DE', { minimumFractionDigits: 2 })}</span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <div className={cn(
-                                            "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                                            inv.status === "PAID" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
-                                        )}>
+                                        <button
+                                            onClick={() => handleUpdateStatus(inv.id, inv.status)}
+                                            className={cn(
+                                                "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition hover:scale-105 active:scale-95",
+                                                inv.status === "PAID" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
+                                            )}
+                                        >
                                             {inv.status === "PAID" ? <CheckCircle size={14} /> : <Clock size={14} />}
                                             {inv.status}
-                                        </div>
+                                        </button>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-2">

@@ -62,4 +62,23 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// PATCH update invoice status
+router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { status } = req.body;
+
+    try {
+        const invoice = await prisma.invoice.update({
+            where: {
+                id: req.params.id,
+                tenantId: tenantId // Security
+            },
+            data: { status }
+        });
+        res.json(invoice);
+    } catch (error) {
+        res.status(500).json({ error: 'Status konnte nicht aktualisiert werden' });
+    }
+});
+
 export default router;

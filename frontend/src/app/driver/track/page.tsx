@@ -7,19 +7,28 @@ import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export default function TrackingPage() {
+    const [driverId, setDriverId] = useState<string | null>(null);
     const [status, setStatus] = useState<"IDLE" | "RUNNING" | "PAUSED">("IDLE");
     const [seconds, setSeconds] = useState(0);
     const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
-    // Hardcoded driver for demo (In real app, get from auth context)
-    const DRIVER_ID = "demo-driver-1";
+    useEffect(() => {
+        const id = localStorage.getItem("driverId");
+        if (id) {
+            setDriverId(id);
+        } else {
+            // In a real app we'd redirect to /driver/login
+            // For demo, let's use the hardcoded one if none found
+            setDriverId("demo-driver-1");
+        }
+    }, []);
 
     useEffect(() => {
         // Check for active session on load
         const checkActiveSession = async () => {
             try {
-                const { data } = await api.get(`/time-entries/active/${DRIVER_ID}`);
+                const { data } = await api.get(`/time-entries/active/${driverId}`);
                 if (data) {
                     setActiveEntryId(data.id);
                     setStatus(data.status);
@@ -36,13 +45,36 @@ export default function TrackingPage() {
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (status === "RUNNING") {
+        let locationInterval: NodeJS.Timeout;
+
+        if (status === "RUNNING" && activeEntryId) {
+            // Timer
             interval = setInterval(() => {
                 setSeconds((s) => s + 1);
             }, 1000);
+
+            // simulated location heartbeats
+            let lat = 52.5200;
+            let lng = 13.4050;
+
+            locationInterval = setInterval(async () => {
+                // Simulate movement
+                lat += (Math.random() - 0.5) * 0.001;
+                lng += (Math.random() - 0.5) * 0.001;
+
+                try {
+                    await api.patch(`/time-entries/location/${activeEntryId}`, { lat, lng });
+                    console.log("Location updated:", { lat, lng });
+                } catch (e) {
+                    console.error("Location update failed", e);
+                }
+            }, 10000); // Every 10 seconds
         }
-        return () => clearInterval(interval);
-    }, [status]);
+        return () => {
+            clearInterval(interval);
+            clearInterval(locationInterval);
+        };
+    }, [status, activeEntryId]);
 
     const formatTime = (totalSeconds: number) => {
         const hrs = Math.floor(totalSeconds / 3600);
@@ -58,7 +90,7 @@ export default function TrackingPage() {
         try {
             // Mocking GPS for now
             const { data } = await api.post("/time-entries/start", {
-                driverId: DRIVER_ID,
+                driverId: driverId,
                 lat: 52.5200,
                 lng: 13.4050
             });
