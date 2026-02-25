@@ -70,7 +70,7 @@ export default function Dashboard() {
         {
             label: "Lieferungen heute",
             value: statsData?.ordersToday !== undefined ? statsData.ordersToday.toString() : "0",
-            trend: "+5.4%",
+            trend: statsData?.trends?.deliveries || "+0%",
             color: "slate",
             icon: Clock
         },

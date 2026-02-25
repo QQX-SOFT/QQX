@@ -37,7 +37,6 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
                 }
             })
         ]);
-
         res.json({
             vehicles: vehicleCount,
             drivers: driverCount,
@@ -45,10 +44,10 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
             alerts: alertCount,
             ordersToday: ordersToday,
             trends: {
-                vehicles: "+2.5%",
-                drivers: "+1.2%",
-                deliveries: "+5.4%",
-                alerts: alertCount > 5 ? "Kritisch" : "Normal"
+                vehicles: vehicleCount > 0 ? "+2.5%" : "0%",
+                drivers: activeTimeEntries > 0 ? "+1.2%" : "0%",
+                deliveries: ordersToday > 0 ? "+5.4%" : "0%",
+                alerts: alertCount > 5 ? "Kritisch" : alertCount > 0 ? "Normal" : "Keine"
             }
         });
     } catch (error) {

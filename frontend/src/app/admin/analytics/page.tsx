@@ -45,7 +45,7 @@ export default function AnalyticsPage() {
 
     const stats = [
         { label: "Umsatz Heute", value: "€3.240", trend: "+12.5%", isPositive: true },
-        { label: "Bestellungen", value: statsData?.ordersToday || "0", trend: "+5.4%", isPositive: true },
+        { label: "Bestellungen", value: statsData?.ordersToday || "0", trend: statsData?.trends?.deliveries || "0%", isPositive: true },
         { label: "Durchschn. Lieferzeit", value: "24m", trend: "-2.1%", isPositive: true },
         { label: "Aktive Fahrer", value: statsData?.activeDrivers || "0", trend: "0%", isPositive: true }
     ];
