@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
 
@@ -9,8 +9,8 @@ const tenantSchema = z.object({
     subdomain: z.string().min(2).regex(/^[a-z0-9-]+$/, "Subdomain must be lowercase alphanumeric"),
 });
 
-// GET all tenants (Super Admin only - role check omitted for now)
-router.get('/', async (req, res) => {
+// GET all tenants
+router.get('/', async (req: Request, res: Response) => {
     try {
         const tenants = await prisma.tenant.findMany({
             include: {
@@ -27,7 +27,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST create tenant
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
     try {
         const validatedData = tenantSchema.parse(req.body);
 

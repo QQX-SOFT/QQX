@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
 
@@ -18,8 +18,8 @@ const getTenantId = async (subdomain: string) => {
     return tenant?.id;
 };
 
-// GET all drivers for a specific tenant
-router.get('/', async (req, res) => {
+// GET all drivers
+router.get('/', async (req: Request, res: Response) => {
     const subdomain = req.headers['x-tenant-subdomain'] as string;
 
     if (!subdomain) {
@@ -44,7 +44,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST create driver
-router.post('/', async (req, res) => {
+router.post('/', async (req: Request, res: Response) => {
     const subdomain = req.headers['x-tenant-subdomain'] as string;
 
     if (!subdomain) {
@@ -56,7 +56,6 @@ router.post('/', async (req, res) => {
         const tenantId = await getTenantId(subdomain);
         if (!tenantId) return res.status(404).json({ error: 'Tenant not found' });
 
-        // TEMPORARY: Create a placeholder user for the driver since clerk is disabled
         const user = await prisma.user.create({
             data: {
                 email: `${validatedData.firstName.toLowerCase()}.${validatedData.lastName.toLowerCase()}@${subdomain}.local`,
