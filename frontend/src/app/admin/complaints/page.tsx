@@ -9,11 +9,21 @@ import {
     Search,
     Loader2,
     MoreVertical,
-    FileText
+    FileText,
+    Plus,
+    X,
+    User,
+    Euro
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+
+type Driver = {
+    id: string;
+    firstName: string;
+    lastName: string;
+};
 
 type Complaint = {
     id: string;
@@ -31,20 +41,51 @@ type Complaint = {
 
 export default function ComplaintsPage() {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
+    const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [creating, setCreating] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const [newComplaint, setNewComplaint] = useState({
+        driverId: "",
+        title: "",
+        description: "",
+        penalty: 0
+    });
 
     useEffect(() => {
-        fetchComplaints();
+        fetchData();
     }, []);
 
-    const fetchComplaints = async () => {
+    const fetchData = async () => {
         try {
-            const { data } = await api.get("/complaints");
-            setComplaints(data);
+            const [compRes, driversRes] = await Promise.all([
+                api.get("/complaints"),
+                api.get("/drivers")
+            ]);
+            setComplaints(compRes.data);
+            setDrivers(driversRes.data);
         } catch (e) {
-            console.error("Failed to fetch complaints", e);
+            console.error("Failed to fetch data", e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCreateComplaint = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newComplaint.driverId) return alert("Fahrer auswählen");
+        setCreating(true);
+        try {
+            await api.post("/complaints", newComplaint);
+            setShowAddModal(false);
+            setNewComplaint({ driverId: "", title: "", description: "", penalty: 0 });
+            fetchData();
+        } catch (error) {
+            alert("Fehler beim Erstellen");
+        } finally {
+            setCreating(false);
         }
     };
 
@@ -52,7 +93,7 @@ export default function ComplaintsPage() {
         const nextStatus = currentStatus === "OPEN" ? "RESOLVED" : "OPEN";
         try {
             await api.patch(`/complaints/${id}/resolve`, { status: nextStatus });
-            fetchComplaints();
+            fetchData();
         } catch (e) {
             console.error("Failed to update complaint status", e);
         }
@@ -64,8 +105,13 @@ export default function ComplaintsPage() {
         DISMISSED: { icon: XCircle, color: "text-slate-500", bg: "bg-slate-100", label: "Verworfen" },
     };
 
+    const filteredComplaints = complaints.filter(c =>
+        c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${c.driver.firstName} ${c.driver.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 pb-20 font-sans">
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -76,8 +122,15 @@ export default function ComplaintsPage() {
                         <span className="text-xs font-black uppercase tracking-[0.3em] text-red-500">Qualitätssicherung</span>
                     </div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Reklamationen</h1>
-                    <p className="text-slate-500 font-medium">Beschwerdemanagement, Vorfälle und Fahrer-Stellungnahmen.</p>
+                    <p className="text-slate-500 font-medium">Beschwerdemanagement und Fahrer-Stellungnahmen.</p>
                 </div>
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition shadow-xl"
+                >
+                    <Plus size={20} />
+                    Vorfall melden
+                </button>
             </header>
 
             {/* Quick Stats */}
@@ -121,6 +174,8 @@ export default function ComplaintsPage() {
                             type="text"
                             placeholder="Suchen..."
                             className="w-full pl-12 pr-6 py-3 bg-slate-50 border-none rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/10 transition"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
@@ -144,13 +199,13 @@ export default function ComplaintsPage() {
                                         <Loader2 className="animate-spin text-blue-500 mx-auto" size={40} />
                                     </td>
                                 </tr>
-                            ) : complaints.length === 0 ? (
+                            ) : filteredComplaints.length === 0 ? (
                                 <tr>
                                     <td colSpan={6} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest">
                                         Keine Vorfälle
                                     </td>
                                 </tr>
-                            ) : complaints.map((complaint, i) => {
+                            ) : filteredComplaints.map((complaint, i) => {
                                 const status = statusIcons[complaint.status] || statusIcons.OPEN;
                                 const StatusIcon = status.icon;
 
@@ -181,13 +236,13 @@ export default function ComplaintsPage() {
                                                     <span className="line-clamp-2">{complaint.explanation}</span>
                                                 </div>
                                             ) : (
-                                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50">Warter auf Stellungnahme</span>
+                                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100/50 italic">Wartet auf Antwort</span>
                                             )}
                                         </td>
                                         <td className="px-8 py-6">
                                             <span className={cn(
-                                                "font-black",
-                                                complaint.penalty > 0 ? "text-red-500" : "text-slate-400"
+                                                "font-black text-sm px-2 py-1 rounded-lg",
+                                                complaint.penalty > 0 ? "text-red-600 bg-red-50" : "text-slate-400 bg-slate-50"
                                             )}>
                                                 {complaint.penalty > 0 ? `-${complaint.penalty}` : "0"} Pkt
                                             </span>
@@ -210,7 +265,7 @@ export default function ComplaintsPage() {
                                                 <button className="p-2 text-slate-400 hover:text-blue-600 transition">
                                                     <FileText size={18} />
                                                 </button>
-                                                <button className="p-2 text-slate-400 hover:text-blue-600 transition">
+                                                <button className="p-2 text-slate-400 hover:text-red-500 transition">
                                                     <MoreVertical size={18} />
                                                 </button>
                                             </div>
@@ -222,6 +277,90 @@ export default function ComplaintsPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Add Complaint Modal */}
+            <AnimatePresence>
+                {showAddModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+
+                            <h2 className="text-3xl font-black text-slate-900 mb-8">Vorfall melden</h2>
+
+                            <form onSubmit={handleCreateComplaint} className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <User size={14} /> Betroffener Fahrer
+                                    </label>
+                                    <select
+                                        required
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                        value={newComplaint.driverId}
+                                        onChange={e => setNewComplaint({ ...newComplaint, driverId: e.target.value })}
+                                    >
+                                        <option value="">Fahrer auswählen...</option>
+                                        {drivers.map(d => (
+                                            <option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Titel des Vorfalls</label>
+                                    <input
+                                        type="text" required
+                                        placeholder="z.B. Verspätete Lieferung"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                        value={newComplaint.title}
+                                        onChange={e => setNewComplaint({ ...newComplaint, title: e.target.value })}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Beschreibung</label>
+                                    <textarea
+                                        required rows={4}
+                                        placeholder="Details zum Vorfall..."
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                        value={newComplaint.description}
+                                        onChange={e => setNewComplaint({ ...newComplaint, description: e.target.value })}
+                                    ></textarea>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <AlertCircle size={14} className="text-red-500" /> Strafpunkte (optional)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                        value={newComplaint.penalty}
+                                        onChange={e => setNewComplaint({ ...newComplaint, penalty: parseInt(e.target.value) })}
+                                    />
+                                </div>
+
+                                <div className="pt-6 flex gap-4">
+                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
+                                    <button
+                                        type="submit"
+                                        disabled={creating}
+                                        className="flex-1 py-4 rounded-2xl bg-red-600 text-white font-black hover:bg-red-700 transition flex items-center justify-center gap-2 shadow-xl shadow-red-100"
+                                    >
+                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Meldung speichern"}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

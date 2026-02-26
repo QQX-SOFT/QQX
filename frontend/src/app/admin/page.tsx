@@ -10,7 +10,9 @@ import {
     AlertCircle,
     Clock,
     ChevronRight,
-    Loader2
+    Loader2,
+    Calendar,
+    Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -54,7 +56,7 @@ export default function Dashboard() {
 
     const stats = [
         {
-            label: "Aktive Fahrzeuge",
+            label: "Fahrzeuge Gesamt",
             value: statsData?.vehicles || "0",
             trend: statsData?.trends?.vehicles || "+0%",
             color: "blue",
@@ -75,7 +77,7 @@ export default function Dashboard() {
             icon: Clock
         },
         {
-            label: "Kritische Warnungen",
+            label: "Wartungen fällig",
             value: statsData?.alerts || "0",
             trend: statsData?.trends?.alerts || "Normal",
             color: "red",
@@ -84,16 +86,19 @@ export default function Dashboard() {
     ] as const;
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-12 pb-20 font-sans">
             {/* Welcome Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Flottenübersicht</h1>
-                    <p className="text-slate-500 font-medium">Willkommen zurück! Hier ist der aktuelle Status Ihrer Flotte.</p>
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Live Cockpit</h1>
+                    <p className="text-slate-500 font-medium">Echtzeit-Übersicht über Ihre gesamte Flotte und Performance.</p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-6 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition">PDF Export</button>
-                    <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200">Neuer Einsatz</button>
+                    <button className="px-6 py-3 bg-white border-2 border-slate-100 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition">Berichte</button>
+                    <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition shadow-xl shadow-blue-100 flex items-center gap-2">
+                        <Activity size={16} />
+                        Live Status
+                    </button>
                 </div>
             </header>
 
@@ -101,7 +106,7 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {loading ? (
                     Array(4).fill(0).map((_, i) => (
-                        <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-pulse h-40"></div>
+                        <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-pulse h-44"></div>
                     ))
                 ) : stats.map((stat, i) => {
                     const Icon = stat.icon;
@@ -114,7 +119,7 @@ export default function Dashboard() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1 }}
                             key={i}
-                            className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden"
+                            className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:translate-y-[-4px] transition-all duration-500 group relative overflow-hidden"
                         >
                             <div className="flex justify-between items-start mb-6">
                                 <div className={cn(
@@ -127,15 +132,15 @@ export default function Dashboard() {
                                     <Icon size={24} />
                                 </div>
                                 <div className={cn(
-                                    "flex items-center gap-1 text-xs font-black px-2 py-1 rounded-full",
+                                    "flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter",
                                     isPositive ? "text-green-600 bg-green-50" : isCritical ? "text-red-600 bg-red-50" : "text-slate-400 bg-slate-50"
                                 )}>
                                     {isPositive ? <TrendingUp size={12} /> : null}
                                     {stat.trend}
                                 </div>
                             </div>
-                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">{stat.label}</p>
-                            <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+                            <h3 className="text-4xl font-black text-slate-900">{stat.value}</h3>
 
                             <Icon className="absolute bottom-[-20px] right-[-20px] text-slate-50 opacity-[0.03] group-hover:scale-150 transition duration-1000" size={160} />
                         </motion.div>
@@ -145,29 +150,24 @@ export default function Dashboard() {
 
             {/* Main Sections */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Live Map Area (Placeholder) */}
+                {/* Live Map Area */}
                 <div className="xl:col-span-2 space-y-8">
-                    <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-4 relative h-[600px] overflow-hidden group">
-                        <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
-                            {/* Mock Map Grid */}
-                            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-                            {/* Simulated City/Roads */}
-                            <svg className="absolute inset-0 w-full h-full text-white/5" viewBox="0 0 800 600">
-                                <path d="M0,300 L800,300 M400,0 L400,600 M200,0 L200,600 M600,0 L600,600 M0,150 L800,150 M0,450 L800,450" stroke="currentColor" strokeWidth="2" fill="none" />
-                            </svg>
+                    <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-4 relative h-[650px] overflow-hidden group">
+                        <div className="absolute inset-0 bg-slate-950 flex items-center justify-center">
+                            {/* Grid effect */}
+                            <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:40px_40px]"></div>
 
                             <div className="relative w-full h-full flex items-center justify-center">
                                 {locations.length === 0 ? (
                                     <div className="text-center">
-                                        <div className="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 mb-4 mx-auto animate-pulse">
-                                            <MapPin size={32} />
+                                        <div className="w-24 h-24 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-600 mb-6 mx-auto animate-pulse">
+                                            <MapPin size={40} />
                                         </div>
-                                        <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Warte auf aktive Einheiten...</p>
+                                        <p className="text-slate-500 font-bold uppercase tracking-[0.3em] text-[10px]">Warte auf Live-Signale...</p>
                                     </div>
                                 ) : (
-                                    <div className="relative w-full h-full overflow-hidden">
-                                        {locations.map((loc, idx) => {
+                                    <div className="relative w-full h-full">
+                                        {locations.map((loc) => {
                                             const x = 400 + (loc.lng - 13.4050) * 50000;
                                             const y = 300 - (loc.lat - 52.5200) * 50000;
 
@@ -183,16 +183,20 @@ export default function Dashboard() {
                                                     className="absolute"
                                                 >
                                                     <div className="relative group/pin">
-                                                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-white px-3 py-1.5 rounded-xl shadow-2xl border border-slate-100 opacity-0 group-hover/pin:opacity-100 transition whitespace-nowrap z-20 pointer-events-none">
-                                                            <p className="text-[10px] font-black text-slate-900">{loc.driverName}</p>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                                                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Aktiv seit {new Date(loc.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-white p-3 rounded-2xl shadow-2xl border border-slate-100 opacity-0 group-hover/pin:opacity-100 transition duration-300 whitespace-nowrap z-20 pointer-events-none">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-black text-xs">
+                                                                    {loc.driverName.split(' ').map((n: string) => n[0]).join('')}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs font-black text-slate-900">{loc.driverName}</p>
+                                                                    <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">In Fahrt</p>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div className="w-12 h-12 bg-blue-600/20 rounded-full flex items-center justify-center animate-ping absolute -inset-2 opacity-30" />
-                                                        <div className="w-8 h-8 bg-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/50 relative z-10 border-2 border-white">
-                                                            <Truck size={14} className="text-white fill-white" />
+                                                        <div className="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center animate-ping absolute -inset-4 opacity-30" />
+                                                        <div className="w-10 h-10 bg-blue-600 rounded-[1.25rem] flex items-center justify-center shadow-2xl shadow-blue-500/50 relative z-10 border-2 border-white">
+                                                            <Truck size={18} className="text-white fill-white" />
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -205,18 +209,19 @@ export default function Dashboard() {
 
                         {/* Map Overlays */}
                         <div className="absolute top-8 left-8 flex flex-col gap-3">
-                            <div className="glass bg-white/10 backdrop-blur-xl p-5 rounded-3xl border border-white/10 shadow-xl min-w-[200px]">
-                                <h4 className="font-black text-xs mb-3 text-white uppercase tracking-widest opacity-60">Live-Monitoring</h4>
-                                <div className="space-y-4">
+                            <div className="bg-slate-950/40 backdrop-blur-2xl p-6 rounded-[2rem] border border-white/5 shadow-2xl min-w-[240px]">
+                                <h4 className="font-black text-[10px] mb-4 text-white uppercase tracking-[0.2em] opacity-40">Monitoring</h4>
+                                <div className="space-y-6">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-[10px] font-bold text-slate-400">Aktive Einheiten</span>
-                                        <span className="text-xs font-black text-white">{locations.length}</span>
+                                        <span className="text-xs font-bold text-slate-300">Aktive Einheiten</span>
+                                        <span className="text-sm font-black text-blue-400">{locations.length}</span>
                                     </div>
-                                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                         <motion.div
-                                            className="h-full bg-blue-500"
+                                            className="h-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)]"
                                             initial={{ width: 0 }}
                                             animate={{ width: `${Math.min(locations.length * 10, 100)}%` }}
+                                            transition={{ duration: 1 }}
                                         />
                                     </div>
                                 </div>
@@ -226,47 +231,41 @@ export default function Dashboard() {
                 </div>
 
                 {/* Sidebar Activity */}
-                <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10">
-                    <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center justify-between">
-                        Letzte Aktivitäten
-                        <button className="text-xs font-bold text-blue-600 uppercase tracking-widest hover:underline">Alle ansehen</button>
+                <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10 flex flex-col">
+                    <h3 className="text-xl font-black text-slate-900 mb-10 flex items-center justify-between">
+                        Aktivitätsfeed
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                     </h3>
-                    <div className="space-y-10">
-                        {locations.length > 0 && (
-                            <div className="relative pl-8 group">
-                                <div className="absolute left-0 top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm bg-green-500 ring-4 ring-green-50"></div>
-                                <div className="absolute left-[4.5px] top-6 bottom-[-30px] w-0.5 bg-slate-50"></div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Live</p>
-                                <h4 className="font-black text-slate-900 mb-1 flex items-center gap-2">
-                                    Operationeller Status: Aktiv
-                                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition" />
-                                </h4>
-                                <p className="text-sm font-medium text-slate-500 leading-relaxed">{locations.length} Einheiten befinden sich aktuell im Einsatz.</p>
+                    <div className="space-y-12 flex-1">
+                        {activities.length === 0 && !loading && (
+                            <div className="text-center py-20 opacity-30">
+                                <Activity className="mx-auto mb-4" />
+                                <p className="text-xs font-black uppercase tracking-widest">Keine aktuellen Daten</p>
                             </div>
                         )}
                         {activities.map((item, i) => (
-                            <div key={item.id} className="relative pl-8 group">
+                            <div key={item.id} className="relative pl-10 group">
                                 <div className={cn(
-                                    "absolute left-0 top-1 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm transition-all duration-300 group-hover:scale-150",
+                                    "absolute left-0 top-1 w-3 h-3 rounded-full border-2 border-white shadow-xl transition-all duration-300 group-hover:scale-150",
                                     item.type === "alert" ? "bg-red-500 ring-4 ring-red-50" : item.type === "success" ? "bg-green-500 ring-4 ring-green-50" : "bg-blue-500 ring-4 ring-blue-50"
                                 )}></div>
-                                {(i < activities.length - 1) && <div className="absolute left-[4.5px] top-6 bottom-[-30px] w-0.5 bg-slate-50"></div>}
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{new Date(item.date).toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })}</p>
-                                <h4 className="font-black text-slate-900 mb-1 flex items-center gap-2">
+                                {(i < activities.length - 1) && <div className="absolute left-[5.5px] top-8 bottom-[-40px] w-1 bg-slate-50 rounded-full"></div>}
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">{new Date(item.date).toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })} Uhr</p>
+                                <h4 className="font-black text-slate-900 mb-1 flex items-center gap-2 group-hover:text-blue-600 transition">
                                     {item.title}
-                                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 transition" />
+                                    <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
                                 </h4>
-                                <p className="text-sm font-medium text-slate-500 leading-relaxed">{item.desc}</p>
+                                <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">{item.desc}</p>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-12 p-8 bg-blue-50 rounded-[2rem] border border-blue-100 relative overflow-hidden">
+                    <div className="mt-12 p-8 bg-blue-600 rounded-[2.5rem] shadow-2xl shadow-blue-100 relative overflow-hidden group">
                         <div className="relative z-10">
-                            <h4 className="font-black text-blue-900 mb-2">Wochenübersicht</h4>
-                            <p className="text-xs font-bold text-blue-700/60 leading-relaxed">Ihre Flotteneffizienz ist im Vergleich zur Vorwoche um 14% gestiegen. Gute Arbeit!</p>
+                            <h4 className="font-black text-white mb-2">System Gesundheit</h4>
+                            <p className="text-[10px] font-black text-blue-100/60 uppercase tracking-widest leading-loose">Alle Schnittstellen aktiv. Latenz < 40ms.</p>
                         </div>
-                        <TrendingUp className="absolute bottom-[-20px] right-[-20px] text-blue-600/10" size={100} />
+                        <Activity className="absolute bottom-[-20px] right-[-20px] text-white/10 group-hover:scale-150 transition duration-1000" size={120} />
                     </div>
                 </div>
             </div>
