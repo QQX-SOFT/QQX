@@ -15,7 +15,9 @@ import {
     Loader2,
     Database,
     UploadCloud,
-    X
+    X,
+    Filter,
+    User
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
@@ -29,26 +31,47 @@ type Doc = {
     expiryDate: string | null;
     fileUrl: string;
     driver: {
+        id: string;
         firstName: string;
         lastName: string;
     }
 };
 
+type Driver = {
+    id: string;
+    firstName: string;
+    lastName: string;
+};
+
 export default function DocumentsPage() {
     const [docs, setDocs] = useState<Doc[]>([]);
+    const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadWorkerType, setUploadWorkerType] = useState<"ANGEMELDET" | "SELBSTSTANDIG">("ANGEMELDET");
     const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("ALL");
+
+    // Form state
+    const [uploadData, setUploadData] = useState({
+        driverId: "",
+        type: "",
+        title: "",
+        expiryDate: ""
+    });
 
     useEffect(() => {
-        fetchDocs();
+        fetchData();
     }, []);
 
-    const fetchDocs = async () => {
+    const fetchData = async () => {
         try {
-            const { data } = await api.get("/documents");
-            setDocs(data);
+            const [docsRes, driversRes] = await Promise.all([
+                api.get("/documents"),
+                api.get("/drivers")
+            ]);
+            setDocs(docsRes.data);
+            setDrivers(driversRes.data);
         } catch (e) {
             console.error("Failed to fetch documents", e);
         } finally {
@@ -75,22 +98,46 @@ export default function DocumentsPage() {
 
     const getStatusStyles = (status: string, expiryDate: string | null) => {
         if (expiryDate && new Date(expiryDate) < new Date()) {
-            return { color: "text-red-600", bg: "bg-red-50", icon: AlertTriangle, label: "Abgelaufen" };
+            return { color: "text-red-600", bg: "bg-red-50", icon: AlertTriangle, label: "Abgelaufen", variant: "EXPIRED" };
         }
         if (expiryDate) {
             const warningDays = 30;
             const diff = (new Date(expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24);
             if (diff < warningDays) {
-                return { color: "text-amber-600", bg: "bg-amber-50", icon: AlertTriangle, label: "Läuft bald ab" };
+                return { color: "text-amber-600", bg: "bg-amber-50", icon: AlertTriangle, label: "Läuft bald ab", variant: "WARNING" };
             }
         }
-        return { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle, label: "Gültig" };
+        return { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle, label: "Gültig", variant: "VALID" };
     };
 
-    const filteredDocs = docs.filter(doc =>
-        doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${doc.driver.firstName} ${doc.driver.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredDocs = docs.filter(doc => {
+        const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            `${doc.driver.firstName} ${doc.driver.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+
+        if (statusFilter === "ALL") return matchesSearch;
+
+        const status = getStatusStyles(doc.status, doc.expiryDate);
+        return matchesSearch && status.variant === statusFilter;
+    });
+
+    const handleUpload = async () => {
+        if (!uploadData.driverId || !uploadData.type || !uploadData.title) {
+            alert("Bitte füllen Sie alle Pflichtfelder aus.");
+            return;
+        }
+
+        try {
+            await api.post("/documents", {
+                ...uploadData,
+                fileUrl: "https://example.com/placeholder.pdf" // Placeholder until real upload logic
+            });
+            setShowUploadModal(false);
+            setUploadData({ driverId: "", type: "", title: "", expiryDate: "" });
+            fetchData();
+        } catch (e) {
+            alert("Fehler beim Hochladen");
+        }
+    };
 
     return (
         <div className="space-y-12">
@@ -101,16 +148,12 @@ export default function DocumentsPage() {
                         <div className="p-2 bg-blue-600 rounded-lg text-white">
                             <FileText size={20} />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Compliance</span>
+                        <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Archiv</span>
                     </div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Dokumentenverwaltung</h1>
-                    <p className="text-slate-500 font-medium">Überwachung von Lizenzen, Versicherungen und behördlichen Dokumenten.</p>
+                    <p className="text-slate-500 font-medium font-sans">Offizielle Dokumente und Zertifikate Ihrer Mitarbeiter.</p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-6 py-3 bg-white border border-slate-200 rounded-2xl font-bold text-sm text-slate-600 hover:bg-slate-50 transition flex items-center gap-2">
-                        <Database size={18} />
-                        Archiv
-                    </button>
                     <button
                         onClick={() => setShowUploadModal(true)}
                         className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center gap-2"
@@ -121,107 +164,10 @@ export default function DocumentsPage() {
                 </div>
             </header>
 
-            {/* Upload Modal */}
-            <AnimatePresence>
-                {showUploadModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
-                        >
-                            <button onClick={() => setShowUploadModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
-                                <X size={24} />
-                            </button>
-
-                            <h2 className="text-3xl font-black text-slate-900 mb-8">Dokument hochladen</h2>
-
-                            {/* Type Selector */}
-                            <div className="flex p-1 bg-slate-100 rounded-2xl mb-8">
-                                <button
-                                    onClick={() => setUploadWorkerType("ANGEMELDET")}
-                                    className={cn(
-                                        "flex-1 py-3 rounded-xl text-sm font-black transition-all",
-                                        uploadWorkerType === "ANGEMELDET" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                                    )}
-                                >
-                                    Angestellt
-                                </button>
-                                <button
-                                    onClick={() => setUploadWorkerType("SELBSTSTANDIG")}
-                                    className={cn(
-                                        "flex-1 py-3 rounded-xl text-sm font-black transition-all",
-                                        uploadWorkerType === "SELBSTSTANDIG" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                                    )}
-                                >
-                                    Selbstständig (Sub)
-                                </button>
-                            </div>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Fahrer auswählen</label>
-                                    <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold text-slate-700">
-                                        <option>Fahrer wählen...</option>
-                                        <option>Max Mustermann</option>
-                                    </select>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {workerRequirements[uploadWorkerType].map((req) => (
-                                        <div key={req} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition group cursor-pointer">
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Upload benötigt</span>
-                                                <span className="font-bold text-slate-900">{docTypes[req]}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
-                                    <button className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition">Hochladen starten</button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Gesamtanzahl</p>
-                        <h3 className="text-4xl font-black text-slate-900">{docs.length}</h3>
-                    </div>
-                    <FileText className="absolute bottom-[-20px] right-[-20px] text-slate-50 opacity-10 group-hover:scale-125 transition duration-700" size={140} />
-                </div>
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-2">Läuft bald ab (30T)</p>
-                        <h3 className="text-4xl font-black text-amber-500">
-                            {docs.filter(d => d.expiryDate && (new Date(d.expiryDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24) < 30 && (new Date(d.expiryDate).getTime() > new Date().getTime())).length}
-                        </h3>
-                    </div>
-                    <Clock className="absolute bottom-[-20px] right-[-20px] text-amber-50 opacity-10 group-hover:scale-125 transition duration-700" size={140} />
-                </div>
-                <div className="bg-red-500 p-8 rounded-[2.5rem] shadow-xl shadow-red-100 relative overflow-hidden group">
-                    <div className="relative z-10">
-                        <p className="text-[10px] font-black text-red-100 uppercase tracking-widest mb-2">Ablaufwarnungen</p>
-                        <h3 className="text-4xl font-black text-white">
-                            {docs.filter(d => d.expiryDate && new Date(d.expiryDate) < new Date()).length}
-                        </h3>
-                    </div>
-                    <AlertTriangle className="absolute bottom-[-20px] right-[-20px] text-white/10 group-hover:scale-125 transition duration-700" size={140} />
-                </div>
-            </div>
-
             {/* Main Content */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="relative flex-1 w-full max-w-md">
+                    <div className="relative flex-1 w-full max-w-md font-sans">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             type="text"
@@ -230,6 +176,20 @@ export default function DocumentsPage() {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <Filter size={18} className="text-slate-400" />
+                        <select
+                            className="bg-slate-50 border-none rounded-xl px-4 py-2 text-xs font-black uppercase tracking-widest text-slate-600 outline-none focus:ring-2 focus:ring-blue-500/10 transition cursor-pointer"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                        >
+                            <option value="ALL">Alle Status</option>
+                            <option value="VALID">Gültig</option>
+                            <option value="EXPIRED">Abgelaufen</option>
+                            <option value="WARNING">Läuft bald ab</option>
+                        </select>
                     </div>
                 </div>
 
@@ -276,7 +236,12 @@ export default function DocumentsPage() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
-                                            <span className="font-bold text-slate-700">{doc.driver.firstName} {doc.driver.lastName}</span>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-black text-xs">
+                                                    {doc.driver.firstName[0]}{doc.driver.lastName[0]}
+                                                </div>
+                                                <span className="font-bold text-slate-700">{doc.driver.firstName} {doc.driver.lastName}</span>
+                                            </div>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className={cn(
@@ -298,14 +263,11 @@ export default function DocumentsPage() {
                                         </td>
                                         <td className="px-8 py-6 text-right">
                                             <div className="flex items-center justify-end gap-2">
-                                                <button className="p-2 text-slate-400 hover:text-blue-600 transition">
+                                                <a href={doc.fileUrl} target="_blank" className="p-2 text-slate-400 hover:text-blue-600 transition">
                                                     <Eye size={18} />
-                                                </button>
+                                                </a>
                                                 <button className="p-2 text-slate-400 hover:text-blue-600 transition">
                                                     <Download size={18} />
-                                                </button>
-                                                <button className="p-2 text-slate-400 hover:text-blue-600 transition opacity-0 group-hover:opacity-100">
-                                                    <MoreVertical size={18} />
                                                 </button>
                                             </div>
                                         </td>
@@ -316,6 +278,97 @@ export default function DocumentsPage() {
                     </table>
                 </div>
             </div>
+
+            {/* Upload Modal */}
+            <AnimatePresence>
+                {showUploadModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowUploadModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+
+                            <h2 className="text-3xl font-black text-slate-900 mb-8">Dokument hochladen</h2>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <User size={14} /> Mitarbeiter / Fahrer
+                                    </label>
+                                    <select
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold text-slate-700"
+                                        value={uploadData.driverId}
+                                        onChange={(e) => setUploadData({ ...uploadData, driverId: e.target.value })}
+                                    >
+                                        <option value="">Mitarbeiter auswählen...</option>
+                                        {drivers.map(driver => (
+                                            <option key={driver.id} value={driver.id}>
+                                                {driver.firstName} {driver.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Dokument-Typ</label>
+                                        <select
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                            value={uploadData.type}
+                                            onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
+                                        >
+                                            <option value="">Typ wählen...</option>
+                                            {Object.entries(docTypes).map(([val, label]) => (
+                                                <option key={val} value={val}>{label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 text-red-500 underline">Ablaufdatum (optional)</label>
+                                        <input
+                                            type="date"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                            value={uploadData.expiryDate}
+                                            onChange={(e) => setUploadData({ ...uploadData, expiryDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Titel des Dokuments</label>
+                                    <input
+                                        type="text"
+                                        placeholder="z.B. Führerschein 2024"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
+                                        value={uploadData.title}
+                                        onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="p-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-center hover:border-blue-400 transition group cursor-pointer">
+                                    <UploadCloud className="mx-auto text-slate-300 group-hover:text-blue-500 transition mb-2" size={32} />
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Datei auswählen oder hierher ziehen</p>
+                                </div>
+
+                                <div className="pt-6 flex gap-4">
+                                    <button type="button" onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
+                                    <button
+                                        onClick={handleUpload}
+                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition shadow-xl shadow-blue-200"
+                                    >
+                                        Speichern
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
