@@ -5,11 +5,11 @@
     "scripts": {
         "start": "node dist/index.js",
         "dev": "ts-node-dev --respawn src/index.ts",
-        "build": "tsc && npx prisma generate",
-        "postinstall": "npx prisma generate"
+        "build": "tsc && npx prisma generate"
     },
     "dependencies": {
         "@prisma/client": "^6.19.2",
+        "prisma": "^6.0.0",
         "cors": "^2.8.6",
         "dotenv": "^16.6.1",
         "express": "^4.22.1",
@@ -20,7 +20,6 @@
     },
     "devDependencies": {
         "nodemon": "^3.1.14",
-        "prisma": "^6.0.0",
         "ts-node": "^10.9.2",
         "ts-node-dev": "^2.0.0",
         "typescript": "^5.5.0"

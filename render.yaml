@@ -13,7 +13,7 @@ services:
     region: frankfurt
     plan: free
     rootDir: backend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && chmod +x ./node_modules/.bin/prisma && npm run build
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
