@@ -17,11 +17,16 @@ import {
     X,
     Calendar,
     Briefcase,
-    ShieldCheck
+    ShieldCheck,
+    Eye,
+    CheckCircle,
+    AlertTriangle,
+    Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 interface Driver {
     id: string;
@@ -36,12 +41,26 @@ interface Driver {
     status: string;
 }
 
+interface Document {
+    id: string;
+    type: string;
+    title: string;
+    status: string;
+    expiryDate: string | null;
+    fileUrl: string;
+}
+
 export default function DriversPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [creating, setCreating] = useState(false);
+
+    // Document View State
+    const [viewingDocs, setViewingDocs] = useState<Driver | null>(null);
+    const [docs, setDocs] = useState<Document[]>([]);
+    const [loadingDocs, setLoadingDocs] = useState(false);
 
     const [newDriver, setNewDriver] = useState({
         firstName: "",
@@ -82,6 +101,24 @@ export default function DriversPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const fetchDriverDocs = async (driver: Driver) => {
+        setViewingDocs(driver);
+        setLoadingDocs(true);
+        try {
+            const { data } = await api.get(`/documents/driver/${driver.id}`);
+            setDocs(data);
+        } catch (e) {
+            console.error("Failed to fetch documents", e);
+        } finally {
+            setLoadingDocs(false);
+        }
+    };
+
+    const handleDownloadReport = async (driver: Driver) => {
+        alert(`Bericht für ${driver.firstName} ${driver.lastName} wird generiert...\n(In einer echten App würde hier ein PDF-Download starten)`);
+        // In reality: window.open(`${api.defaults.baseURL}/reports/driver/${driver.id}?start=...&end=...`)
     };
 
     const handleCreateDriver = async (e: React.FormEvent) => {
@@ -208,21 +245,120 @@ export default function DriversPage() {
                         </div>
 
                         <div className="flex items-center gap-3 justify-end">
-                            <button className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition">
+                            <button
+                                onClick={() => fetchDriverDocs(driver)}
+                                className="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition"
+                                title="Dokumente ansehen"
+                            >
                                 <FileText size={20} />
                             </button>
-                            <button className="p-3 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition">
+                            <button
+                                onClick={() => handleDownloadReport(driver)}
+                                className="p-3 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition"
+                                title="Bericht exportieren"
+                            >
                                 <Download size={20} />
                             </button>
                             <div className="h-8 w-px bg-slate-100 mx-2" />
-                            <button className="px-6 py-3 bg-slate-50 text-slate-900 rounded-2xl font-black text-sm flex items-center gap-2 hover:bg-slate-900 hover:text-white transition group/btn">
+                            <Link
+                                href={`/admin/drivers/${driver.id}`}
+                                className="px-6 py-3 bg-slate-50 text-slate-900 rounded-2xl font-black text-sm flex items-center gap-2 hover:bg-slate-900 hover:text-white transition group/btn"
+                            >
                                 Profil
                                 <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform" />
-                            </button>
+                            </Link>
                         </div>
                     </motion.div>
                 ))}
             </div>
+
+            {/* Document Modal */}
+            <AnimatePresence>
+                {viewingDocs && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setViewingDocs(null)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+
+                            <div className="mb-8">
+                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2 block">Unterlagen</span>
+                                <h2 className="text-3xl font-black text-slate-900">{viewingDocs.firstName} {viewingDocs.lastName}</h2>
+                            </div>
+
+                            <div className="space-y-4">
+                                {loadingDocs ? (
+                                    <div className="py-12 text-center">
+                                        <Loader2 className="animate-spin text-blue-500 mx-auto" size={32} />
+                                    </div>
+                                ) : docs.length === 0 ? (
+                                    <div className="py-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                                        <AlertTriangle className="mx-auto text-slate-300 mb-2" size={32} />
+                                        <p className="text-slate-500 font-bold text-sm">Noch keine Dokumente hochgeladen</p>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {docs.map((doc) => (
+                                            <div key={doc.id} className="p-5 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-between hover:border-blue-200 transition group">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100">
+                                                        <FileText size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-black text-slate-900 mb-0.5">{doc.title}</p>
+                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                            {doc.expiryDate ? (
+                                                                <span className="flex items-center gap-1">
+                                                                    <Clock size={10} />
+                                                                    Exp: {new Date(doc.expiryDate).toLocaleDateString('de-DE')}
+                                                                </span>
+                                                            ) : "Unbefristet"}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={cn(
+                                                        "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                                                        doc.status === "VALID" ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
+                                                    )}>
+                                                        {doc.status}
+                                                    </span>
+                                                    <a href={doc.fileUrl} target="_blank" className="p-2 bg-white rounded-xl text-slate-400 hover:text-blue-600 shadow-sm border border-slate-50 transition border-none">
+                                                        <Eye size={18} />
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div className="pt-8 border-t border-slate-50">
+                                    <p className="text-xs font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Gesetzlich erforderlich:</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {docRequirements[viewingDocs.employmentType].map((req: string) => {
+                                            const hasDoc = docs.some(d => d.title.includes(req) || d.type === req);
+                                            return (
+                                                <div key={req} className={cn(
+                                                    "px-4 py-3 rounded-2xl border text-[11px] font-bold flex items-center gap-3 transition",
+                                                    hasDoc ? "bg-green-50/50 border-green-100 text-green-700" : "bg-red-50/50 border-red-100 text-red-700"
+                                                )}>
+                                                    {hasDoc ? <CheckCircle size={14} /> : <AlertTriangle size={14} />}
+                                                    {req}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Add Driver Modal */}
             <AnimatePresence>

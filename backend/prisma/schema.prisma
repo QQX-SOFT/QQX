@@ -68,6 +68,7 @@ model Driver {
   firstName     String
   lastName      String
   phone         String?
+  birthday      DateTime?
   
   type          DriverType @default(EMPLOYED) // Angestellt / Selbstständig
   status        DriverStatus @default(INACTIVE)
