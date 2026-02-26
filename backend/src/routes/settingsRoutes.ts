@@ -50,7 +50,7 @@ router.patch('/', async (req: TenantRequest, res: Response) => {
         });
         res.json(tenant);
     } catch (error) {
-        res.status(500).json({ error: 'Name konnte nicht aktualisiert werden' });
+        res.status(500).json({ error: 'Einstellungen konnten nicht aktualisiert werden' });
     }
 });
 
