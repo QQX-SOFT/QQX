@@ -8,9 +8,13 @@ export interface TenantRequest extends express.Request {
 
 export const tenantMiddleware = async (req: TenantRequest, res: Response, next: NextFunction) => {
     const subdomain = req.headers['x-tenant-subdomain'] as string;
+    const path = req.originalUrl || req.path;
 
-    // Skip tenant check for tenant creation/listing
-    if (!subdomain || req.path.startsWith('/tenants')) {
+    console.log(`[TenantMiddleware] Path: ${path}, Subdomain: ${subdomain}`);
+
+    // Skip tenant check for tenant creation/listing or health checks
+    if (path.includes('/tenants') || path.includes('/health') || !subdomain) {
+        console.log(`[TenantMiddleware] Bypassing check for ${path}`);
         return next();
     }
 
@@ -20,7 +24,11 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
         });
 
         if (!tenant) {
-            return res.status(404).json({ error: 'Mandant (Tenant) nicht gefunden.' });
+            console.warn(`[TenantMiddleware] Tenant NOT FOUND for subdomain: ${subdomain}`);
+            return res.status(404).json({
+                error: 'Mandant (Tenant) nicht gefunden.',
+                debug: { subdomain, path }
+            });
         }
 
         // Attach tenantId and subdomain to request for use in routes
