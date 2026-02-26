@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
     FileText,
-    ShieldTerm,
+    ShieldAlert,
     AlertTriangle,
     CheckCircle,
     Clock,
@@ -37,6 +37,9 @@ type Doc = {
 export default function DocumentsPage() {
     const [docs, setDocs] = useState<Doc[]>([]);
     const [loading, setLoading] = useState(true);
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [uploadWorkerType, setUploadWorkerType] = useState<"ANGEMELDET" | "SELBSTSTANDIG">("ANGEMELDET");
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         fetchDocs();
@@ -54,11 +57,20 @@ export default function DocumentsPage() {
     };
 
     const docTypes: Record<string, string> = {
-        LICENSE: "Führerschein",
-        INSURANCE: "Versicherung",
-        TAX_ID: "Steuer-ID",
-        BUSINESS_REG: "Gewerbeanmeldung",
+        IDENTITY: "Lichtbildausweis/Reisepass",
+        LICENSE: "Führerschein (Klasse B)",
+        MELDEZETTEL: "Meldezettel",
+        GISA_EXTRACT: "GISA-Auszug (Gewerbe)",
+        INSURANCE: "Haftpflichtversicherung",
+        SVS_CONFIRMATION: "SVS Bestätigung (Selbstständig)",
+        OGK_ANMELDUNG: "ÖGK Anmeldung (Angestellt)",
+        TAX_ID: "UID / Steuer-ID",
         OTHER: "Sonstiges"
+    };
+
+    const workerRequirements = {
+        ANGEMELDET: ["IDENTITY", "LICENSE", "MELDEZETTEL", "OGK_ANMELDUNG"],
+        SELBSTSTANDIG: ["IDENTITY", "LICENSE", "MELDEZETTEL", "GISA_EXTRACT", "SVS_CONFIRMATION", "TAX_ID"]
     };
 
     const getStatusStyles = (status: string, expiryDate: string | null) => {
@@ -74,6 +86,11 @@ export default function DocumentsPage() {
         }
         return { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle, label: "Gültig" };
     };
+
+    const filteredDocs = docs.filter(doc =>
+        doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${doc.driver.firstName} ${doc.driver.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return (
         <div className="space-y-12">
@@ -94,12 +111,83 @@ export default function DocumentsPage() {
                         <Database size={18} />
                         Archiv
                     </button>
-                    <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center gap-2">
+                    <button
+                        onClick={() => setShowUploadModal(true)}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center gap-2"
+                    >
                         <UploadCloud size={18} />
                         Dokument hochladen
                     </button>
                 </div>
             </header>
+
+            {/* Upload Modal */}
+            <AnimatePresence>
+                {showUploadModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowUploadModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+
+                            <h2 className="text-3xl font-black text-slate-900 mb-8">Dokument hochladen</h2>
+
+                            {/* Type Selector */}
+                            <div className="flex p-1 bg-slate-100 rounded-2xl mb-8">
+                                <button
+                                    onClick={() => setUploadWorkerType("ANGEMELDET")}
+                                    className={cn(
+                                        "flex-1 py-3 rounded-xl text-sm font-black transition-all",
+                                        uploadWorkerType === "ANGEMELDET" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                    )}
+                                >
+                                    Angestellt
+                                </button>
+                                <button
+                                    onClick={() => setUploadWorkerType("SELBSTSTANDIG")}
+                                    className={cn(
+                                        "flex-1 py-3 rounded-xl text-sm font-black transition-all",
+                                        uploadWorkerType === "SELBSTSTANDIG" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                    )}
+                                >
+                                    Selbstständig (Sub)
+                                </button>
+                            </div>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Fahrer auswählen</label>
+                                    <select className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold text-slate-700">
+                                        <option>Fahrer wählen...</option>
+                                        <option>Max Mustermann</option>
+                                    </select>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {workerRequirements[uploadWorkerType].map((req) => (
+                                        <div key={req} className="p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:border-blue-200 transition group cursor-pointer">
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">Upload benötigt</span>
+                                                <span className="font-bold text-slate-900">{docTypes[req]}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="pt-6 flex gap-4">
+                                    <button type="button" onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
+                                    <button className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition">Hochladen starten</button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -139,6 +227,8 @@ export default function DocumentsPage() {
                             type="text"
                             placeholder="Nach Fahrer oder Dokument suchen..."
                             className="w-full pl-12 pr-6 py-3 bg-slate-50 border-none rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/10 transition"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
                 </div>
@@ -161,13 +251,13 @@ export default function DocumentsPage() {
                                         <Loader2 className="animate-spin text-blue-500 mx-auto" size={40} />
                                     </td>
                                 </tr>
-                            ) : docs.length === 0 ? (
+                            ) : filteredDocs.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest">
                                         Keine Dokumente gefunden
                                     </td>
                                 </tr>
-                            ) : docs.map((doc, i) => {
+                            ) : filteredDocs.map((doc, i) => {
                                 const status = getStatusStyles(doc.status, doc.expiryDate);
                                 const StatusIcon = status.icon;
 
