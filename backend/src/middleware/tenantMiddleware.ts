@@ -9,8 +9,8 @@ export interface TenantRequest extends express.Request {
 export const tenantMiddleware = async (req: TenantRequest, res: Response, next: NextFunction) => {
     const subdomain = req.headers['x-tenant-subdomain'] as string;
 
-    if (!subdomain) {
-        // If no subdomain, we might be in a public area or super admin area
+    // Skip tenant check for tenant creation/listing
+    if (!subdomain || req.path.startsWith('/tenants')) {
         return next();
     }
 
