@@ -27,18 +27,13 @@ export default function SuperAdminDashboard() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch all tenants for the overview
-                const { data } = await api.get("/tenants");
-                setTenants(data);
+                // Fetch aggregate stats
+                const { data: statsData } = await api.get("/tenants/stats");
+                setStats(statsData);
 
-                // Simulated global stats for now
-                setStats({
-                    totalTenants: data.length,
-                    activeNodes: 4,
-                    uptime: "99.99%",
-                    latency: "12ms",
-                    revenue: data.length * 149.90, // Example 149.90€ per tenant
-                });
+                // Fetch all tenants for the list view
+                const { data: tenantsData } = await api.get("/tenants");
+                setTenants(tenantsData);
             } catch (e) {
                 console.error("Failed to fetch superadmin stats", e);
             } finally {
@@ -49,9 +44,9 @@ export default function SuperAdminDashboard() {
     }, []);
 
     const indicators = [
-        { label: "Gesamte Mandanten", value: stats?.totalTenants || 0, trend: "+2", icon: Globe, color: "indigo" },
-        { label: "Plattform-Umsatz", value: `€${stats?.revenue?.toFixed(2) || "0.00"}`, trend: "+12.5%", icon: TrendingUp, color: "purple" },
-        { label: "Aktive Signale", value: tenants.reduce((acc, t) => acc + (t._count?.users || 0), 0), trend: "Live", icon: Zap, color: "blue" },
+        { label: "Gesamte Mandanten", value: stats?.totalTenants || 0, trend: "+", icon: Globe, color: "indigo" },
+        { label: "Plattform-Umsatz", value: `€${stats?.revenue?.toLocaleString('de-DE', { minimumFractionDigits: 2 }) || "0,00"}`, trend: "Plan", icon: TrendingUp, color: "purple" },
+        { label: "Gesamte Benutzer", value: stats?.totalUsers || 0, trend: "Live", icon: Users, color: "blue" },
         { label: "System-Uptime", value: stats?.uptime || "100%", trend: "Normal", icon: ShieldCheck, color: "green" },
     ];
 

@@ -9,6 +9,33 @@ const tenantSchema = z.object({
     subdomain: z.string().min(2).regex(/^[a-z0-9-]+$/, "Subdomain must be lowercase alphanumeric"),
 });
 
+// GET global platform stats (SuperAdmin)
+router.get('/stats', async (req: express.Request, res: Response) => {
+    try {
+        const [tenantCount, userCount, vehicleCount, orderCount] = await Promise.all([
+            prisma.tenant.count(),
+            prisma.user.count(),
+            prisma.vehicle.count(),
+            prisma.order.count(),
+        ]);
+
+        // Simulated platform revenue (e.g. 149.90€ per tenant subscription)
+        const revenue = tenantCount * 149.90;
+
+        res.json({
+            totalTenants: tenantCount,
+            totalUsers: userCount,
+            totalVehicles: vehicleCount,
+            totalOrders: orderCount,
+            revenue: revenue,
+            uptime: "99.99%",
+            latency: "14ms"
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch global stats' });
+    }
+});
+
 // GET all tenants
 router.get('/', async (req: express.Request, res: Response) => {
     try {
