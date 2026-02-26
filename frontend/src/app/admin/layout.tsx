@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -19,6 +20,7 @@ import {
     FileText,
     MapPin,
     Calendar,
+    X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,14 +51,39 @@ const analyticLinks = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Close sidebar when route changes
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [pathname]);
 
     return (
         <div className="flex min-h-screen bg-background text-foreground transition-colors duration-300">
+            {/* Mobile Overlay */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[50] lg:hidden transition-opacity duration-300"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-72 bg-card border-r border-slate-200 dark:border-slate-800 flex flex-col hidden lg:flex transition-colors duration-300">
-                <div className="p-8 pb-12 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-400/20">Q</div>
-                    <span className="text-xl font-black tracking-tight text-foreground">QQX CONTROL</span>
+            <aside className={cn(
+                "fixed inset-y-0 left-0 w-72 bg-card border-r border-slate-200 dark:border-slate-800 flex flex-col z-[60] lg:relative lg:flex transition-transform duration-300 ease-in-out",
+                isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+            )}>
+                <div className="p-8 pb-12 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-400/20">Q</div>
+                        <span className="text-xl font-black tracking-tight text-foreground">QQX CONTROL</span>
+                    </div>
+                    <button
+                        className="lg:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition"
+                        onClick={() => setIsSidebarOpen(false)}
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide">
@@ -110,7 +137,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {/* Top Header */}
                 <header className="h-20 bg-card/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300">
                     <div className="flex items-center gap-4 lg:hidden">
-                        <button className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition">
+                        <button
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+                            onClick={() => setIsSidebarOpen(true)}
+                        >
                             <Menu size={24} />
                         </button>
                         <span className="font-black text-xl">QQX</span>
