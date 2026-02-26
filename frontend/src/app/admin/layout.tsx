@@ -49,12 +49,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
 
     return (
-        <div className="flex min-h-screen bg-[#F8FAFC]">
+        <div className="flex min-h-screen bg-background">
             {/* Sidebar */}
             <aside className="w-72 bg-white border-r border-slate-200 flex flex-col hidden lg:flex">
                 <div className="p-8 pb-12 flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-100">Q</div>
-                    <span className="text-xl font-black tracking-tight text-slate-900">QQX CONTROL</span>
+                    <span className="text-xl font-black tracking-tight text-foreground">QQX CONTROL</span>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide">
