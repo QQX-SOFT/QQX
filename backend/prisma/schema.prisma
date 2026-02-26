@@ -22,6 +22,7 @@ model Tenant {
   autoAssignDrivers    Boolean @default(false)
   currency             String  @default("EUR")
   timezone             String  @default("Europe/Berlin")
+  isActive             Boolean  @default(true)
 
   users      User[]
   drivers    Driver[]

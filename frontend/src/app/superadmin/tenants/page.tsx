@@ -26,6 +26,7 @@ export default function TenantManagement() {
     const [tenants, setTenants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
+    const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newTenant, setNewTenant] = useState({ name: "", subdomain: "" });
     const [saving, setSaving] = useState(false);
@@ -60,10 +61,37 @@ export default function TenantManagement() {
         }
     };
 
-    const filteredTenants = tenants.filter(t =>
-        t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.subdomain.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Möchten Sie den Mandanten "${name}" wirklich unwiderruflich löschen?`)) return;
+        try {
+            await api.delete(`/tenants/${id}`);
+            fetchTenants();
+        } catch (e) {
+            alert("Fehler beim Löschen");
+        }
+    };
+
+    const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+        try {
+            await api.patch(`/tenants/${id}`, { isActive: !currentStatus });
+            fetchTenants();
+        } catch (e) {
+            alert("Fehler beim Aktualisieren");
+        }
+    };
+
+    const handleOpenExternal = (subdomain: string) => {
+        const url = `https://${subdomain}.qqx.de`;
+        window.open(url, "_blank");
+    };
+
+    const filteredTenants = tenants.filter(t => {
+        const matchesSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.subdomain.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesStatus = filterStatus === "all" ||
+            (filterStatus === "active" ? t.isActive : !t.isActive);
+        return matchesSearch && matchesStatus;
+    });
 
     return (
         <div className="space-y-12 pb-20">
@@ -88,16 +116,31 @@ export default function TenantManagement() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition" size={18} />
                     <input
                         type="text"
-                        placeholder="Name veya Subdomain ara..."
+                        placeholder="Name oder Subdomain suchen..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-12 pr-6 py-4 bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-2xl text-sm font-bold text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
                     />
                 </div>
                 <div className="flex gap-3 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide text-xs font-black uppercase tracking-widest">
-                    <button className="px-6 py-3 bg-indigo-600 text-white rounded-xl shadow-md">Alle ({tenants.length})</button>
-                    <button className="px-6 py-3 bg-white dark:bg-[#131720] text-slate-400 dark:text-slate-500 rounded-xl border border-slate-100 dark:border-white/5 hover:border-indigo-500 transition">Aktiv</button>
-                    <button className="px-6 py-3 bg-white dark:bg-[#131720] text-slate-400 dark:text-slate-500 rounded-xl border border-slate-100 dark:border-white/5 hover:border-indigo-500 transition">Inaktiv</button>
+                    <button
+                        onClick={() => setFilterStatus("all")}
+                        className={cn("px-6 py-3 rounded-xl transition shadow-md", filterStatus === "all" ? "bg-indigo-600 text-white" : "bg-white dark:bg-[#131720] text-slate-400")}
+                    >
+                        Alle ({tenants.length})
+                    </button>
+                    <button
+                        onClick={() => setFilterStatus("active")}
+                        className={cn("px-6 py-3 rounded-xl transition border border-slate-100 dark:border-white/5", filterStatus === "active" ? "bg-indigo-600 text-white shadow-md" : "bg-white dark:bg-[#131720] text-slate-400")}
+                    >
+                        Aktiv ({tenants.filter(t => t.isActive).length})
+                    </button>
+                    <button
+                        onClick={() => setFilterStatus("inactive")}
+                        className={cn("px-6 py-3 rounded-xl transition border border-slate-100 dark:border-white/5", filterStatus === "inactive" ? "bg-indigo-600 text-white shadow-md" : "bg-white dark:bg-[#131720] text-slate-400")}
+                    >
+                        Inaktiv ({tenants.filter(t => !t.isActive).length})
+                    </button>
                 </div>
             </div>
 
@@ -158,17 +201,41 @@ export default function TenantManagement() {
                                         </div>
                                     </td>
                                     <td className="px-10 py-8">
-                                        <div className="flex items-center gap-2 text-green-500 font-black text-[10px] uppercase tracking-widest">
-                                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                                            Aktiv
+                                        <div className={cn(
+                                            "flex items-center gap-2 font-black text-[10px] uppercase tracking-widest",
+                                            t.isActive ? "text-green-500" : "text-slate-400"
+                                        )}>
+                                            <span className={cn(
+                                                "w-2 h-2 rounded-full",
+                                                t.isActive ? "bg-green-500 animate-pulse" : "bg-slate-400"
+                                            )} />
+                                            {t.isActive ? "Aktiv" : "Inaktiv"}
                                         </div>
                                     </td>
                                     <td className="px-10 py-8 text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            <button className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition duration-300">
+                                            <button
+                                                onClick={() => handleOpenExternal(t.subdomain)}
+                                                className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl transition duration-300"
+                                            >
+                                                <LayoutDashboard size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleToggleStatus(t.id, t.isActive)}
+                                                title={t.isActive ? "Deaktivieren" : "Aktivieren"}
+                                                className={cn(
+                                                    "p-3 rounded-xl transition duration-300",
+                                                    t.isActive
+                                                        ? "bg-slate-50 dark:bg-white/5 hover:bg-amber-50 dark:hover:bg-amber-500/10 text-slate-400 hover:text-amber-600"
+                                                        : "bg-slate-50 dark:bg-white/5 hover:bg-green-50 dark:hover:bg-green-500/10 text-slate-400 hover:text-green-600"
+                                                )}
+                                            >
                                                 <Settings size={18} />
                                             </button>
-                                            <button className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-600 rounded-xl transition duration-300">
+                                            <button
+                                                onClick={() => handleDelete(t.id, t.name)}
+                                                className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-600 rounded-xl transition duration-300"
+                                            >
                                                 <Trash2 size={18} />
                                             </button>
                                         </div>
@@ -199,13 +266,13 @@ export default function TenantManagement() {
                             <form onSubmit={handleCreate} className="space-y-8">
                                 <div className="space-y-6">
                                     <div>
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">Unternehmen Name</label>
+                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">Unternehmensname</label>
                                         <div className="relative group">
                                             <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition" size={18} />
                                             <input
                                                 type="text"
                                                 required
-                                                placeholder="Örn: QQX Logistics GmbH"
+                                                placeholder="Bsp: QQX Logistics GmbH"
                                                 value={newTenant.name}
                                                 onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
                                                 className="w-full pl-16 pr-8 py-5 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl text-slate-900 dark:text-white font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
@@ -220,7 +287,7 @@ export default function TenantManagement() {
                                             <input
                                                 type="text"
                                                 required
-                                                placeholder="Örn: mein-logistik"
+                                                placeholder="Bsp: mein-logistik"
                                                 value={newTenant.subdomain}
                                                 onChange={(e) => setNewTenant({ ...newTenant, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
                                                 className="w-full pl-16 pr-32 py-5 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl text-slate-900 dark:text-white font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
@@ -229,7 +296,7 @@ export default function TenantManagement() {
                                                 .qqx.de
                                             </div>
                                         </div>
-                                        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Must be unique and lowercase alphanumeric.</p>
+                                        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Muss eindeutig sein und nur Kleinbuchstaben/Zahlen enthalten.</p>
                                     </div>
                                 </div>
 

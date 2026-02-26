@@ -79,4 +79,31 @@ router.post('/', async (req: express.Request, res: Response) => {
     }
 });
 
+// PATCH update tenant (SuperAdmin)
+router.patch('/:id', async (req: express.Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const tenant = await prisma.tenant.update({
+            where: { id },
+            data: req.body
+        });
+        res.json(tenant);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update tenant' });
+    }
+});
+
+// DELETE tenant (SuperAdmin)
+router.delete('/:id', async (req: express.Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        await prisma.tenant.delete({
+            where: { id }
+        });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete tenant' });
+    }
+});
+
 export default router;
