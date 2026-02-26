@@ -24,7 +24,10 @@ import {
     Clock,
     Building2,
     Hash,
-    Banknote
+    Banknote,
+    Trash2,
+    Power,
+    PowerOff
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -126,6 +129,31 @@ export default function DriversPage() {
         }
     };
 
+    const handleToggleStatus = async (driver: Driver) => {
+        const newStatus = driver.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+        try {
+            await api.patch(`/drivers/${driver.id}/status`, { status: newStatus });
+            fetchDrivers();
+        } catch (error) {
+            alert("Fehler beim Aktualisieren des Status");
+        }
+    };
+
+    const handleDeleteDriver = async (driver: Driver) => {
+        if (driver.status === "ACTIVE") {
+            alert("Aktive Fahrer können nicht gelöscht werden.");
+            return;
+        }
+        if (!confirm(`Möchtest du ${driver.firstName} ${driver.lastName} wirklich löschen?`)) return;
+
+        try {
+            await api.delete(`/drivers/${driver.id}`);
+            fetchDrivers();
+        } catch (error: any) {
+            alert(error.response?.data?.error || "Fehler beim Löschen");
+        }
+    };
+
     const handleDownloadReport = async (driver: Driver) => {
         alert(`Bericht für ${driver.firstName} ${driver.lastName} wird generiert...\n(In einer echten App würde hier ein PDF-Download starten)`);
     };
@@ -134,10 +162,8 @@ export default function DriversPage() {
         e.preventDefault();
         setCreating(true);
         try {
-            // Mapping frontend types to backend Prisma types
             const payload = {
                 ...newDriver,
-                // The backend route handles the mapping of employmentType to Prisma enum
             };
             await api.post("/drivers", payload);
             setShowAddModal(false);
@@ -247,10 +273,16 @@ export default function DriversPage() {
                         <div className="grid grid-cols-3 gap-8 flex-1">
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
-                                <div className="flex items-center gap-1.5 font-black text-green-500 text-sm uppercase tracking-tighter">
-                                    <ShieldCheck size={14} />
-                                    {driver.status}
-                                </div>
+                                <button
+                                    onClick={() => handleToggleStatus(driver)}
+                                    className={cn(
+                                        "flex items-center gap-1.5 font-black text-sm uppercase tracking-tighter transition-colors",
+                                        driver.status === "ACTIVE" ? "text-green-500 hover:text-amber-500" : "text-slate-300 hover:text-green-500"
+                                    )}
+                                >
+                                    {driver.status === "ACTIVE" ? <ShieldCheck size={14} /> : <Clock size={14} />}
+                                    {driver.status === "ACTIVE" ? "Aktiv" : "Passiv"}
+                                </button>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Telefon</p>
@@ -280,6 +312,17 @@ export default function DriversPage() {
                             >
                                 <Download size={20} />
                             </button>
+
+                            {driver.status !== "ACTIVE" && (
+                                <button
+                                    onClick={() => handleDeleteDriver(driver)}
+                                    className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition"
+                                    title="Löschen"
+                                >
+                                    <Trash2 size={20} />
+                                </button>
+                            )}
+
                             <div className="h-8 w-px bg-slate-100 mx-2" />
                             <Link
                                 href={`/admin/drivers/${driver.id}`}

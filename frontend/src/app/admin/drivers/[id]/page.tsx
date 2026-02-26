@@ -23,7 +23,9 @@ import {
     Upload,
     Building2,
     Hash,
-    Banknote
+    Banknote,
+    Power,
+    PowerOff
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
@@ -83,12 +85,21 @@ export default function DriverProfilePage() {
         }
     };
 
+    const handleToggleStatus = async () => {
+        if (!driver) return;
+        const newStatus = driver.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+        try {
+            await api.patch(`/drivers/${driver.id}/status`, { status: newStatus });
+            fetchDriverDetails();
+        } catch (error) {
+            alert("Fehler beim Aktualisieren des Status");
+        }
+    };
+
     const handleUploadDoc = async (e: React.FormEvent) => {
         e.preventDefault();
         setUploading(true);
         try {
-            // In a real app, you'd upload to S3/Cloudinary first. 
-            // Here we use a placeholder URL if empty.
             const docData = {
                 ...newDoc,
                 driverId: params.id,
@@ -142,14 +153,31 @@ export default function DriverProfilePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Profile Info */}
                 <div className="lg:col-span-1 space-y-8">
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-blue-50/20 text-center">
+                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-blue-50/20 text-center relative overflow-hidden">
+                        {/* Status Toggle Button */}
+                        <button
+                            onClick={handleToggleStatus}
+                            className={cn(
+                                "absolute top-6 right-6 p-2 rounded-xl border transition-all",
+                                driver.status === "ACTIVE"
+                                    ? "bg-green-50 text-green-600 border-green-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-100"
+                                    : "bg-slate-50 text-slate-400 border-slate-100 hover:bg-green-50 hover:text-green-600 hover:border-green-100"
+                            )}
+                            title={driver.status === "ACTIVE" ? "Auf Passiv setzen" : "Auf Aktiv setzen"}
+                        >
+                            {driver.status === "ACTIVE" ? <Power size={20} /> : <PowerOff size={20} />}
+                        </button>
+
                         <div className="w-24 h-24 bg-blue-600 rounded-[2rem] mx-auto flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-100 mb-6">
                             {driver.firstName[0]}{driver.lastName[0]}
                         </div>
                         <h2 className="text-2xl font-black text-slate-900">{driver.firstName} {driver.lastName}</h2>
-                        <div className="mt-2 inline-flex items-center gap-2 px-4 py-1.5 bg-green-50 text-green-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                        <div className={cn(
+                            "mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
+                            driver.status === "ACTIVE" ? "bg-green-50 text-green-600" : "bg-slate-100 text-slate-400"
+                        )}>
                             <ShieldCheck size={12} />
-                            Status: {driver.status}
+                            Status: {driver.status === "ACTIVE" ? "Aktiv" : "Passiv"}
                         </div>
 
                         <div className="mt-8 space-y-4 text-left">
@@ -333,9 +361,7 @@ export default function DriverProfilePage() {
                             <button onClick={() => setShowUploadModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
                                 <X size={24} />
                             </button>
-
                             <h2 className="text-2xl font-black text-slate-900 mb-8">Dokument hochladen</h2>
-
                             <form onSubmit={handleUploadDoc} className="space-y-6">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Dokument-Typ</label>
@@ -351,7 +377,6 @@ export default function DriverProfilePage() {
                                         <option value="OTHER">Sonstiges</option>
                                     </select>
                                 </div>
-
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Bezeichnung / Titel</label>
                                     <input
@@ -362,7 +387,6 @@ export default function DriverProfilePage() {
                                         onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
                                     />
                                 </div>
-
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Ablaufdatum (optional)</label>
                                     <input
@@ -372,13 +396,11 @@ export default function DriverProfilePage() {
                                         onChange={(e) => setNewDoc({ ...newDoc, expiryDate: e.target.value })}
                                     />
                                 </div>
-
                                 <div className="p-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-center hover:border-blue-400 transition-colors group cursor-pointer">
                                     <Upload className="mx-auto text-slate-300 group-hover:text-blue-500 transition-colors mb-2" size={32} />
                                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Datei auswählen oder hierher ziehen</p>
                                     <p className="text-[10px] text-slate-300 mt-2">PDF, JPG, PNG (Max. 10MB)</p>
                                 </div>
-
                                 <div className="pt-4 flex gap-4">
                                     <button type="button" onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
                                     <button

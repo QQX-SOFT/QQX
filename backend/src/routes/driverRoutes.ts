@@ -130,4 +130,55 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// PATCH update driver status
+router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+    const { status } = req.body; // Expect ACTIVE or INACTIVE
+
+    if (!tenantId) return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+
+    try {
+        const driver = await prisma.driver.updateMany({
+            where: { id, tenantId },
+            data: { status }
+        });
+
+        if (driver.count === 0) return res.status(404).json({ error: 'Fahrer nicht gefunden' });
+
+        res.json({ message: 'Status aktualisiert' });
+    } catch (error) {
+        res.status(500).json({ error: 'Status konnte nicht aktualisiert werden' });
+    }
+});
+
+// DELETE driver (only if inactive)
+router.delete('/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+
+    if (!tenantId) return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+
+    try {
+        const driver = await prisma.driver.findFirst({
+            where: { id, tenantId }
+        });
+
+        if (!driver) return res.status(404).json({ error: 'Fahrer nicht gefunden' });
+
+        if (driver.status === 'ACTIVE') {
+            return res.status(400).json({ error: 'Aktive Fahrer können nicht gelöscht werden. Bitte zuerst auf Passiv setzen.' });
+        }
+
+        await prisma.driver.delete({
+            where: { id }
+        });
+
+        res.json({ message: 'Fahrer erfolgreich gelöscht' });
+    } catch (error) {
+        console.error("Delete driver error:", error);
+        res.status(500).json({ error: 'Fahrer konnte nicht gelöscht werden' });
+    }
+});
+
 export default router;
