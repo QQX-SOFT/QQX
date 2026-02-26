@@ -5,79 +5,72 @@ import { Truck, Rocket, ChevronRight } from "lucide-react";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
-      {/* Animated Background Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-600/10 blur-[120px] rounded-full" />
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 relative overflow-hidden font-sans">
 
-      {/* Grid Pattern */}
-      <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-
-      <header className="relative z-10 text-center space-y-8 max-w-3xl">
+      <header className="relative z-10 text-center space-y-12 max-w-3xl">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-20 h-20 bg-blue-600 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl shadow-blue-500/20 rotate-12 mb-12"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-blue-500/5 mb-8"
         >
-          <Truck className="text-white" size={40} />
+          <Truck className="text-white" size={48} />
         </motion.div>
 
-        <div className="space-y-4">
+        <div className="space-y-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/10 border border-blue-500/20 rounded-full text-blue-400 text-[10px] font-black uppercase tracking-[0.3em]"
+            className="inline-flex items-center gap-2 px-5 py-2 bg-slate-50 border border-slate-100 rounded-full text-blue-600 text-[10px] font-black uppercase tracking-[0.3em]"
           >
-            <Rocket size={14} className="animate-bounce" />
+            <Rocket size={14} />
             Next Gen Fleet Architecture
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9]"
+            className="text-7xl md:text-9xl font-black text-slate-900 tracking-tighter leading-[0.85]"
           >
-            QQX <br /> <span className="text-slate-500">COMING SOON.</span>
+            QQX <br /> <span className="text-slate-200">COMING SOON.</span>
           </motion.h1>
         </div>
 
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl mx-auto"
+          className="text-slate-500 text-lg md:text-2xl font-medium leading-relaxed max-w-xl mx-auto"
         >
-          Die Zukunft des intelligenten Flottenmanagements wird gerade geschmiedet.
-          Wir transformieren Logistik in ein datengesteuertes Erlebnis.
+          Die Zukunft des intelligenten Flottenmanagements.
+          Minimalistisch, effizient und radikal einfach.
         </motion.p>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="pt-12 flex flex-col md:flex-row items-center justify-center gap-4"
+          className="pt-8 flex flex-col md:flex-row items-center justify-center gap-4"
         >
-          <div className="px-8 py-4 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-4 group hover:border-blue-500/50 transition duration-500">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            <span className="text-sm font-bold text-slate-300">Phase 1: Backend Architecture Complete</span>
+          <div className="px-8 py-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center gap-4 group">
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-sm font-bold text-slate-400">Phase 1: Architecture Optimized</span>
           </div>
         </motion.div>
       </header>
 
-      {/* Footer / Links for testing during development */}
+      {/* Navigation for Dev Access */}
       <motion.footer
         initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        transition={{ delay: 1 }}
-        className="absolute bottom-12 left-0 right-0 text-center hover:opacity-100 transition duration-500"
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="absolute bottom-12 left-0 right-0 text-center"
       >
-        <div className="flex justify-center gap-8 text-[10px] font-black uppercase tracking-widest text-slate-500">
-          <a href="/admin" className="hover:text-blue-500 flex items-center gap-1">Admin Dashboard <ChevronRight size={10} /></a>
-          <a href="/driver/login" className="hover:text-blue-500 flex items-center gap-1">Driver Login <ChevronRight size={10} /></a>
-          <a href="/super-admin" className="hover:text-blue-500 flex items-center gap-1">Super Admin <ChevronRight size={10} /></a>
+        <div className="flex justify-center gap-10 text-[10px] font-black uppercase tracking-widest text-slate-300">
+          <a href="/admin" className="hover:text-blue-600 transition flex items-center gap-1">Admin Panel <ChevronRight size={10} /></a>
+          <a href="/driver/login" className="hover:text-blue-600 transition flex items-center gap-1">Driver App <ChevronRight size={10} /></a>
         </div>
       </motion.footer>
     </div>
