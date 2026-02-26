@@ -263,7 +263,7 @@ export default function Dashboard() {
                     <div className="mt-12 p-8 bg-blue-600 rounded-[2.5rem] shadow-2xl shadow-blue-100 relative overflow-hidden group">
                         <div className="relative z-10">
                             <h4 className="font-black text-white mb-2">System Gesundheit</h4>
-                            <p className="text-[10px] font-black text-blue-100/60 uppercase tracking-widest leading-loose">Alle Schnittstellen aktiv. Latenz < 40ms.</p>
+                            <p className="text-[10px] font-black text-blue-100/60 uppercase tracking-widest leading-loose">Alle Schnittstellen aktiv. Latenz &lt; 40ms.</p>
                         </div>
                         <Activity className="absolute bottom-[-20px] right-[-20px] text-white/10 group-hover:scale-150 transition duration-1000" size={120} />
                     </div>
