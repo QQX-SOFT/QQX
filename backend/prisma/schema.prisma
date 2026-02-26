@@ -70,6 +70,20 @@ model Driver {
   phone         String?
   birthday      DateTime?
   
+  // Professional / Legal
+  ssn           String?   // Sozialversicherungsnummer
+  taxId         String?   // Steuer-ID
+  workPermitUntil DateTime?
+  
+  // Address
+  street        String?
+  zip           String?
+  city          String?
+  
+  // Banking
+  iban          String?
+  bic           String?
+
   type          DriverType @default(EMPLOYED) // Angestellt / Selbstständig
   status        DriverStatus @default(INACTIVE)
   
