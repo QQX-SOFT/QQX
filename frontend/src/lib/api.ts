@@ -1,8 +1,14 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api",
+    baseURL: baseURL.endsWith("/") ? baseURL.slice(0, -1) : baseURL,
 });
+
+if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL && window.location.hostname !== "localhost") {
+    console.warn("⚠️ NEXT_PUBLIC_API_URL is not set. Frontend is trying to connect to localhost:3001, which will fail for external users.");
+}
 
 // Add a request interceptor to attach the tenant subdomain from the current window location
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
