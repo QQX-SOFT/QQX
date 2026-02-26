@@ -44,10 +44,30 @@ export default function AnalyticsPage() {
     }
 
     const stats = [
-        { label: "Umsatz Heute", value: "€3.240", trend: "+12.5%", isPositive: true },
-        { label: "Bestellungen", value: statsData?.ordersToday || "0", trend: statsData?.trends?.deliveries || "0%", isPositive: true },
-        { label: "Durchschn. Lieferzeit", value: "24m", trend: "-2.1%", isPositive: true },
-        { label: "Aktive Fahrer", value: statsData?.activeDrivers || "0", trend: "0%", isPositive: true }
+        {
+            label: "Umsatz Heute",
+            value: new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(statsData?.revenueToday || 0),
+            trend: statsData?.trends?.revenue || "0%",
+            isPositive: !statsData?.trends?.revenue?.startsWith('-')
+        },
+        {
+            label: "Bestellungen",
+            value: statsData?.ordersToday || "0",
+            trend: statsData?.trends?.deliveries || "0%",
+            isPositive: !statsData?.trends?.deliveries?.startsWith('-')
+        },
+        {
+            label: "Durchschn. Lieferzeit",
+            value: `${statsData?.avgDeliveryTime || 0}m`,
+            trend: statsData?.trends?.deliveryTime || "0%",
+            isPositive: statsData?.trends?.deliveryTime?.startsWith('-') // For delivery time, negative trend is good
+        },
+        {
+            label: "Aktive Fahrer",
+            value: statsData?.activeDrivers || "0",
+            trend: statsData?.trends?.drivers || "0%",
+            isPositive: true
+        }
     ];
 
     return (
@@ -104,17 +124,21 @@ export default function AnalyticsPage() {
                 <div className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
                     <h3 className="text-xl font-black text-slate-900 mb-6">Bestellvolumen (7 Tage)</h3>
                     <div className="h-64 flex items-end justify-between gap-2">
-                        {[40, 60, 45, 80, 50, 90, 70].map((h, i) => (
-                            <div key={i} className="w-full flex flex-col items-center gap-4 group">
-                                <div className="w-full bg-slate-100 rounded-full h-full relative overflow-hidden">
-                                    <div
-                                        className="absolute bottom-0 w-full bg-indigo-500 rounded-full group-hover:bg-indigo-400 transition-colors"
-                                        style={{ height: `${h}%` }}
-                                    ></div>
+                        {(statsData?.volume7d || [0, 0, 0, 0, 0, 0, 0]).map((h: number, i: number) => {
+                            const maxVal = Math.max(...(statsData?.volume7d || [1]));
+                            const height = maxVal > 0 ? (h / maxVal) * 100 : 0;
+                            return (
+                                <div key={i} className="w-full flex flex-col items-center gap-4 group">
+                                    <div className="w-full bg-slate-100 rounded-full h-full relative overflow-hidden">
+                                        <div
+                                            className="absolute bottom-0 w-full bg-indigo-500 rounded-full group-hover:bg-indigo-400 transition-all duration-1000"
+                                            style={{ height: `${height}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-400">T-{6 - i}</span>
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-400">Tag {i + 1}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -123,9 +147,9 @@ export default function AnalyticsPage() {
                     <h3 className="text-xl font-black text-slate-900 mb-6">Operative Ziele</h3>
                     <div className="space-y-6">
                         {[
-                            { label: "Pünktliche Lieferungen", val: 92, target: 95 },
-                            { label: "Fahrer Auslastung", val: 78, target: 80 },
-                            { label: "Kundenzufriedenheit", val: 98, target: 90 },
+                            { label: "Pünktliche Lieferungen", val: statsData?.goals?.onTime || 0, target: 95 },
+                            { label: "Fahrer Auslastung", val: statsData?.goals?.utilization || 0, target: 80 },
+                            { label: "Kundenzufriedenheit", val: statsData?.goals?.satisfaction || 0, target: 90 },
                         ].map((m, i) => (
                             <div key={i}>
                                 <div className="flex justify-between items-center mb-2">
