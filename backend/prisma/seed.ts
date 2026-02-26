@@ -15,6 +15,16 @@ async function main() {
         },
     });
 
+    // Add Vercel Subdomain for Testing
+    await prisma.tenant.upsert({
+        where: { subdomain: 'qqx-blond' },
+        update: {},
+        create: {
+            name: 'QQX Vercel Preview',
+            subdomain: 'qqx-blond',
+        },
+    });
+
     console.log(`Tenant created: ${tenant.name}`);
 
     // 2. Create a Super Admin User
