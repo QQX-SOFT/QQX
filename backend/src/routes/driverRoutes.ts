@@ -8,10 +8,17 @@ const router = Router();
 const driverSchema = z.object({
     firstName: z.string().min(2),
     lastName: z.string().min(2),
-    phone: z.string().optional(),
-    email: z.string().email().optional(),
-    birthday: z.string().optional(),
+    phone: z.string().optional().nullable(),
+    email: z.string().email().optional().nullable(),
+    birthday: z.string().optional().nullable(),
     employmentType: z.enum(['ANGEMELDET', 'SELBSTSTANDIG']).optional(),
+    street: z.string().optional().nullable(),
+    zip: z.string().optional().nullable(),
+    city: z.string().optional().nullable(),
+    ssn: z.string().optional().nullable(),
+    taxId: z.string().optional().nullable(),
+    iban: z.string().optional().nullable(),
+    bic: z.string().optional().nullable(),
 });
 
 // GET all drivers
@@ -98,6 +105,13 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 phone: validatedData.phone,
                 birthday: validatedData.birthday ? new Date(validatedData.birthday) : null,
                 type: prismaType,
+                street: validatedData.street,
+                zip: validatedData.zip,
+                city: validatedData.city,
+                ssn: validatedData.ssn,
+                taxId: validatedData.taxId,
+                iban: validatedData.iban,
+                bic: validatedData.bic,
                 tenantId: tenantId as string,
                 userId: user.id
             },

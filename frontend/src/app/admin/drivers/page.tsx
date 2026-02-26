@@ -21,7 +21,10 @@ import {
     Eye,
     CheckCircle,
     AlertTriangle,
-    Clock
+    Clock,
+    Building2,
+    Hash,
+    Banknote
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -32,9 +35,9 @@ interface Driver {
     id: string;
     firstName: string;
     lastName: string;
-    phone: string;
-    birthday?: string;
-    employmentType: "ANGEMELDET" | "SELBSTSTANDIG";
+    phone: string | null;
+    birthday: string | null;
+    type: "EMPLOYED" | "FREELANCE";
     user?: {
         email: string;
     };
@@ -68,7 +71,14 @@ export default function DriversPage() {
         phone: "",
         email: "",
         birthday: "",
-        employmentType: "ANGEMELDET" as "ANGEMELDET" | "SELBSTSTANDIG"
+        employmentType: "ANGEMELDET" as "ANGEMELDET" | "SELBSTSTANDIG",
+        street: "",
+        zip: "",
+        city: "",
+        ssn: "",
+        taxId: "",
+        iban: "",
+        bic: ""
     });
 
     const docRequirements = {
@@ -118,14 +128,18 @@ export default function DriversPage() {
 
     const handleDownloadReport = async (driver: Driver) => {
         alert(`Bericht für ${driver.firstName} ${driver.lastName} wird generiert...\n(In einer echten App würde hier ein PDF-Download starten)`);
-        // In reality: window.open(`${api.defaults.baseURL}/reports/driver/${driver.id}?start=...&end=...`)
     };
 
     const handleCreateDriver = async (e: React.FormEvent) => {
         e.preventDefault();
         setCreating(true);
         try {
-            await api.post("/drivers", newDriver);
+            // Mapping frontend types to backend Prisma types
+            const payload = {
+                ...newDriver,
+                // The backend route handles the mapping of employmentType to Prisma enum
+            };
+            await api.post("/drivers", payload);
             setShowAddModal(false);
             setNewDriver({
                 firstName: "",
@@ -133,7 +147,14 @@ export default function DriversPage() {
                 phone: "",
                 email: "",
                 birthday: "",
-                employmentType: "ANGEMELDET"
+                employmentType: "ANGEMELDET",
+                street: "",
+                zip: "",
+                city: "",
+                ssn: "",
+                taxId: "",
+                iban: "",
+                bic: ""
             });
             fetchDrivers();
         } catch (error: any) {
@@ -212,13 +233,13 @@ export default function DriversPage() {
                                 <div className="flex items-center gap-3 mt-1 text-slate-400 text-sm font-medium">
                                     <div className={cn(
                                         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                        driver.employmentType === "SELBSTSTANDIG" ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
+                                        driver.type === "FREELANCE" ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
                                     )}>
                                         <Briefcase size={10} />
-                                        {driver.employmentType === "SELBSTSTANDIG" ? "Subunternehmer" : "Angestellt"}
+                                        {driver.type === "FREELANCE" ? "Subunternehmer" : "Angestellt"}
                                     </div>
                                     <span>•</span>
-                                    <span className="flex items-center gap-1"><Mail size={12} /> {driver.user?.email || "-"}</span>
+                                    <span className="flex items-center gap-1 truncate max-w-[150px]"><Mail size={12} /> {driver.user?.email || "-"}</span>
                                 </div>
                             </div>
                         </div>
@@ -228,12 +249,12 @@ export default function DriversPage() {
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
                                 <div className="flex items-center gap-1.5 font-black text-green-500 text-sm uppercase tracking-tighter">
                                     <ShieldCheck size={14} />
-                                    Aktiv
+                                    {driver.status}
                                 </div>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Telefon</p>
-                                <p className="font-black text-slate-900 flex items-center gap-2"><Phone size={14} className="text-slate-300" /> {driver.phone || "-"}</p>
+                                <p className="font-black text-slate-900 flex items-center gap-2 truncate"><Phone size={14} className="text-slate-300" /> {driver.phone || "-"}</p>
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bewertung</p>
@@ -272,7 +293,7 @@ export default function DriversPage() {
                 ))}
             </div>
 
-            {/* Document Modal */}
+            {/* Document View Modal */}
             <AnimatePresence>
                 {viewingDocs && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
@@ -340,8 +361,8 @@ export default function DriversPage() {
                                 <div className="pt-8 border-t border-slate-50">
                                     <p className="text-xs font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Gesetzlich erforderlich:</p>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {docRequirements[viewingDocs.employmentType].map((req: string) => {
-                                            const hasDoc = docs.some(d => d.title.includes(req) || d.type === req);
+                                        {(viewingDocs.type === "FREELANCE" ? docRequirements.SELBSTSTANDIG : docRequirements.ANGEMELDET).map((req: string) => {
+                                            const hasDoc = docs.some(d => d.title.toLowerCase().includes(req.toLowerCase()) || d.type.toLowerCase().includes(req.toLowerCase()));
                                             return (
                                                 <div key={req} className={cn(
                                                     "px-4 py-3 rounded-2xl border text-[11px] font-bold flex items-center gap-3 transition",
@@ -360,7 +381,7 @@ export default function DriversPage() {
                 )}
             </AnimatePresence>
 
-            {/* Add Driver Modal */}
+            {/* Detailed Add Driver Modal */}
             <AnimatePresence>
                 {showAddModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
@@ -368,7 +389,7 @@ export default function DriversPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
+                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-4xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
                         >
                             <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
                                 <X size={24} />
@@ -376,9 +397,9 @@ export default function DriversPage() {
 
                             <h2 className="text-3xl font-black text-slate-900 mb-8">Neuen Fahrer einstellen</h2>
 
-                            <form onSubmit={handleCreateDriver} className="space-y-6">
+                            <form onSubmit={handleCreateDriver} className="space-y-8">
                                 {/* Type Selector */}
-                                <div className="flex p-1 bg-slate-100 rounded-2xl mb-8">
+                                <div className="flex p-1 bg-slate-100 rounded-2xl max-w-md">
                                     <button
                                         type="button"
                                         onClick={() => setNewDriver({ ...newDriver, employmentType: "ANGEMELDET" })}
@@ -401,81 +422,59 @@ export default function DriversPage() {
                                     </button>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Vorname</label>
-                                        <input
-                                            type="text" required
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                            value={newDriver.firstName}
-                                            onChange={(e) => setNewDriver({ ...newDriver, firstName: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Nachname</label>
-                                        <input
-                                            type="text" required
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                            value={newDriver.lastName}
-                                            onChange={(e) => setNewDriver({ ...newDriver, lastName: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Email @</label>
-                                        <input
-                                            type="email" required
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold text-blue-600"
-                                            value={newDriver.email}
-                                            onChange={(e) => setNewDriver({ ...newDriver, email: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Geburtsdatum</label>
-                                        <div className="relative">
-                                            <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                            <input
-                                                type="date" required
-                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-14 pr-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                                value={newDriver.birthday}
-                                                onChange={(e) => setNewDriver({ ...newDriver, birthday: e.target.value })}
-                                            />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                    {/* Personal Info */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Persönliche Daten</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="text" placeholder="Vorname" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.firstName} onChange={e => setNewDriver({ ...newDriver, firstName: e.target.value })} />
+                                            <input type="text" placeholder="Nachname" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.lastName} onChange={e => setNewDriver({ ...newDriver, lastName: e.target.value })} />
+                                        </div>
+                                        <input type="email" placeholder="E-Mail" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-blue-600" value={newDriver.email} onChange={e => setNewDriver({ ...newDriver, email: e.target.value })} />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="tel" placeholder="Telefon" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.phone} onChange={e => setNewDriver({ ...newDriver, phone: e.target.value })} />
+                                            <input type="date" placeholder="Geburtsdatum" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.birthday} onChange={e => setNewDriver({ ...newDriver, birthday: e.target.value })} />
                                         </div>
                                     </div>
-                                </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Telefonnummer</label>
-                                    <div className="relative">
-                                        <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                        <input
-                                            type="tel" required
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-14 pr-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                            value={newDriver.phone}
-                                            placeholder="+43 664 1234567"
-                                            onChange={(e) => setNewDriver({ ...newDriver, phone: e.target.value })}
-                                        />
+                                    {/* Address Info */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Anschrift</h3>
+                                        <input type="text" placeholder="Straße / Hausnummer" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.street} onChange={e => setNewDriver({ ...newDriver, street: e.target.value })} />
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="text" placeholder="PLZ" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.zip} onChange={e => setNewDriver({ ...newDriver, zip: e.target.value })} />
+                                            <input type="text" placeholder="Stadt" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.city} onChange={e => setNewDriver({ ...newDriver, city: e.target.value })} />
+                                        </div>
+                                    </div>
+
+                                    {/* Legal Info */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Rechtliches / Steuern</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <input type="text" placeholder="SV-Nummer (SSN)" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.ssn} onChange={e => setNewDriver({ ...newDriver, ssn: e.target.value })} />
+                                            <input type="text" placeholder="Steuer-ID / UID" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={newDriver.taxId} onChange={e => setNewDriver({ ...newDriver, taxId: e.target.value })} />
+                                        </div>
+                                    </div>
+
+                                    {/* Bank Info */}
+                                    <div className="space-y-6">
+                                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Bankverbindung</h3>
+                                        <input type="text" placeholder="IBAN" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={newDriver.iban} onChange={e => setNewDriver({ ...newDriver, iban: e.target.value })} />
+                                        <input type="text" placeholder="BIC" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={newDriver.bic} onChange={e => setNewDriver({ ...newDriver, bic: e.target.value })} />
                                     </div>
                                 </div>
 
-                                {/* Information Box for Austria */}
-                                <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
-                                    <h4 className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-[0.2em]">
-                                        <ShieldCheck size={14} />
-                                        Gesetzliche Anforderungen (Österreich)
-                                    </h4>
-                                    <p className="text-[10px] text-slate-500 font-medium leading-relaxed uppercase tracking-widest">
-                                        Basierend auf der Auswahl müssen folgende Dokumente vor Fahrtantritt im System hinterlegt werden:
-                                    </p>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {docRequirements[newDriver.employmentType].map((doc) => (
-                                            <div key={doc} className="flex items-center gap-2 text-[11px] font-bold text-blue-900/80">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                                                {doc}
-                                            </div>
-                                        ))}
+                                {/* Information Box */}
+                                <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 flex items-start gap-4">
+                                    <ShieldCheck className="text-blue-600 shrink-0" size={24} />
+                                    <div>
+                                        <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Gesetzliche Anforderungen (Österreich)</h4>
+                                        <p className="text-[10px] text-slate-500 font-medium leading-relaxed mb-4 uppercase tracking-widest">Die folgenden Dokumente werden für diesen Typ benötigt:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {(newDriver.employmentType === "SELBSTSTANDIG" ? docRequirements.SELBSTSTANDIG : docRequirements.ANGEMELDET).map(req => (
+                                                <span key={req} className="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-blue-700 border border-blue-100">{req}</span>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
 
