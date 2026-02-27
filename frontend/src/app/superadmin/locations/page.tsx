@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { MapPin, Plus, Search, Filter, MoreVertical, Building2, Users, Car, Globe } from "lucide-react";
