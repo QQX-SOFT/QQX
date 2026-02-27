@@ -76,7 +76,7 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-8 text-center pt-8 border-t border-white/5">
-                        <p className="text-slate-500 text-xs font-medium italic">Demodaten: driver@qqx.de / beliebig</p>
+                        <p className="text-slate-500 text-xs font-medium italic">Demodaten: driver@qqxsoft.com / beliebig</p>
                     </div>
                 </div>
             </motion.div>

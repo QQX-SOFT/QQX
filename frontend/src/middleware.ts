@@ -6,7 +6,7 @@ export function middleware(req: NextRequest) {
     const hostname = req.headers.get('host') || '';
 
     // Define ignored hosts (main landing page)
-    const mainDomains = ['localhost:3000', 'qqx-eight.vercel.app', 'qqx.de'];
+    const mainDomains = ['localhost:3000', 'qqx-eight.vercel.app', 'qqx.de', 'qqxsoft.com', 'www.qqxsoft.com'];
     const isMainDomain = mainDomains.includes(hostname);
 
     // Extract subdomain

@@ -175,7 +175,7 @@ export default function SuperAdminDashboard() {
                                                 <h4 className="font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition tracking-tight">{tenant.name}</h4>
                                                 <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-full tracking-tighter">Pro Plan</span>
                                             </div>
-                                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 tracking-tight">{tenant.subdomain}.qqx-cloud.io</p>
+                                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 tracking-tight">{tenant.subdomain}.qqxsoft.com</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-12 text-right">

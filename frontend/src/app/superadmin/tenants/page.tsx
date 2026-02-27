@@ -81,7 +81,7 @@ export default function TenantManagement() {
     };
 
     const handleOpenExternal = (subdomain: string) => {
-        const url = `https://${subdomain}.qqx.de`;
+        const url = `https://${subdomain}.qqxsoft.com`;
         window.open(url, "_blank");
     };
 
@@ -293,7 +293,7 @@ export default function TenantManagement() {
                                                 className="w-full pl-16 pr-32 py-5 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl text-slate-900 dark:text-white font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
                                             />
                                             <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs uppercase tracking-widest">
-                                                .qqx.de
+                                                .qqxsoft.com
                                             </div>
                                         </div>
                                         <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Muss eindeutig sein und nur Kleinbuchstaben/Zahlen enthalten.</p>
