@@ -1,13 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import api from "@/lib/api";
 import { Bell, Mail, Smartphone, Globe, Plus, Search, Filter, Megaphone, AlertTriangle, Info } from "lucide-react";
 
 export default function NotificationsPage() {
-    const notifications = [
-        { id: 1, type: "SYSTEM", category: "Incident", title: "Datenbank Wartungsarbeiten", date: "Vor 2 Stunden", status: "SENT", icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-500/10" },
-        { id: 2, type: "BILLING", category: "Abo-Warnung", title: "Zahlungserinnerung: FleetHub GmbH", date: "Vor 5 Stunden", status: "SCHEDULED", icon: Info, color: "text-blue-500", bg: "bg-blue-500/10" },
-        { id: 3, type: "ANNOUNCEMENT", category: "Systemweit", title: "Version 2.4.0 ist jetzt live!", date: "Gestern", status: "SENT", icon: Megaphone, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    ];
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const { data } = await api.get("/superadmin/notifications");
+                // Transform API data to match UI expectations if necessary
+                const transformed = data.map((n: any) => ({
+                    id: n.id,
+                    type: "SYSTEM",
+                    category: n.priority || "Incident",
+                    title: n.title,
+                    date: new Date(n.createdAt).toLocaleString('de-DE'),
+                    status: "SENT",
+                    icon: n.priority === 'HIGH' ? AlertTriangle : Info,
+                    color: n.priority === 'HIGH' ? "text-amber-500" : "text-blue-500",
+                    bg: n.priority === 'HIGH' ? "bg-amber-500/10" : "bg-blue-500/10"
+                }));
+                setNotifications(transformed);
+            } catch (error) {
+                console.error("Failed to fetch notifications", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchNotifications();
+    }, []);
 
     return (
         <div className="space-y-8 animate-in fade-in duration-1000">
@@ -67,28 +92,38 @@ export default function NotificationsPage() {
                 </div>
 
                 <div className="divide-y divide-slate-100 dark:divide-white/5">
-                    {notifications.map((n) => (
-                        <div key={n.id} className="p-6 flex items-center gap-6 hover:bg-slate-50/50 dark:hover:bg-white/5 transition group">
-                            <div className={`${n.bg} ${n.color} w-14 h-14 rounded-2xl flex items-center justify-center shrink-0`}>
-                                <n.icon size={24} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{n.category}</span>
-                                    <span className="text-[10px] font-black text-slate-300">•</span>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{n.type}</span>
-                                </div>
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-500 transition">{n.title}</h4>
-                                <p className="text-xs font-medium text-slate-400 mt-0.5">{n.date}</p>
-                            </div>
-                            <div className="flex flex-col items-end gap-2">
-                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-full ${n.status === 'SENT' ? 'text-emerald-500 bg-emerald-500/10' : 'text-blue-500 bg-blue-500/10'}`}>
-                                    {n.status === 'SENT' ? 'Gesendet' : 'Geplant'}
-                                </span>
-                                <button className="text-xs font-bold text-slate-300 hover:text-indigo-500 transition">Details</button>
-                            </div>
+                    {loading ? (
+                        <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">
+                            Lade Benachrichtigungen...
                         </div>
-                    ))}
+                    ) : notifications.length === 0 ? (
+                        <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest">
+                            Keine Benachrichtigungen gefunden
+                        </div>
+                    ) : (
+                        notifications.map((n) => (
+                            <div key={n.id} className="p-6 flex items-center gap-6 hover:bg-slate-50/50 dark:hover:bg-white/5 transition group">
+                                <div className={`${n.bg} ${n.color} w-14 h-14 rounded-2xl flex items-center justify-center shrink-0`}>
+                                    <n.icon size={24} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-500">{n.category}</span>
+                                        <span className="text-[10px] font-black text-slate-300">•</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{n.type}</span>
+                                    </div>
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-indigo-500 transition">{n.title}</h4>
+                                    <p className="text-xs font-medium text-slate-400 mt-0.5">{n.date}</p>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                    <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-full ${n.status === 'SENT' ? 'text-emerald-500 bg-emerald-500/10' : 'text-blue-500 bg-blue-500/10'}`}>
+                                        {n.status === 'SENT' ? 'Gesendet' : 'Geplant'}
+                                    </span>
+                                    <button className="text-xs font-bold text-slate-300 hover:text-indigo-500 transition">Details</button>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
 
                 <div className="p-6 bg-slate-50/50 dark:bg-white/5 text-center">

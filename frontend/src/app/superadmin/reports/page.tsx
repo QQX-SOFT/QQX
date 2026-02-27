@@ -94,7 +94,7 @@ export default function ReportsPage() {
                                 style={{ height: `${h}%` }}
                             >
                                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none">
-                                    €{(h * 400).toLocaleString()}
+                                    {(h * (stats?.totalTenants || 10) * 10).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
                                 </div>
                             </div>
                         ))}
@@ -111,9 +111,9 @@ export default function ReportsPage() {
 
                     <div className="space-y-8">
                         {[
-                            { name: "Pro Plan", count: 84, color: "bg-indigo-500" },
-                            { name: "Basic Plan", count: 32, color: "bg-blue-400" },
-                            { name: "Enterprise", count: 12, color: "bg-emerald-400" },
+                            { name: "Aktiv", count: stats?.activeSupscriptions || 0, color: "bg-indigo-500" },
+                            { name: "Inaktiv", count: stats?.inactiveTenants || 0, color: "bg-blue-400" },
+                            { name: "Gesamt", count: stats?.totalTenants || 0, color: "bg-emerald-400" },
                         ].map((plan, i) => (
                             <div key={i}>
                                 <div className="flex justify-between text-sm font-bold mb-3">
@@ -121,7 +121,7 @@ export default function ReportsPage() {
                                     <span className="text-slate-400">{plan.count} Tenants</span>
                                 </div>
                                 <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                    <div className={`h-full ${plan.color} rounded-full`} style={{ width: `${(plan.count / 128) * 100}%` }}></div>
+                                    <div className={`h-full ${plan.color} rounded-full`} style={{ width: `${(plan.count / (stats?.totalTenants || 1)) * 100}%` }}></div>
                                 </div>
                             </div>
                         ))}

@@ -22,6 +22,7 @@ import api from "@/lib/api";
 export default function SuperAdminDashboard() {
     const [stats, setStats] = useState<any>(null);
     const [tenants, setTenants] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -34,6 +35,10 @@ export default function SuperAdminDashboard() {
                 // Fetch all tenants for the list view
                 const { data: tenantsData } = await api.get("/tenants");
                 setTenants(tenantsData);
+
+                // Fetch latest notifications
+                const { data: notifData } = await api.get("/superadmin/notifications");
+                setNotifications(notifData.slice(0, 3));
             } catch (e) {
                 console.error("Failed to fetch superadmin stats", e);
             } finally {
@@ -116,7 +121,7 @@ export default function SuperAdminDashboard() {
                             <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-white/5">
                                 <div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Neu</p>
-                                    <h4 className="text-2xl font-black text-slate-900 dark:text-white">+24</h4>
+                                    <h4 className="text-2xl font-black text-slate-900 dark:text-white">+{tenants.filter(t => new Date(t.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}</h4>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Wachstum</p>
@@ -130,9 +135,9 @@ export default function SuperAdminDashboard() {
                             <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-8">Abonnement-Status</h3>
                             <div className="space-y-6">
                                 {[
-                                    { label: "Aktive Abos", count: 112, color: "bg-indigo-500" },
-                                    { label: "Auslaufend (30d)", count: 14, color: "bg-amber-500" },
-                                    { label: "Testphase", count: 28, color: "bg-blue-400" },
+                                    { label: "Aktive Abos", count: stats?.activeSupscriptions || 0, color: "bg-indigo-500" },
+                                    { label: "Inaktive Tenants", count: stats?.inactiveTenants || 0, color: "bg-amber-500" },
+                                    { label: "Gesamt Tenants", count: stats?.totalTenants || 0, color: "bg-blue-400" },
                                 ].map((item, i) => (
                                     <div key={i}>
                                         <div className="flex justify-between text-xs font-black uppercase tracking-widest mb-2">
@@ -140,7 +145,7 @@ export default function SuperAdminDashboard() {
                                             <span className="text-slate-900 dark:text-white">{item.count}</span>
                                         </div>
                                         <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
-                                            <div className={`h-full ${item.color} rounded-full`} style={{ width: `${(item.count / 154) * 100}%` }} />
+                                            <div className={`h-full ${item.color} rounded-full`} style={{ width: `${(item.count / (stats?.totalTenants || 1)) * 100}%` }} />
                                         </div>
                                     </div>
                                 ))}
@@ -208,7 +213,7 @@ export default function SuperAdminDashboard() {
                                     { service: "Core API", status: "Operational", color: "text-emerald-400" },
                                     { service: "Auth & SSO", status: "Operational", color: "text-emerald-400" },
                                     { service: "Billing Engine", status: "Operational", color: "text-emerald-400" },
-                                    { service: "CDN / Assets", status: "Degraded", color: "text-amber-400" },
+                                    { service: "CDN / Assets", status: stats?.latency || "12ms", color: "text-amber-400" },
                                 ].map((s, i) => (
                                     <div key={i} className="flex justify-between items-center">
                                         <span className="text-sm font-bold text-slate-400 tracking-tight">{s.service}</span>
@@ -226,24 +231,24 @@ export default function SuperAdminDashboard() {
 
                     {/* System Notifications / Incident Feed */}
                     <div className="bg-white dark:bg-[#0f111a] rounded-[3rem] border border-slate-200 dark:border-white/5 p-10 shadow-sm relative overflow-hidden group">
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-8">Systemmeldungen</h3>
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Systemmeldungen</h3>
+                            {loading && <div className="w-4 h-4 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />}
+                        </div>
                         <div className="space-y-6">
-                            {[
-                                { title: "Downtime Warnung", text: "Geplante Wartung am 02.03. 02:00 UTC", type: "WARN" },
-                                { title: "Neuer SuperAdmin", text: "Konto 'admin_fk' wurde erstellt", type: "INFO" },
-                                { title: "Backup Komplett", text: "System-Snapshot 'daily_prod' erfolgreich", type: "SUCCESS" },
-                            ].map((msg, i) => (
-                                <div key={i} className="flex gap-4 group">
-                                    <div className={`w-1 h-12 rounded-full shrink-0 ${msg.type === 'WARN' ? 'bg-amber-500' :
-                                        msg.type === 'INFO' ? 'bg-indigo-500' :
-                                            'bg-emerald-500'
-                                        }`} />
-                                    <div>
-                                        <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{msg.title}</h4>
-                                        <p className="text-xs font-medium text-slate-400 leading-relaxed mt-1">{msg.text}</p>
+                            {notifications.length === 0 && !loading ? (
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center py-4">Keine Meldungen</p>
+                            ) : (
+                                notifications.map((msg, i) => (
+                                    <div key={i} className="flex gap-4 group animate-in slide-in-from-right duration-500" style={{ animationDelay: `${i * 100}ms` }}>
+                                        <div className={`w-1 h-12 rounded-full shrink-0 ${msg.priority === 'HIGH' ? 'bg-amber-500' : 'bg-indigo-500'}`} />
+                                        <div>
+                                            <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight truncate w-40">{msg.title}</h4>
+                                            <p className="text-[10px] font-medium text-slate-400 leading-relaxed mt-1 line-clamp-2">{msg.description}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

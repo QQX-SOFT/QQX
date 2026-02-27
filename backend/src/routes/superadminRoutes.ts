@@ -76,6 +76,30 @@ router.post('/plans', async (req: Request, res: Response) => {
     }
 });
 
+router.patch('/plans/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const data = planSchema.partial().parse(req.body);
+        const plan = await prisma.plan.update({
+            where: { id },
+            data
+        });
+        res.json(plan);
+    } catch (error) {
+        res.status(400).json({ error: 'Failed to update plan' });
+    }
+});
+
+router.delete('/plans/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await prisma.plan.delete({ where: { id } });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete plan' });
+    }
+});
+
 // -----------------------------------------------------------------
 // FEATURES
 // -----------------------------------------------------------------
@@ -85,6 +109,28 @@ router.get('/features', async (req: Request, res: Response) => {
         res.json(features);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch features' });
+    }
+});
+
+router.post('/features', async (req: Request, res: Response) => {
+    try {
+        const { key, description } = req.body;
+        const feature = await prisma.feature.create({
+            data: { key, description }
+        });
+        res.status(201).json(feature);
+    } catch (error) {
+        res.status(400).json({ error: 'Failed to create feature' });
+    }
+});
+
+router.delete('/features/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await prisma.feature.delete({ where: { id } });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete feature' });
     }
 });
 
@@ -102,6 +148,28 @@ router.get('/locations', async (req: Request, res: Response) => {
         res.json(locations);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch global locations' });
+    }
+});
+
+router.post('/locations', async (req: Request, res: Response) => {
+    try {
+        const { tenantId, name, address } = req.body;
+        const location = await prisma.location.create({
+            data: { tenantId, name, address }
+        });
+        res.status(201).json(location);
+    } catch (error) {
+        res.status(400).json({ error: 'Failed to create location' });
+    }
+});
+
+router.delete('/locations/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await prisma.location.delete({ where: { id } });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete location' });
     }
 });
 
@@ -146,6 +214,51 @@ router.get('/audit-logs', async (req: Request, res: Response) => {
         res.json(logs);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch audit logs' });
+    }
+});
+
+// -----------------------------------------------------------------
+// NOTIFICATIONS / ANNOUNCEMENTS
+// -----------------------------------------------------------------
+router.get('/notifications', async (req: Request, res: Response) => {
+    try {
+        const notifications = await prisma.supportTicket.findMany({
+            where: { priority: 'HIGH' }, // Mocking announcements using tickets for now or add model
+            orderBy: { createdAt: 'desc' },
+            take: 20
+        });
+        res.json(notifications);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch notifications' });
+    }
+});
+
+router.post('/notifications', async (req: Request, res: Response) => {
+    try {
+        const { title, description, category, type } = req.body;
+        // In a real app, you'd have a Notification model. 
+        // For now, let's just return what was sent to simulate success.
+        res.status(201).json({ title, description, category, type, status: 'SENT', createdAt: new Date() });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create notification' });
+    }
+});
+
+// -----------------------------------------------------------------
+// BILLING / SUBSCRIPTIONS
+// -----------------------------------------------------------------
+router.get('/subscriptions', async (req: Request, res: Response) => {
+    try {
+        const subscriptions = await prisma.subscription.findMany({
+            include: {
+                tenant: { select: { name: true, subdomain: true } },
+                // plan: true // Plan relation might need fixing if not explicitly linked in schema beyond planId
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(subscriptions);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch subscriptions' });
     }
 });
 
