@@ -28,7 +28,7 @@ export default function SuperAdminDashboard() {
         const fetchData = async () => {
             try {
                 // Fetch aggregate stats
-                const { data: statsData } = await api.get("/tenants/stats");
+                const { data: statsData } = await api.get("/superadmin/stats");
                 setStats(statsData);
 
                 // Fetch all tenants for the list view
@@ -44,156 +44,207 @@ export default function SuperAdminDashboard() {
     }, []);
 
     const indicators = [
-        { label: "Gesamte Mandanten", value: stats?.totalTenants || 0, trend: "+", icon: Globe, color: "indigo" },
-        { label: "Plattform-Umsatz", value: `€${stats?.revenue?.toLocaleString('de-DE', { minimumFractionDigits: 2 }) || "0,00"}`, trend: "Plan", icon: TrendingUp, color: "purple" },
-        { label: "Gesamte Benutzer", value: stats?.totalUsers || 0, trend: "Live", icon: Users, color: "blue" },
-        { label: "System-Uptime", value: stats?.uptime || "100%", trend: "Normal", icon: ShieldCheck, color: "green" },
+        { label: "Tenants (Aktiv / Inaktiv)", value: `${stats?.totalTenants || 0} / ${stats?.inactiveTenants || 0}`, trend: "Global", icon: Globe, color: "indigo" },
+        { label: "Fahrzeuge & Benutzer", value: `${stats?.totalVehicles || 0} / ${stats?.totalUsers || 0}`, trend: "System", icon: Users, color: "blue" },
+        { label: "MRR / ARR", value: `€${stats?.mrr || "0K"} / €${stats?.arr || "0K"}`, trend: "+12%", icon: TrendingUp, color: "purple" },
+        { label: "Dienste-Status", value: stats?.uptime || "Optimal", trend: "Live", icon: ShieldCheck, color: "green" },
     ];
 
     return (
-        <div className="space-y-12 pb-20">
+        <div className="space-y-10 pb-20 animate-in fade-in duration-1000">
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Plattform Cockpit</h1>
-                    <p className="text-slate-500 font-medium">Zentrale Überwachung aller QQX-Mandanten und Systemknoten.</p>
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2 uppercase italic">
+                        Plattform <span className="text-indigo-500 not-italic">Intelligence</span>
+                    </h1>
+                    <p className="text-slate-500 font-medium tracking-tight">Systemweite Überwachung & SaaS-Performance Cockpit.</p>
                 </div>
                 <div className="flex gap-4">
-                    <button className="px-6 py-3 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-500 hover:bg-slate-50 transition drop-shadow-sm">Cluster-Logs</button>
-                    <button className="px-10 py-3 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition shadow-xl shadow-indigo-200 flex items-center gap-2">
-                        System-Check
-                    </button>
+                    <div className="flex items-center gap-2 bg-emerald-500/10 text-emerald-500 px-4 py-2 rounded-2xl border border-emerald-500/20">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                        <span className="text-xs font-black uppercase tracking-widest">Alle Systeme nominal</span>
+                    </div>
                 </div>
             </header>
 
-            {/* Global Stats Grid */}
+            {/* Main KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {indicators.map((stat, i) => {
                     const Icon = stat.icon;
                     return (
-                        <div key={i} className="bg-white dark:bg-[#131720] p-8 rounded-[2.5rem] border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden">
+                        <div key={i} className="bg-white dark:bg-[#0f111a] p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-500 group overflow-hidden">
                             <div className="flex justify-between items-start mb-6">
                                 <div className={cn(
-                                    "p-4 rounded-2xl transition duration-500 group-hover:scale-110",
-                                    stat.color === "indigo" && "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
-                                    stat.color === "purple" && "bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400",
-                                    stat.color === "blue" && "bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400",
-                                    stat.color === "green" && "bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400"
+                                    "p-4 rounded-2xl transition duration-500 group-hover:scale-110 shadow-lg",
+                                    stat.color === "indigo" && "bg-indigo-500 text-white shadow-indigo-500/20",
+                                    stat.color === "purple" && "bg-purple-500 text-white shadow-purple-500/20",
+                                    stat.color === "blue" && "bg-blue-500 text-white shadow-blue-500/20",
+                                    stat.color === "green" && "bg-emerald-500 text-white shadow-emerald-500/20"
                                 )}>
                                     <Icon size={24} />
                                 </div>
-                                <div className="flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-tighter text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                     {stat.trend}
                                 </div>
                             </div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">{stat.label}</p>
+                            <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1 leading-none">{stat.label}</p>
                             <h3 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">{stat.value}</h3>
-                            <Icon className="absolute bottom-[-20px] right-[-20px] text-indigo-900/5 dark:text-white/5 group-hover:scale-150 transition duration-1000" size={160} />
                         </div>
                     );
                 })}
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* Active Tenants List */}
-                <div className="xl:col-span-2 bg-white dark:bg-[#131720] rounded-[3rem] border border-slate-100 dark:border-white/5 shadow-sm p-10">
-                    <div className="flex justify-between items-center mb-10">
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                            <Globe className="text-indigo-500" />
-                            Aktive Mandanten
-                        </h3>
-                        <button className="text-xs font-black text-indigo-500 uppercase tracking-widest hover:underline">Alle ansehen</button>
-                    </div>
-
-                    <div className="space-y-2">
-                        {loading ? (
-                            Array(3).fill(0).map((_, i) => (
-                                <div key={i} className="h-16 bg-slate-50 dark:bg-white/5 animate-pulse rounded-2xl" />
-                            ))
-                        ) : tenants.length === 0 ? (
-                            <p className="text-center py-10 text-slate-400 font-bold uppercase tracking-widest text-xs">Keine Mandanten gefunden</p>
-                        ) : tenants.map((tenant) => (
-                            <div key={tenant.id} className="group p-5 hover:bg-slate-50 dark:hover:bg-white/5 rounded-[2rem] border border-transparent hover:border-slate-100 dark:hover:border-white/10 transition-all flex items-center justify-between">
-                                <div className="flex items-center gap-5">
-                                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-lg transition group-hover:scale-110">
-                                        {tenant.name[0]}
+                {/* SaaS Performance Section */}
+                <div className="xl:col-span-2 space-y-8">
+                    {/* Performance & Incidents */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* New Tenants */}
+                        <div className="bg-white dark:bg-[#0f111a] p-10 rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-sm">
+                            <div className="flex items-center justify-between mb-8">
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Neue Tenants</h3>
+                                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Letzte 30 Tage</span>
+                            </div>
+                            <div className="flex items-end gap-2 h-32 mb-6">
+                                {[30, 45, 25, 60, 40, 75, 50, 90, 65, 80].map((h, i) => (
+                                    <div key={i} className="flex-1 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-t-lg group relative hover:bg-indigo-500 transition-all duration-300" style={{ height: `${h}%` }}>
+                                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-black opacity-0 group-hover:opacity-100 transition whitespace-nowrap bg-slate-900 text-white px-2 py-1 rounded">+{Math.floor(h / 5)}</div>
                                     </div>
-                                    <div>
-                                        <h4 className="font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition">{tenant.name}</h4>
-                                        <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">{tenant.subdomain}.qqx.de</p>
-                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-white/5">
+                                <div>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Neu</p>
+                                    <h4 className="text-2xl font-black text-slate-900 dark:text-white">+24</h4>
                                 </div>
-                                <div className="flex items-center gap-12">
-                                    <div className="text-right hidden sm:block">
-                                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Benutzer</p>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white">{tenant._count?.users || 0}</p>
-                                    </div>
-                                    <div className="text-right hidden sm:block">
-                                        <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Fahrzeuge</p>
-                                        <p className="text-sm font-black text-slate-900 dark:text-white">{tenant._count?.vehicles || 0}</p>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button className="p-3 bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition duration-300">
-                                            <ExternalLink size={18} />
-                                        </button>
-                                        <button className="p-3 bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-xl transition duration-300">
-                                            <Settings size={18} />
-                                        </button>
-                                    </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Wachstum</p>
+                                    <h4 className="text-2xl font-black text-emerald-500">+12.4%</h4>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </div>
 
-                {/* System Infrastructure Cards */}
-                <div className="space-y-8">
-                    <div className="bg-white dark:bg-[#131720] rounded-[3rem] border border-slate-100 dark:border-white/5 shadow-sm p-10">
-                        <h3 className="text-xl font-black text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                            <Server className="text-indigo-500" />
-                            Cluster Status
-                        </h3>
-                        <div className="space-y-8">
-                            {[
-                                { node: "Frankfurt-01", load: 24, status: "Healthy", type: "Main" },
-                                { node: "Frankfurt-02", load: 18, status: "Healthy", type: "Mirror" },
-                                { node: "Zurich-LB", load: 45, status: "Optimal", type: "Gateway" },
-                            ].map((s, i) => (
-                                <div key={i} className="space-y-3">
-                                    <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                                            <span className="text-slate-900 dark:text-white">{s.node}</span>
+                        {/* Subscription Status */}
+                        <div className="bg-white dark:bg-[#0f111a] p-10 rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-sm">
+                            <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-8">Abonnement-Status</h3>
+                            <div className="space-y-6">
+                                {[
+                                    { label: "Aktive Abos", count: 112, color: "bg-indigo-500" },
+                                    { label: "Auslaufend (30d)", count: 14, color: "bg-amber-500" },
+                                    { label: "Testphase", count: 28, color: "bg-blue-400" },
+                                ].map((item, i) => (
+                                    <div key={i}>
+                                        <div className="flex justify-between text-xs font-black uppercase tracking-widest mb-2">
+                                            <span className="text-slate-500">{item.label}</span>
+                                            <span className="text-slate-900 dark:text-white">{item.count}</span>
                                         </div>
-                                        <span className="text-indigo-500">{s.load}%</span>
+                                        <div className="h-2 w-full bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
+                                            <div className={`h-full ${item.color} rounded-full`} style={{ width: `${(item.count / 154) * 100}%` }} />
+                                        </div>
                                     </div>
-                                    <div className="h-1.5 w-full bg-slate-50 dark:bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${s.load}%` }} />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Active Tenants List Overlay */}
+                    <div className="bg-white dark:bg-[#0f111a] rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-sm p-10">
+                        <div className="flex justify-between items-center mb-10">
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3 italic">
+                                RECENT <span className="text-indigo-500 not-italic">ACTIVITY</span>
+                            </h3>
+                            <button className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all">Show All Tenants</button>
+                        </div>
+
+                        <div className="space-y-2">
+                            {loading ? (
+                                Array(3).fill(0).map((_, i) => (
+                                    <div key={i} className="h-20 bg-slate-50 dark:bg-white/5 animate-pulse rounded-3xl" />
+                                ))
+                            ) : tenants.length === 0 ? (
+                                <p className="text-center py-10 text-slate-400 font-bold uppercase tracking-widest text-xs">Keine Mandanten gefunden</p>
+                            ) : tenants.slice(0, 5).map((tenant) => (
+                                <div key={tenant.id} className="group p-6 hover:bg-slate-50 dark:hover:bg-white/5 rounded-[2.5rem] border border-transparent hover:border-slate-100 dark:hover:border-white/10 transition-all flex items-center justify-between">
+                                    <div className="flex items-center gap-5">
+                                        <div className="w-14 h-14 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl flex items-center justify-center font-black text-xl transition group-hover:scale-110 shadow-lg">
+                                            {tenant.name[0]}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h4 className="font-black text-slate-900 dark:text-white group-hover:text-indigo-600 transition tracking-tight">{tenant.name}</h4>
+                                                <span className="text-[10px] font-black uppercase px-2 py-0.5 bg-emerald-500/10 text-emerald-500 rounded-full tracking-tighter">Pro Plan</span>
+                                            </div>
+                                            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 tracking-tight">{tenant.subdomain}.qqx-cloud.io</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-12 text-right">
+                                        <div className="hidden md:block">
+                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 leading-none">Fleet Size</p>
+                                            <p className="text-lg font-black text-slate-900 dark:text-white tracking-tighter">{tenant._count?.vehicles || 0}</p>
+                                        </div>
+                                        <button className="p-4 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white hover:bg-indigo-500 hover:text-white rounded-2xl transition duration-500 shadow-sm">
+                                            <ExternalLink size={20} />
+                                        </button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
+                </div>
 
-                    <div className="bg-indigo-600 rounded-[3rem] shadow-2xl shadow-indigo-200 dark:shadow-none p-10 relative overflow-hidden group">
+                {/* Sidebar Section: System & Incidents */}
+                <div className="space-y-8">
+                    {/* Incident Status */}
+                    <div className="bg-slate-900 text-white rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group">
                         <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 bg-indigo-500 rounded-lg text-white">
-                                    <Activity size={18} />
-                                </div>
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-200">System Monitoring</span>
+                            <div className="flex items-center justify-between mb-10">
+                                <h3 className="text-lg font-black uppercase tracking-tight">System Status</h3>
+                                <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                             </div>
-                            <h4 className="text-2xl font-black text-white mb-2">Realtime Pulse</h4>
-                            <p className="text-sm font-bold text-indigo-100 leading-relaxed max-w-[200px]">Alle Dienste antworten innerhalb der SLA-Parameter.</p>
 
-                            <div className="mt-8 flex gap-4">
-                                <button className="px-6 py-3 bg-white text-indigo-600 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition">Dashboard</button>
+                            <div className="space-y-6">
+                                {[
+                                    { service: "Core API", status: "Operational", color: "text-emerald-400" },
+                                    { service: "Auth & SSO", status: "Operational", color: "text-emerald-400" },
+                                    { service: "Billing Engine", status: "Operational", color: "text-emerald-400" },
+                                    { service: "CDN / Assets", status: "Degraded", color: "text-amber-400" },
+                                ].map((s, i) => (
+                                    <div key={i} className="flex justify-between items-center">
+                                        <span className="text-sm font-bold text-slate-400 tracking-tight">{s.service}</span>
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${s.color}`}>{s.status}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-12 pt-8 border-t border-white/5 text-center">
+                                <button className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] hover:text-white transition-all">Open Service Matrix</button>
                             </div>
                         </div>
-                        <Activity
-                            size={200}
-                            className="absolute bottom-[-60px] right-[-60px] text-white/10 group-hover:scale-125 transition duration-[2s]"
-                        />
+                        <Activity size={200} className="absolute bottom-[-60px] right-[-60px] text-white/5 group-hover:scale-110 transition duration-[2s]" />
+                    </div>
+
+                    {/* System Notifications / Incident Feed */}
+                    <div className="bg-white dark:bg-[#0f111a] rounded-[3rem] border border-slate-200 dark:border-white/5 p-10 shadow-sm relative overflow-hidden group">
+                        <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight mb-8">Systemmeldungen</h3>
+                        <div className="space-y-6">
+                            {[
+                                { title: "Downtime Warnung", text: "Geplante Wartung am 02.03. 02:00 UTC", type: "WARN" },
+                                { title: "Neuer SuperAdmin", text: "Konto 'admin_fk' wurde erstellt", type: "INFO" },
+                                { title: "Backup Komplett", text: "System-Snapshot 'daily_prod' erfolgreich", type: "SUCCESS" },
+                            ].map((msg, i) => (
+                                <div key={i} className="flex gap-4 group">
+                                    <div className={`w-1 h-12 rounded-full shrink-0 ${msg.type === 'WARN' ? 'bg-amber-500' :
+                                        msg.type === 'INFO' ? 'bg-indigo-500' :
+                                            'bg-emerald-500'
+                                        }`} />
+                                    <div>
+                                        <h4 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{msg.title}</h4>
+                                        <p className="text-xs font-medium text-slate-400 leading-relaxed mt-1">{msg.text}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

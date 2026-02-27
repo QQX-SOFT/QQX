@@ -18,21 +18,51 @@ import {
     Users,
     X,
     Server,
-    Zap
+    Zap,
+    MapPin,
+    BarChart3,
+    TrendingUp,
+    LifeBuoy
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 
-const superAdminLinks = [
-    { name: "Plattform-Übersicht", icon: LayoutDashboard, href: "/superadmin" },
-    { name: "Mandanten-Verwaltung", icon: Globe, href: "/superadmin/tenants" },
-    { name: "System-Gesundheit", icon: Activity, href: "/superadmin/system" },
-    { name: "Benutzer-Sicherheit", icon: ShieldCheck, href: "/superadmin/security" },
-];
-
-const backendLinks = [
-    { name: "Abonnements & Pläne", icon: CreditCard, href: "/superadmin/billing" },
-    { name: "Global Settings", icon: Settings, href: "/superadmin/settings" },
+const navigationLinks = [
+    {
+        group: "Plattform Management",
+        links: [
+            { name: "Dashboard", icon: LayoutDashboard, href: "/superadmin" },
+            { name: "Firmenverwaltung", icon: Globe, href: "/superadmin/tenants" },
+            { name: "Standortverwaltung", icon: MapPin, href: "/superadmin/locations" },
+        ]
+    },
+    {
+        group: "Produkt & Features",
+        links: [
+            { name: "Tarifverwaltung", icon: CreditCard, href: "/superadmin/plans" },
+            { name: "Funktionsverwaltung", icon: Zap, href: "/superadmin/features" },
+        ]
+    },
+    {
+        group: "Finanzen & Analyse",
+        links: [
+            { name: "Berichte & Analysen", icon: BarChart3, href: "/superadmin/reports" },
+            { name: "Abonnementverwaltung", icon: TrendingUp, href: "/superadmin/billing" },
+        ]
+    },
+    {
+        group: "Kommunikation & Support",
+        links: [
+            { name: "Benachrichtigungen", icon: Bell, href: "/superadmin/notifications" },
+            { name: "Supportanfragen", icon: LifeBuoy, href: "/superadmin/support" },
+        ]
+    },
+    {
+        group: "System",
+        links: [
+            { name: "Systemeinstellungen", icon: Settings, href: "/superadmin/settings" },
+        ]
+    }
 ];
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -77,23 +107,16 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                 </div>
 
                 <nav className="flex-1 px-4 space-y-10 overflow-y-auto scrollbar-hide pt-4">
-                    <div>
-                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4 mb-4">Plattform Management</div>
-                        <div className="space-y-1.5">
-                            {superAdminLinks.map((link) => (
-                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
-                            ))}
+                    {navigationLinks.map((group) => (
+                        <div key={group.group}>
+                            <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4 mb-4">{group.group}</div>
+                            <div className="space-y-1.5">
+                                {group.links.map((link) => (
+                                    <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
+                                ))}
+                            </div>
                         </div>
-                    </div>
-
-                    <div>
-                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] px-4 mb-4">Backoffice</div>
-                        <div className="space-y-1.5">
-                            {backendLinks.map((link) => (
-                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
-                            ))}
-                        </div>
-                    </div>
+                    ))}
                 </nav>
 
                 <div className="p-6 mt-auto">
@@ -170,7 +193,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     );
 }
 
-function SidebarLink({ link, isActive }: { link: any, isActive: boolean }) {
+function SidebarLink({ link, isActive, key }: { link: any, isActive: boolean, key?: string }) {
     return (
         <Link
             href={link.href}

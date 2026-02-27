@@ -15,6 +15,7 @@ import complaintRoutes from './routes/complaintRoutes';
 import documentRoutes from './routes/documentRoutes';
 import walletRoutes from './routes/walletRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import superadminRoutes from './routes/superadminRoutes';
 
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 
@@ -42,6 +43,7 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/superadmin', superadminRoutes);
 
 app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
