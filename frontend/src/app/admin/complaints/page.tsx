@@ -18,6 +18,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 type Driver = {
     id: string;
@@ -43,16 +44,7 @@ export default function ComplaintsPage() {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [creating, setCreating] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
-    const [newComplaint, setNewComplaint] = useState({
-        driverId: "",
-        title: "",
-        description: "",
-        penalty: 0
-    });
 
     useEffect(() => {
         fetchData();
@@ -73,21 +65,7 @@ export default function ComplaintsPage() {
         }
     };
 
-    const handleCreateComplaint = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newComplaint.driverId) return alert("Fahrer auswählen");
-        setCreating(true);
-        try {
-            await api.post("/complaints", newComplaint);
-            setShowAddModal(false);
-            setNewComplaint({ driverId: "", title: "", description: "", penalty: 0 });
-            fetchData();
-        } catch (error) {
-            alert("Fehler beim Erstellen");
-        } finally {
-            setCreating(false);
-        }
-    };
+    // Create handler moved to editor page
 
     const handleResolve = async (id: string, currentStatus: string) => {
         const nextStatus = currentStatus === "OPEN" ? "RESOLVED" : "OPEN";
@@ -124,13 +102,13 @@ export default function ComplaintsPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Reklamationen</h1>
                     <p className="text-slate-500 font-medium">Beschwerdemanagement und Fahrer-Stellungnahmen.</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
+                <Link
+                    href="/admin/complaints/editor"
                     className="flex items-center gap-3 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm hover:bg-slate-800 transition shadow-xl"
                 >
                     <Plus size={20} />
                     Vorfall melden
-                </button>
+                </Link>
             </header>
 
             {/* Quick Stats */}
@@ -278,89 +256,7 @@ export default function ComplaintsPage() {
                 </div>
             </div>
 
-            {/* Add Complaint Modal */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
-                        >
-                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
-                                <X size={24} />
-                            </button>
-
-                            <h2 className="text-3xl font-black text-slate-900 mb-8">Vorfall melden</h2>
-
-                            <form onSubmit={handleCreateComplaint} className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <User size={14} /> Betroffener Fahrer
-                                    </label>
-                                    <select
-                                        required
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newComplaint.driverId}
-                                        onChange={e => setNewComplaint({ ...newComplaint, driverId: e.target.value })}
-                                    >
-                                        <option value="">Fahrer auswählen...</option>
-                                        {drivers.map(d => (
-                                            <option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Titel des Vorfalls</label>
-                                    <input
-                                        type="text" required
-                                        placeholder="z.B. Verspätete Lieferung"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newComplaint.title}
-                                        onChange={e => setNewComplaint({ ...newComplaint, title: e.target.value })}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Beschreibung</label>
-                                    <textarea
-                                        required rows={4}
-                                        placeholder="Details zum Vorfall..."
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newComplaint.description}
-                                        onChange={e => setNewComplaint({ ...newComplaint, description: e.target.value })}
-                                    ></textarea>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <AlertCircle size={14} className="text-red-500" /> Strafpunkte (optional)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newComplaint.penalty}
-                                        onChange={e => setNewComplaint({ ...newComplaint, penalty: parseInt(e.target.value) })}
-                                    />
-                                </div>
-
-                                <div className="pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 py-4 rounded-2xl bg-red-600 text-white font-black hover:bg-red-700 transition flex items-center justify-center gap-2 shadow-xl shadow-red-100"
-                                    >
-                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Meldung speichern"}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Add Complaint Modal removed */}
         </div>
     );
 }

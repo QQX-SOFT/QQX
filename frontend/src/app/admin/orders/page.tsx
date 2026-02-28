@@ -26,6 +26,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 type Order = {
     id: string;
@@ -62,26 +63,7 @@ type activeDriver = {
 export default function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
-
-    // Drivers for dropdown
-    const [drivers, setDrivers] = useState<any[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
-
-    const [newOrder, setNewOrder] = useState({
-        customerId: "",
-        senderName: "",
-        senderAddress: "",
-        recipientName: "",
-        recipientAddress: "",
-        packageInfo: "",
-        serviceType: "standard",
-        priority: "normal",
-        amount: "",
-        driverId: "",
-        notes: ""
-    });
-    const [creating, setCreating] = useState(false);
 
     // Assignment Logic
     const [assigningOrder, setAssigningOrder] = useState<Order | null>(null);
@@ -91,18 +73,8 @@ export default function OrdersPage() {
 
     useEffect(() => {
         fetchOrders();
-        fetchDrivers();
         fetchCustomers();
     }, []);
-
-    const fetchDrivers = async () => {
-        try {
-            const { data } = await api.get("/drivers");
-            setDrivers(data);
-        } catch (e) {
-            console.error("Failed to fetch drivers", e);
-        }
-    };
 
     const fetchCustomers = async () => {
         try {
@@ -141,45 +113,7 @@ export default function OrdersPage() {
         }
     };
 
-    const handleCreateOrder = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        try {
-            // Fetch coordinates for recipient address (nominatim)
-            const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(newOrder.recipientAddress)}&limit=1`);
-            const geoData = await geoRes.json();
-
-            const payload = {
-                ...newOrder,
-                amount: Number(newOrder.amount),
-                customerName: newOrder.recipientName, // Map for compatibility
-                address: newOrder.recipientAddress,   // Map for compatibility
-                source: "DIRECT"
-            };
-
-            await api.post("/orders", payload);
-
-            setShowAddModal(false);
-            setNewOrder({
-                customerId: "",
-                senderName: "",
-                senderAddress: "",
-                recipientName: "",
-                recipientAddress: "",
-                packageInfo: "",
-                serviceType: "standard",
-                priority: "normal",
-                amount: "",
-                driverId: "",
-                notes: ""
-            });
-            fetchOrders();
-        } catch (e) {
-            console.error("Failed to create order", e);
-        } finally {
-            setCreating(false);
-        }
-    };
+    // Create logic moved to editor branch
 
     const deg2rad = (deg: number) => deg * (Math.PI / 180);
 
@@ -268,13 +202,13 @@ export default function OrdersPage() {
                         <Scan size={18} />
                         QR Scan
                     </button>
-                    <button
-                        onClick={() => setShowAddModal(true)}
+                    <Link
+                        href="/admin/orders/editor"
                         className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center gap-2"
                     >
                         <Plus size={20} />
                         Neuer Auftrag
-                    </button>
+                    </Link>
                 </div>
             </header>
 
@@ -413,9 +347,9 @@ export default function OrdersPage() {
                                                         <Check size={14} /> Freigeben
                                                     </button>
                                                 )}
-                                                <button className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-blue-600 shadow-sm opacity-0 group-hover:opacity-100">
+                                                <Link href={`/admin/orders/editor?id=${order.id}`} className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-blue-600 shadow-sm opacity-0 group-hover:opacity-100 flex items-center justify-center">
                                                     <MoreVertical size={18} />
-                                                </button>
+                                                </Link>
                                             </div>
                                         </td>
                                     </motion.tr>
@@ -426,229 +360,7 @@ export default function OrdersPage() {
                 </div>
             </div>
 
-            {/* Add Order Modal - Premium Design */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative bg-white rounded-[3rem] p-10 w-full max-w-4xl shadow-2xl border border-slate-100 font-sans max-h-[90vh] overflow-y-auto"
-                        >
-                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-300 hover:text-slate-900 transition p-2 hover:bg-slate-50 rounded-full">
-                                <X size={24} />
-                            </button>
-
-                            <div className="mb-10">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-2 bg-blue-600 rounded-lg text-white">
-                                        <Plus size={20} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">Operations</span>
-                                </div>
-                                <h2 className="text-4xl font-black text-slate-900 tracking-tight">Auftrag Erstellen</h2>
-                                <p className="text-slate-500 font-medium mt-1">Geben Sie die Details für die neue Lieferung ein.</p>
-                            </div>
-
-                            <form onSubmit={handleCreateOrder} className="space-y-10">
-                                <div className="p-8 bg-blue-50/30 border border-blue-100 rounded-[2.5rem] relative overflow-hidden group transition-all hover:bg-blue-50/50">
-                                    <div className="absolute top-0 right-0 p-8 text-blue-100/50 group-hover:text-blue-500/10 transition-colors">
-                                        <Building2 size={80} />
-                                    </div>
-                                    <div className="relative z-10">
-                                        <label className="block text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-4 ml-1">Kunden-Zuweisung *</label>
-                                        <select
-                                            required
-                                            className="w-full bg-white border border-blue-100 rounded-3xl px-8 py-5 focus:border-blue-500 outline-none font-black text-slate-900 transition-all shadow-sm appearance-none cursor-pointer"
-                                            value={newOrder.customerId}
-                                            onChange={e => {
-                                                const cust = customers.find(c => c.id === e.target.value);
-                                                setNewOrder({
-                                                    ...newOrder,
-                                                    customerId: e.target.value,
-                                                    recipientName: cust?.contactPerson || cust?.name || "",
-                                                    recipientAddress: cust?.address || ""
-                                                });
-                                            }}
-                                        >
-                                            <option value="">Bitte Kunden wählen...</option>
-                                            {customers.map(c => (
-                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                            ))}
-                                        </select>
-                                        <p className="mt-3 ml-1 text-xs font-medium text-slate-400 group-hover:text-blue-400 transition-colors">Wählen Sie einen registrierten Kunden aus der Datenbank.</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    {/* Left Column: People */}
-                                    <div className="space-y-8">
-                                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                            <div className="flex items-center gap-2 mb-6">
-                                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
-                                                    <MapPin size={16} />
-                                                </div>
-                                                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Absender (Sender)</h3>
-                                            </div>
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Name</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Name des Absenders"
-                                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                                        value={newOrder.senderName}
-                                                        onChange={e => setNewOrder({ ...newOrder, senderName: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Adresse</label>
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Straße, Hausnummer..."
-                                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                                        value={newOrder.senderAddress}
-                                                        onChange={e => setNewOrder({ ...newOrder, senderAddress: e.target.value })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100">
-                                            <div className="flex items-center gap-2 mb-6">
-                                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
-                                                    <User size={16} />
-                                                </div>
-                                                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Empfänger (Recipient)</h3>
-                                            </div>
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Name *</label>
-                                                    <input
-                                                        required
-                                                        type="text"
-                                                        placeholder="Name des Empfängers"
-                                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                                        value={newOrder.recipientName}
-                                                        onChange={e => setNewOrder({ ...newOrder, recipientName: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Adresse *</label>
-                                                    <input
-                                                        required
-                                                        type="text"
-                                                        placeholder="Straße, Hausnummer..."
-                                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                                        value={newOrder.recipientAddress}
-                                                        onChange={e => setNewOrder({ ...newOrder, recipientAddress: e.target.value })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Right Column: Delivery Info */}
-                                    <div className="space-y-8">
-                                        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                                            <div className="flex items-center gap-2 mb-6">
-                                                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center text-amber-600">
-                                                    <Truck size={16} />
-                                                </div>
-                                                <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Paket & Service</h3>
-                                            </div>
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Service-Typ</label>
-                                                        <select
-                                                            className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm appearance-none"
-                                                            value={newOrder.serviceType}
-                                                            onChange={e => setNewOrder({ ...newOrder, serviceType: e.target.value })}
-                                                        >
-                                                            <option value="standard">Standard</option>
-                                                            <option value="essen">Essen Lieferung</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Priorität</label>
-                                                        <select
-                                                            className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm appearance-none"
-                                                            value={newOrder.priority}
-                                                            onChange={e => setNewOrder({ ...newOrder, priority: e.target.value })}
-                                                        >
-                                                            <option value="normal">Normal</option>
-                                                            <option value="express">Express</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Preis (€)</label>
-                                                        <input
-                                                            type="number"
-                                                            step="0.01"
-                                                            placeholder="0,00"
-                                                            className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                                            value={newOrder.amount}
-                                                            onChange={e => setNewOrder({ ...newOrder, amount: e.target.value })}
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Fahrer zuweisen</label>
-                                                        <select
-                                                            className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm appearance-none"
-                                                            value={newOrder.driverId}
-                                                            onChange={e => setNewOrder({ ...newOrder, driverId: e.target.value })}
-                                                        >
-                                                            <option value="">Kein Fahrer</option>
-                                                            {drivers.map(d => (
-                                                                <option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Paket Information</label>
-                                                    <textarea
-                                                        rows={2}
-                                                        placeholder="Größe, Gewicht, Inhalt..."
-                                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm resize-none"
-                                                        value={newOrder.packageInfo}
-                                                        onChange={e => setNewOrder({ ...newOrder, packageInfo: e.target.value })}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Notiz</label>
-                                                    <textarea
-                                                        rows={2}
-                                                        placeholder="Zusätzliche Informationen..."
-                                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm resize-none"
-                                                        value={newOrder.notes}
-                                                        onChange={e => setNewOrder({ ...newOrder, notes: e.target.value })}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-8 flex gap-4 border-t border-slate-50">
-                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-5 rounded-2xl bg-slate-50 font-black text-xs uppercase tracking-widest text-slate-400 hover:bg-slate-100 transition shadow-sm">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 py-5 rounded-2xl bg-blue-600 text-white font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-xl shadow-blue-200"
-                                    >
-                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Auftrag Erstellen"}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Add Order Modal removed */}
             {/* Assignment Modal */}
             <AnimatePresence>
                 {assigningOrder && (

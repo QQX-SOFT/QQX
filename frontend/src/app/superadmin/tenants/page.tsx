@@ -21,15 +21,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 export default function TenantManagement() {
     const [tenants, setTenants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState<"all" | "active" | "inactive">("all");
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [newTenant, setNewTenant] = useState({ name: "", subdomain: "" });
-    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         fetchTenants();
@@ -46,20 +44,7 @@ export default function TenantManagement() {
         }
     };
 
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSaving(true);
-        try {
-            await api.post("/tenants", newTenant);
-            setIsAddModalOpen(false);
-            setNewTenant({ name: "", subdomain: "" });
-            fetchTenants();
-        } catch (e: any) {
-            alert(e.response?.data?.error || "Fehler beim Erstellen");
-        } finally {
-            setSaving(false);
-        }
-    };
+    // Creation moved to editor page
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`Möchten Sie den Mandanten "${name}" wirklich unwiderruflich löschen?`)) return;
@@ -101,13 +86,13 @@ export default function TenantManagement() {
                     <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Mandanten-Verwaltung</h1>
                     <p className="text-slate-500 font-medium font-sans">Verwalten Sie alle registrierten Unternehmen und deren Subdomains.</p>
                 </div>
-                <button
-                    onClick={() => setIsAddModalOpen(true)}
+                <Link
+                    href="/superadmin/tenants/editor"
                     className="px-8 py-3 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 flex items-center gap-2 group"
                 >
                     <Plus size={18} className="group-hover:rotate-90 transition duration-300" />
                     Neuer Mandant
-                </button>
+                </Link>
             </header>
 
             {/* Filter & Search */}
@@ -247,85 +232,7 @@ export default function TenantManagement() {
                 </div>
             </div>
 
-            {/* Add Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setIsAddModalOpen(false)} />
-                    <div className="bg-white dark:bg-[#0b0e14] w-full max-w-xl rounded-[3rem] shadow-2xl relative z-10 overflow-hidden border border-white/5">
-                        <div className="p-10">
-                            <div className="flex justify-between items-start mb-10">
-                                <div>
-                                    <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-2">Neuer Mandant</h2>
-                                    <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Mandanten-Ecosystem Erweitern</p>
-                                </div>
-                                <button onClick={() => setIsAddModalOpen(false)} className="p-3 bg-slate-100 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-500 rounded-2xl transition">
-                                    <X size={24} />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleCreate} className="space-y-8">
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">Unternehmensname</label>
-                                        <div className="relative group">
-                                            <Users className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition" size={18} />
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Bsp: QQX Logistics GmbH"
-                                                value={newTenant.name}
-                                                onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
-                                                className="w-full pl-16 pr-8 py-5 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl text-slate-900 dark:text-white font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 px-1">Subdomain</label>
-                                        <div className="relative group">
-                                            <Globe className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition" size={18} />
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Bsp: mein-logistik"
-                                                value={newTenant.subdomain}
-                                                onChange={(e) => setNewTenant({ ...newTenant, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                                                className="w-full pl-16 pr-32 py-5 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 rounded-3xl text-slate-900 dark:text-white font-black focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all placeholder:text-slate-400"
-                                            />
-                                            <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 font-black text-xs uppercase tracking-widest">
-                                                .qqxsoft.com
-                                            </div>
-                                        </div>
-                                        <p className="mt-4 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Muss eindeutig sein und nur Kleinbuchstaben/Zahlen enthalten.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-4 pt-6">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAddModalOpen(false)}
-                                        className="flex-1 py-5 bg-slate-50 dark:bg-white/5 text-slate-500 dark:text-slate-400 rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-white/10 transition"
-                                    >
-                                        Abbrechen
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={saving}
-                                        className="flex-[2] py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition shadow-xl shadow-indigo-100 disabled:opacity-50 flex items-center justify-center gap-3"
-                                    >
-                                        {saving ? (
-                                            <ZapIcon className="animate-spin" size={18} />
-                                        ) : (
-                                            <ZapIcon size={18} fill="white" />
-                                        )}
-                                        Mandant Erstellen
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* Add Modal removed */}
         </div>
     );
 }

@@ -18,19 +18,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 export default function FleetPage() {
     const [vehicles, setVehicles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [newVehicle, setNewVehicle] = useState({
-        licensePlate: "",
-        make: "",
-        model: "",
-        milage: 0,
-        nextMaintenance: ""
-    });
-    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         fetchVehicles();
@@ -47,23 +39,7 @@ export default function FleetPage() {
         }
     };
 
-    const handleCreateVehicle = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        try {
-            await api.post("/vehicles", {
-                ...newVehicle,
-                milage: Number(newVehicle.milage)
-            });
-            setShowAddModal(false);
-            setNewVehicle({ licensePlate: "", make: "", model: "", milage: 0, nextMaintenance: "" });
-            fetchVehicles();
-        } catch (e: any) {
-            alert(e.response?.data?.error || "Fehler beim Erstellen des Fahrzeugs");
-        } finally {
-            setCreating(false);
-        }
-    };
+    // Creation logic moved to editor page
 
     return (
         <div className="space-y-12">
@@ -73,13 +49,13 @@ export default function FleetPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Fuhrpark & Wartung</h1>
                     <p className="text-slate-500 font-medium">Überwachen Sie Ihre Fahrzeuge, Kilometerstände und anstehende Inspektionen.</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
+                <Link
+                    href="/admin/fleet/editor"
                     className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200"
                 >
                     <Plus size={20} />
                     Neues Fahrzeug hinzufügen
-                </button>
+                </Link>
             </header>
 
             {/* Fleet Overview Cards */}
@@ -176,95 +152,14 @@ export default function FleetPage() {
 
                         <Car className="absolute bottom-[-40px] right-[-40px] text-slate-50 opacity-[0.03] group-hover:scale-150 transition duration-1000" size={240} />
 
-                        <button className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition">
+                        <Link href={`/admin/fleet/editor?id=${vehicle.id}`} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition hover:bg-slate-50 rounded-xl">
                             <MoreVertical size={20} />
-                        </button>
+                        </Link>
                     </motion.div>
                 ))}
             </div>
 
-            {/* Add Vehicle Modal */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative"
-                        >
-                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
-                                <X size={24} />
-                            </button>
-                            <h2 className="text-3xl font-black text-slate-900 mb-8">Fahrzeug hinzufügen</h2>
-                            <form onSubmit={handleCreateVehicle} className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Marke</label>
-                                        <input
-                                            type="text" required
-                                            placeholder="z.B. Mercedes-Benz"
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                            value={newVehicle.make}
-                                            onChange={(e) => setNewVehicle({ ...newVehicle, make: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Modell</label>
-                                        <input
-                                            type="text" required
-                                            placeholder="z.B. Sprinter"
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                            value={newVehicle.model}
-                                            onChange={(e) => setNewVehicle({ ...newVehicle, model: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Kennzeichen</label>
-                                        <input
-                                            type="text" required
-                                            placeholder="B-QX 123"
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                            value={newVehicle.licensePlate}
-                                            onChange={(e) => setNewVehicle({ ...newVehicle, licensePlate: e.target.value.toUpperCase() })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Kilometerstand</label>
-                                        <input
-                                            type="number" required
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                            value={newVehicle.milage}
-                                            onChange={(e) => setNewVehicle({ ...newVehicle, milage: Number(e.target.value) })}
-                                        />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Nächste Wartung</label>
-                                    <input
-                                        type="date"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                        value={newVehicle.nextMaintenance}
-                                        onChange={(e) => setNewVehicle({ ...newVehicle, nextMaintenance: e.target.value })}
-                                    />
-                                </div>
-                                <div className="pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                                    >
-                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Fahrzeug Hinzufügen"}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Add Vehicle Modal Removed */}
         </div>
     );
 }

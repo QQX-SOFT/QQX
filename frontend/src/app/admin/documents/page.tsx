@@ -22,6 +22,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 type Doc = {
     id: string;
@@ -47,18 +48,9 @@ export default function DocumentsPage() {
     const [docs, setDocs] = useState<Doc[]>([]);
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadWorkerType, setUploadWorkerType] = useState<"ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG">("ECHTER_DIENSTNEHMER");
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
-
-    // Form state
-    const [uploadData, setUploadData] = useState({
-        driverId: "",
-        type: "",
-        title: "",
-        expiryDate: ""
-    });
 
     useEffect(() => {
         fetchData();
@@ -121,24 +113,7 @@ export default function DocumentsPage() {
         return matchesSearch && status.variant === statusFilter;
     });
 
-    const handleUpload = async () => {
-        if (!uploadData.driverId || !uploadData.type || !uploadData.title) {
-            alert("Bitte füllen Sie alle Pflichtfelder aus.");
-            return;
-        }
-
-        try {
-            await api.post("/documents", {
-                ...uploadData,
-                fileUrl: "https://example.com/placeholder.pdf" // Placeholder until real upload logic
-            });
-            setShowUploadModal(false);
-            setUploadData({ driverId: "", type: "", title: "", expiryDate: "" });
-            fetchData();
-        } catch (e) {
-            alert("Fehler beim Hochladen");
-        }
-    };
+    // Upload handler moved to editor page
 
     return (
         <div className="space-y-12">
@@ -155,13 +130,13 @@ export default function DocumentsPage() {
                     <p className="text-slate-500 font-medium font-sans">Offizielle Dokumente und Zertifikate Ihrer Mitarbeiter.</p>
                 </div>
                 <div className="flex gap-4">
-                    <button
-                        onClick={() => setShowUploadModal(true)}
+                    <Link
+                        href="/admin/documents/editor"
                         className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200 flex items-center gap-2"
                     >
                         <UploadCloud size={18} />
                         Dokument hochladen
-                    </button>
+                    </Link>
                 </div>
             </header>
 
@@ -280,96 +255,7 @@ export default function DocumentsPage() {
                 </div>
             </div>
 
-            {/* Upload Modal */}
-            <AnimatePresence>
-                {showUploadModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
-                        >
-                            <button onClick={() => setShowUploadModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
-                                <X size={24} />
-                            </button>
-
-                            <h2 className="text-3xl font-black text-slate-900 mb-8">Dokument hochladen</h2>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                        <User size={14} /> Mitarbeiter / Fahrer
-                                    </label>
-                                    <select
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold text-slate-700"
-                                        value={uploadData.driverId}
-                                        onChange={(e) => setUploadData({ ...uploadData, driverId: e.target.value })}
-                                    >
-                                        <option value="">Mitarbeiter auswählen...</option>
-                                        {drivers.map(driver => (
-                                            <option key={driver.id} value={driver.id}>
-                                                {driver.firstName} {driver.lastName}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Dokument-Typ</label>
-                                        <select
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                            value={uploadData.type}
-                                            onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
-                                        >
-                                            <option value="">Typ wählen...</option>
-                                            {Object.entries(docTypes).map(([val, label]) => (
-                                                <option key={val} value={val}>{label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 text-red-500 underline">Ablaufdatum (optional)</label>
-                                        <input
-                                            type="date"
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                            value={uploadData.expiryDate}
-                                            onChange={(e) => setUploadData({ ...uploadData, expiryDate: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Titel des Dokuments</label>
-                                    <input
-                                        type="text"
-                                        placeholder="z.B. Führerschein 2024"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={uploadData.title}
-                                        onChange={(e) => setUploadData({ ...uploadData, title: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="p-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-center hover:border-blue-400 transition group cursor-pointer">
-                                    <UploadCloud className="mx-auto text-slate-300 group-hover:text-blue-500 transition mb-2" size={32} />
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Datei auswählen oder hierher ziehen</p>
-                                </div>
-
-                                <div className="pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
-                                    <button
-                                        onClick={handleUpload}
-                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition shadow-xl shadow-blue-200"
-                                    >
-                                        Speichern
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Upload Modal removed */}
         </div>
     );
 }

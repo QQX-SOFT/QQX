@@ -18,14 +18,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 export default function AccountingPage() {
     const [invoices, setInvoices] = useState<any[]>([]);
     const [drivers, setDrivers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [newInvoice, setNewInvoice] = useState({ driverId: "", amount: 0, period: "" });
-    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         fetchInvoices();
@@ -52,23 +50,7 @@ export default function AccountingPage() {
         }
     };
 
-    const handleCreateInvoice = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        try {
-            await api.post("/invoices", {
-                ...newInvoice,
-                amount: Number(newInvoice.amount)
-            });
-            setShowAddModal(false);
-            setNewInvoice({ driverId: "", amount: 0, period: "" });
-            fetchInvoices();
-        } catch (e: any) {
-            alert(e.response?.data?.error || "Fehler beim Erstellen der Rechnung");
-        } finally {
-            setCreating(false);
-        }
-    };
+    // Create logic moved to editor page
 
     const handleUpdateStatus = async (id: string, currentStatus: string) => {
         const nextStatus = currentStatus === "PAID" ? "PENDING" : "PAID";
@@ -91,13 +73,13 @@ export default function AccountingPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Buchhaltung & Finanzen</h1>
                     <p className="text-slate-500 font-medium">Verwalten Sie Abrechnungen und erstellen Sie Rechnungen für gewerbliche Fahrer.</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
+                <Link
+                    href="/admin/accounting/editor"
                     className="flex items-center gap-3 px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200"
                 >
                     <Plus size={20} />
                     Neue Rechnung erstellen
-                </button>
+                </Link>
             </header>
 
             {/* Finance Stats */}
@@ -202,71 +184,7 @@ export default function AccountingPage() {
                 </div>
             </div>
 
-            {/* Create Invoice Modal */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl relative"
-                        >
-                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
-                                <X size={24} />
-                            </button>
-                            <h2 className="text-3xl font-black text-slate-900 mb-8">Rechnung erstellen</h2>
-                            <form onSubmit={handleCreateInvoice} className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Fahrer auswählen</label>
-                                    <select
-                                        required
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition appearance-none"
-                                        value={newInvoice.driverId}
-                                        onChange={(e) => setNewInvoice({ ...newInvoice, driverId: e.target.value })}
-                                    >
-                                        <option value="">Fahrer wählen...</option>
-                                        {drivers.map(d => (
-                                            <option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Betrag (€)</label>
-                                        <input
-                                            type="number" step="0.01" required
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                            value={newInvoice.amount}
-                                            onChange={(e) => setNewInvoice({ ...newInvoice, amount: Number(e.target.value) })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Zeitraum</label>
-                                        <input
-                                            type="text" required
-                                            placeholder="z.B. Feb 2026"
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition"
-                                            value={newInvoice.period}
-                                            onChange={(e) => setNewInvoice({ ...newInvoice, period: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                                    >
-                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Rechnung Generieren"}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Create Invoice Modal removed */}
         </div>
     );
 }

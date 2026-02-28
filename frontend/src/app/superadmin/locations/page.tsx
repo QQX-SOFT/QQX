@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { MapPin, Plus, Search, Filter, MoreVertical, Building2, Users, Car, Globe, Trash2, X } from "lucide-react";
+import Link from "next/link";
 
 interface LocationData {
     id: string;
@@ -16,8 +17,6 @@ interface LocationData {
 export default function LocationsPage() {
     const [locations, setLocations] = useState<LocationData[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [newLoc, setNewLoc] = useState({ name: "", address: "", tenantId: "" });
 
     const fetchLocations = async () => {
         try {
@@ -34,17 +33,7 @@ export default function LocationsPage() {
         fetchLocations();
     }, []);
 
-    const handleCreate = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await api.post("/superadmin/locations", newLoc);
-            setIsModalOpen(false);
-            setNewLoc({ name: "", address: "", tenantId: "" });
-            fetchLocations();
-        } catch (error) {
-            alert("Fehler beim Erstellen");
-        }
-    };
+    // Creation moved to editor page
 
     const handleDelete = async (id: string) => {
         if (!confirm("Sicher löschen?")) return;
@@ -74,13 +63,13 @@ export default function LocationsPage() {
                         Verwalten Sie Filialen und organisatorische Einheiten systemweit.
                     </p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
+                <Link
+                    href="/superadmin/locations/editor"
                     className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold transition shadow-lg shadow-indigo-500/20 active:scale-95"
                 >
                     <Plus size={20} />
                     <span>Standort erstellen</span>
-                </button>
+                </Link>
             </div>
 
             {/* Stats Overview */}
@@ -123,12 +112,12 @@ export default function LocationsPage() {
                                 <MapPin size={40} />
                             </div>
                             <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Noch keine Standorte definiert</h3>
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold transition"
+                            <Link
+                                href="/superadmin/locations/editor"
+                                className="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold transition inline-block text-sm uppercase tracking-widest"
                             >
                                 Ersten Standort hinzufügen
-                            </button>
+                            </Link>
                         </div>
                     ) : (
                         locations.map((loc: LocationData) => (
@@ -162,39 +151,7 @@ export default function LocationsPage() {
                 </div>
             </div>
 
-            {/* Create Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0f111a] w-full max-w-lg rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-                        <div className="p-8 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Standort Erstellen</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
-                        </div>
-                        <form onSubmit={handleCreate} className="p-8 space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Name</label>
-                                <input
-                                    required
-                                    value={newLoc.name}
-                                    onChange={e => setNewLoc({ ...newLoc, name: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl py-4 px-6 font-bold"
-                                    placeholder="Filiale Berlin..."
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest">Tenant ID (Optional)</label>
-                                <input
-                                    value={newLoc.tenantId}
-                                    onChange={e => setNewLoc({ ...newLoc, tenantId: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl py-4 px-6 font-bold"
-                                    placeholder="Tenant UUID..."
-                                />
-                            </div>
-                            <button className="w-full bg-indigo-500 py-4 rounded-2xl text-white font-black uppercase tracking-widest hover:bg-indigo-600 transition">Speichern</button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Create Modal removed */}
         </div>
     );
 }

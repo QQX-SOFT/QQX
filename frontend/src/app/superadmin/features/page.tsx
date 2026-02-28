@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import api from "@/lib/api";
 import { Zap, Shield, Rocket, Clock, Settings2, ToggleLeft, ToggleRight, Search, Plus, X, Trash2 } from "lucide-react";
+import Link from "next/link";
 
 interface FeatureData {
     id: string;
@@ -14,8 +15,6 @@ interface FeatureData {
 export default function FeaturesPage() {
     const [features, setFeatures] = useState<FeatureData[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ key: "", description: "" });
 
     const fetchFeatures = async () => {
         try {
@@ -32,17 +31,7 @@ export default function FeaturesPage() {
         fetchFeatures();
     }, []);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            await api.post("/superadmin/features", formData);
-            setIsModalOpen(false);
-            setFormData({ key: "", description: "" });
-            fetchFeatures();
-        } catch (error) {
-            alert("Fehler beim Erstellen");
-        }
-    };
+    // Creation handler moved to editor page
 
     const handleDelete = async (id: string) => {
         if (!confirm("Feature wirklich entfernen?")) return;
@@ -66,13 +55,13 @@ export default function FeaturesPage() {
                         Verwalten Sie Feature-Flags und Modulfreischaltungen systemweit.
                     </p>
                 </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
+                <Link
+                    href="/superadmin/features/editor"
                     className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold transition shadow-lg shadow-indigo-500/20 active:scale-95"
                 >
                     <Plus size={20} />
                     <span>Neues Feature definieren</span>
-                </button>
+                </Link>
             </div>
 
             {/* List */}
@@ -85,8 +74,7 @@ export default function FeaturesPage() {
                     <div className="md:col-span-2 text-center py-20 bg-white dark:bg-[#0f111a] rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-sm">
                         <Zap size={48} className="mx-auto text-slate-300 mb-4" />
                         <h3 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Keine Features gefunden</h3>
-                        <p className="text-slate-500 mb-8">Definieren Sie System-Features, um sie Mandanten zuzuweisen.</p>
-                        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-500 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest">Feature definieren</button>
+                        <Link href="/superadmin/features/editor" className="bg-indigo-500 text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest inline-block">Feature definieren</Link>
                     </div>
                 ) : (
                     features.map((feature) => (
@@ -132,41 +120,7 @@ export default function FeaturesPage() {
                 )}
             </div>
 
-            {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0f111a] w-full max-w-lg rounded-[2.5rem] border border-slate-200 dark:border-white/5 shadow-2xl overflow-hidden animate-in zoom-in duration-300 font-sans">
-                        <div className="p-8 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
-                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Neues Feature</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24} /></button>
-                        </div>
-                        <form onSubmit={handleSubmit} className="p-8 space-y-4">
-                            <div>
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Feature Key (UNIQUE)</label>
-                                <input
-                                    value={formData.key}
-                                    onChange={e => setFormData({ ...formData, key: e.target.value.toUpperCase() })}
-                                    className="w-full bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border-none font-bold uppercase"
-                                    placeholder="MODULE_INVOICING"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Beschreibung</label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full bg-slate-50 dark:bg-white/5 rounded-2xl p-4 border-none font-bold h-32"
-                                    placeholder="Ermöglicht das Erstellen von Rechnungen..."
-                                />
-                            </div>
-                            <button className="w-full bg-indigo-500 py-4 rounded-2xl text-white font-black uppercase tracking-widest hover:bg-indigo-600 transition shadow-xl shadow-indigo-500/20 mt-4">
-                                Feature Registrieren
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Create Modal removed */}
         </div>
     );
 }
