@@ -25,11 +25,13 @@ import {
     Hash,
     Banknote,
     Power,
-    PowerOff
+    PowerOff,
+    Edit
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface DriverDetails {
     id: string;
@@ -137,17 +139,26 @@ export default function DriverProfilePage() {
     return (
         <div className="space-y-8">
             {/* Nav Header */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={() => router.back()}
-                    className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 hover:border-slate-300 transition shadow-sm"
-                >
-                    <ChevronLeft size={24} />
-                </button>
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fahrerprofil</h1>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">ID: {driver.id.slice(0, 8)}</p>
+            <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => router.back()}
+                        className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 hover:border-slate-300 transition shadow-sm"
+                    >
+                        <ChevronLeft size={24} />
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fahrerprofil</h1>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">ID: {driver.id.slice(0, 8)}</p>
+                    </div>
                 </div>
+                <Link
+                    href={`/admin/drivers/editor?id=${driver.id}`}
+                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded-2xl font-black text-sm transition"
+                >
+                    <Edit size={16} />
+                    Profil bearbeiten
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
