@@ -48,7 +48,7 @@ export default function DocumentsPage() {
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
     const [showUploadModal, setShowUploadModal] = useState(false);
-    const [uploadWorkerType, setUploadWorkerType] = useState<"ANGEMELDET" | "SELBSTSTANDIG">("ANGEMELDET");
+    const [uploadWorkerType, setUploadWorkerType] = useState<"ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG">("ECHTER_DIENSTNEHMER");
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -85,14 +85,15 @@ export default function DocumentsPage() {
         MELDEZETTEL: "Meldezettel",
         GISA_EXTRACT: "GISA-Auszug (Gewerbe)",
         INSURANCE: "Haftpflichtversicherung",
-        SVS_CONFIRMATION: "SVS Bestätigung (Selbstständig)",
-        OGK_ANMELDUNG: "ÖGK Anmeldung (Angestellt)",
+        SVS_CONFIRMATION: "SVS Bestätigung",
+        OGK_ANMELDUNG: "ÖGK Anmeldung",
         TAX_ID: "UID / Steuer-ID",
         OTHER: "Sonstiges"
     };
 
     const workerRequirements = {
-        ANGEMELDET: ["IDENTITY", "LICENSE", "MELDEZETTEL", "OGK_ANMELDUNG"],
+        ECHTER_DIENSTNEHMER: ["IDENTITY", "LICENSE", "MELDEZETTEL", "OGK_ANMELDUNG"],
+        FREIER_DIENSTNEHMER: ["IDENTITY", "LICENSE", "MELDEZETTEL", "SVS_CONFIRMATION"],
         SELBSTSTANDIG: ["IDENTITY", "LICENSE", "MELDEZETTEL", "GISA_EXTRACT", "SVS_CONFIRMATION", "TAX_ID"]
     };
 
@@ -282,7 +283,7 @@ export default function DocumentsPage() {
             {/* Upload Modal */}
             <AnimatePresence>
                 {showUploadModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}

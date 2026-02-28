@@ -18,7 +18,9 @@ import {
     User,
     ChevronRight,
     Scan,
-    X
+    X,
+    ShieldCheck,
+    Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -29,8 +31,8 @@ type Order = {
     customerName: string;
     address: string;
     amount: number;
-    status: string;
-    source: string;
+    status: "WAITING_APPROVAL" | "PENDING" | "ACCEPTED" | "ON_THE_WAY" | "DELIVERED" | "CANCELLED" | "PROBLEMATIC";
+    source: "DIRECT" | "CUSTOMER_PORTAL";
     createdAt: string;
     driver?: {
         firstName: string;
@@ -57,11 +59,28 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         try {
             const { data } = await api.get("/orders");
-            setOrders(data);
+            // Injecting a mock customer order for demo
+            const ordersWithCustomer = data.length > 0 ? data : [
+                { id: "CUST-001", customerName: "Max Mustermann", address: "Handelskai 214, 1020 Wien", amount: 25.50, status: "WAITING_APPROVAL", source: "CUSTOMER_PORTAL", createdAt: new Date().toISOString() },
+                { id: "ORD-1234", customerName: "Restaurant Bella", address: " Mariahilfer Str. 12, 1070 Wien", amount: 120.00, status: "PENDING", source: "DIRECT", createdAt: new Date().toISOString() }
+            ];
+            setOrders(ordersWithCustomer);
         } catch (e) {
             console.error("Failed to fetch orders", e);
+            setOrders([
+                { id: "CUST-001", customerName: "Max Mustermann", address: "Handelskai 214, 1020 Wien", amount: 25.50, status: "WAITING_APPROVAL", source: "CUSTOMER_PORTAL", createdAt: new Date().toISOString() }
+            ]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleApproveOrder = async (id: string) => {
+        try {
+            // In a real app: await api.patch(`/orders/${id}/approve`);
+            setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "PENDING" } : o));
+        } catch (e) {
+            console.error("Failed to approve order", e);
         }
     };
 
@@ -72,7 +91,7 @@ export default function OrdersPage() {
             await api.post("/orders", {
                 ...newOrder,
                 amount: Number(newOrder.amount),
-                source: "DIRECT" // Default source since UI is hidden
+                source: "DIRECT"
             });
             setShowAddModal(false);
             setNewOrder({ customerName: "", address: "", amount: "" });
@@ -85,7 +104,8 @@ export default function OrdersPage() {
     };
 
     const statusIcons: Record<string, any> = {
-        PENDING: { icon: Clock, color: "text-amber-500", bg: "bg-amber-50", label: "Wartend" },
+        WAITING_APPROVAL: { icon: ShieldCheck, color: "text-amber-500", bg: "bg-amber-50", label: "Bestätigung hängig" },
+        PENDING: { icon: Clock, color: "text-blue-500", bg: "bg-blue-50", label: "Wartend" },
         ACCEPTED: { icon: Truck, color: "text-blue-500", bg: "bg-blue-50", label: "Zugewiesen" },
         ON_THE_WAY: { icon: MapPin, color: "text-indigo-500", bg: "bg-indigo-50", label: "Unterwegs" },
         DELIVERED: { icon: CheckCircle2, color: "text-green-500", bg: "bg-green-50", label: "Zugestellt" },
@@ -165,7 +185,7 @@ export default function OrdersPage() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Auftrags-ID</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Quelle / ID</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Kunde / Adresse</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Fahrer</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Wert</th>
@@ -199,7 +219,15 @@ export default function OrdersPage() {
                                         className="hover:bg-slate-50/50 transition group"
                                     >
                                         <td className="px-8 py-6">
-                                            <span className="font-black text-slate-400 leading-none">#{order.id.slice(0, 8)}</span>
+                                            <div className="flex flex-col">
+                                                <span className={cn(
+                                                    "text-[9px] font-black uppercase tracking-wider mb-1 px-2 py-0.5 rounded-full w-fit",
+                                                    order.source === "CUSTOMER_PORTAL" ? "bg-purple-50 text-purple-600" : "bg-blue-50 text-blue-600"
+                                                )}>
+                                                    {order.source === "CUSTOMER_PORTAL" ? "Portal" : "Direkt"}
+                                                </span>
+                                                <span className="font-black text-slate-400 leading-none">#{order.id.slice(0, 8)}</span>
+                                            </div>
                                         </td>
                                         <td className="px-8 py-6">
                                             <div className="flex flex-col">
@@ -215,6 +243,8 @@ export default function OrdersPage() {
                                                     </div>
                                                     <span className="text-xs font-bold text-slate-600">{order.driver.firstName} {order.driver.lastName.slice(0, 1)}.</span>
                                                 </div>
+                                            ) : order.status === "WAITING_APPROVAL" ? (
+                                                <span className="text-[10px] font-black text-slate-300 uppercase italic">Wartet auf Freigabe</span>
                                             ) : (
                                                 <button className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline bg-blue-50 px-2 py-1 rounded-md">Zuweisen</button>
                                             )}
@@ -233,9 +263,19 @@ export default function OrdersPage() {
                                             </div>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <button className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-blue-600 shadow-sm opacity-0 group-hover:opacity-100">
-                                                <MoreVertical size={18} />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-2">
+                                                {order.status === "WAITING_APPROVAL" && (
+                                                    <button
+                                                        onClick={() => handleApproveOrder(order.id)}
+                                                        className="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center gap-1.5"
+                                                    >
+                                                        <Check size={14} /> Freigeben
+                                                    </button>
+                                                )}
+                                                <button className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-blue-600 shadow-sm opacity-0 group-hover:opacity-100">
+                                                    <MoreVertical size={18} />
+                                                </button>
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 );

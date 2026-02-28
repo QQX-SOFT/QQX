@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin, Clock, User, LogOut } from "lucide-react";
+import { MapPin, Clock, User, LogOut, LayoutDashboard, MessageSquare, Wallet, Package, Key } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,18 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
 
             {/* Bottom Navigation */}
             <nav className="fixed bottom-0 w-full bg-white/80 backdrop-blur-xl border-t border-slate-200 px-6 py-3 flex items-center justify-around z-50">
+                <Link href="/driver/orders" className={cn(
+                    "flex flex-col items-center gap-1 transition",
+                    pathname === "/driver/orders" ? "text-blue-600" : "text-slate-400"
+                )}>
+                    <div className={cn(
+                        "p-2 rounded-xl transition",
+                        pathname === "/driver/orders" ? "bg-blue-50" : ""
+                    )}>
+                        <Package size={20} />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Aufträge</span>
+                </Link>
                 <Link href="/driver/track" className={cn(
                     "flex flex-col items-center gap-1 transition",
                     pathname === "/driver/track" ? "text-blue-600" : "text-slate-400"
@@ -40,26 +52,44 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                     )}>
                         <Clock size={20} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Tracking</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Shift</span>
                 </Link>
-                <Link href="/driver/history" className={cn(
+                <Link href="/driver/messages" className={cn(
                     "flex flex-col items-center gap-1 transition",
-                    pathname === "/driver/history" ? "text-blue-600" : "text-slate-400"
+                    pathname === "/driver/messages" ? "text-blue-600" : "text-slate-400"
                 )}>
                     <div className={cn(
                         "p-2 rounded-xl transition",
-                        pathname === "/driver/history" ? "bg-blue-50" : ""
+                        pathname === "/driver/messages" ? "bg-blue-50" : ""
                     )}>
-                        <MapPin size={20} />
+                        <MessageSquare size={20} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Verlauf</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Messages</span>
                 </Link>
-                <button className="flex flex-col items-center gap-1 text-slate-400 hover:text-red-500 transition">
-                    <div className="p-2">
-                        <LogOut size={20} />
+                <Link href="/driver/rentals" className={cn(
+                    "flex flex-col items-center gap-1 transition",
+                    pathname === "/driver/rentals" ? "text-blue-600" : "text-slate-400"
+                )}>
+                    <div className={cn(
+                        "p-2 rounded-xl transition",
+                        pathname === "/driver/rentals" ? "bg-blue-50" : ""
+                    )}>
+                        <Key size={20} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Logout</span>
-                </button>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Miete</span>
+                </Link>
+                <Link href="/driver/profile" className={cn(
+                    "flex flex-col items-center gap-1 transition",
+                    pathname === "/driver/profile" ? "text-blue-600" : "text-slate-400"
+                )}>
+                    <div className={cn(
+                        "p-2 rounded-xl transition",
+                        pathname === "/driver/profile" ? "bg-blue-50" : ""
+                    )}>
+                        <User size={20} />
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Profil</span>
+                </Link>
             </nav>
         </div>
     );

@@ -1,10 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Play, Square, Pause, MapPin, Clock, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+    Play,
+    Square,
+    Pause,
+    MapPin,
+    Clock,
+    AlertCircle,
+    CheckCircle2,
+    ArrowLeft,
+    Navigation,
+    Zap
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export default function TrackingPage() {
     const [driverId, setDriverId] = useState<string | null>(null);
@@ -18,21 +30,18 @@ export default function TrackingPage() {
         if (id) {
             setDriverId(id);
         } else {
-            // In a real app we'd redirect to /driver/login
-            // For demo, let's use the hardcoded one if none found
             setDriverId("demo-driver-1");
         }
     }, []);
 
     useEffect(() => {
-        // Check for active session on load
         const checkActiveSession = async () => {
+            if (!driverId) return;
             try {
                 const { data } = await api.get(`/time-entries/active/${driverId}`);
                 if (data) {
                     setActiveEntryId(data.id);
                     setStatus(data.status);
-                    // Calculate elapsed time
                     const start = new Date(data.startTime).getTime();
                     setSeconds(Math.floor((Date.now() - start) / 1000));
                 }
@@ -41,34 +50,29 @@ export default function TrackingPage() {
             }
         };
         checkActiveSession();
-    }, []);
+    }, [driverId]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
         let locationInterval: NodeJS.Timeout;
 
         if (status === "RUNNING" && activeEntryId) {
-            // Timer
             interval = setInterval(() => {
                 setSeconds((s) => s + 1);
             }, 1000);
 
-            // simulated location heartbeats
             let lat = 52.5200;
             let lng = 13.4050;
 
             locationInterval = setInterval(async () => {
-                // Simulate movement
                 lat += (Math.random() - 0.5) * 0.001;
                 lng += (Math.random() - 0.5) * 0.001;
-
                 try {
                     await api.patch(`/time-entries/location/${activeEntryId}`, { lat, lng });
-                    console.log("Location updated:", { lat, lng });
                 } catch (e) {
                     console.error("Location update failed", e);
                 }
-            }, 10000); // Every 10 seconds
+            }, 10000);
         }
         return () => {
             clearInterval(interval);
@@ -80,15 +84,12 @@ export default function TrackingPage() {
         const hrs = Math.floor(totalSeconds / 3600);
         const mins = Math.floor((totalSeconds % 3600) / 60);
         const secs = totalSeconds % 60;
-        return `${hrs.toString().padStart(2, "0")}:${mins
-            .toString()
-            .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+        return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
     const handleStart = async () => {
         setLoading(true);
         try {
-            // Mocking GPS for now
             const { data } = await api.post("/time-entries/start", {
                 driverId: driverId,
                 lat: 52.5200,
@@ -122,78 +123,91 @@ export default function TrackingPage() {
     };
 
     return (
-        <div className="p-6 max-w-lg mx-auto space-y-8">
-            {/* Status Header */}
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
-                <div className="relative z-10">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 text-center">Aktueller Status</p>
-                    <div className="flex items-center justify-center gap-3 mb-8">
+        <div className="p-6 max-w-lg mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700 font-sans">
+            {/* Nav Header */}
+            <header className="flex items-center gap-4">
+                <Link href="/driver" className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400">
+                    <ArrowLeft size={20} />
+                </Link>
+                <div>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Schicht Tracking</h1>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Live Arbeitszeit & GPS</p>
+                </div>
+            </header>
+
+            {/* Status Visualizer */}
+            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-xl relative overflow-hidden group">
+                <div className="relative z-10 text-center">
+                    <div className="flex items-center justify-center gap-3 mb-10">
                         <div className={cn(
-                            "w-3 h-3 rounded-full animate-pulse",
-                            status === "RUNNING" ? "bg-green-500" : status === "PAUSED" ? "bg-yellow-500" : "bg-slate-300"
+                            "w-4 h-4 rounded-full",
+                            status === "RUNNING" ? "bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)] animate-pulse" :
+                                status === "PAUSED" ? "bg-yellow-500 animate-pulse" : "bg-slate-300"
                         )}></div>
-                        <span className="text-xl font-black text-slate-900 tracking-tight">
-                            {status === "RUNNING" ? "Schicht aktiv" : status === "PAUSED" ? "Pause" : "Nicht im Dienst"}
+                        <span className="text-xl font-black text-slate-900 tracking-tight uppercase">
+                            {status === "RUNNING" ? "Schicht läuft" : status === "PAUSED" ? "Pause" : "Nicht im Dienst"}
                         </span>
                     </div>
 
-                    <div className="text-6xl font-black text-center text-slate-900 tracking-tighter mb-2 tabular-nums">
+                    <div className="text-7xl font-black text-slate-900 tracking-tighter mb-4 tabular-nums py-4">
                         {formatTime(seconds)}
                     </div>
-                    <p className="text-center text-slate-400 text-sm font-medium">Verbrachte Arbeitszeit heute</p>
+                    <p className="text-slate-400 text-xs font-black uppercase tracking-widest">Aktive Arbeitszeit</p>
                 </div>
 
-                {/* Background Decor */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-slate-100">
+                {/* Progress Bar Top */}
+                <div className="absolute top-0 left-0 w-full h-2 bg-slate-50">
                     <motion.div
-                        className="h-full bg-blue-600"
+                        className="h-full bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]"
                         initial={{ width: "0%" }}
                         animate={{ width: status === "RUNNING" ? "100%" : "0%" }}
                         transition={{ duration: 1 }}
                     />
                 </div>
+
+                <Clock className="absolute bottom-[-30px] left-[-30px] text-slate-50 opacity-5 group-hover:scale-110 transition duration-1000" size={200} />
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-6">
                 <AnimatePresence mode="wait">
                     {status === "IDLE" ? (
                         <motion.button
                             key="start"
-                            initial={{ opacity: 0, scale: 0.9 }}
+                            initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
                             onClick={handleStart}
                             disabled={loading}
-                            className="w-full bg-blue-600 text-white rounded-[2rem] py-10 flex flex-col items-center justify-center gap-4 shadow-2xl shadow-blue-200 hover:bg-blue-700 transition group"
+                            className="w-full bg-blue-600 text-white rounded-[2.5rem] py-12 flex flex-col items-center justify-center gap-6 shadow-2xl shadow-blue-200 hover:bg-blue-700 transition-all duration-300 group active:scale-95"
                         >
-                            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center group-hover:scale-110 transition duration-500">
-                                <Play size={32} className="fill-white" />
+                            <div className="w-20 h-20 bg-white/20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition duration-500 shadow-xl">
+                                <Play size={40} className="fill-white" />
                             </div>
-                            <span className="text-xl font-black uppercase tracking-widest">Schicht Starten</span>
+                            <span className="text-2xl font-black uppercase tracking-[0.2em]">Starten</span>
                         </motion.button>
                     ) : (
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-6">
                             <motion.button
                                 key="stop"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 onClick={handleStop}
                                 disabled={loading}
-                                className="w-full bg-slate-900 text-white rounded-[2rem] py-8 flex items-center justify-center gap-4 shadow-xl hover:bg-black transition"
+                                className="w-full bg-slate-950 text-white rounded-[2.5rem] py-10 flex items-center justify-center gap-4 shadow-xl hover:bg-black transition-all duration-300 active:scale-95 border-b-4 border-slate-800"
                             >
-                                <Square size={24} className="fill-white" />
-                                <span className="text-lg font-black uppercase tracking-widest">Schicht Beenden</span>
+                                <Square size={28} className="fill-white" />
+                                <span className="text-xl font-black uppercase tracking-widest">Beenden</span>
                             </motion.button>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <button className="bg-white border border-slate-200 p-6 rounded-3xl flex flex-col items-center gap-2 text-slate-600 hover:bg-slate-50 transition">
-                                    <Pause size={20} />
-                                    <span className="text-xs font-bold uppercase tracking-widest">Pause</span>
+                                <button className="bg-white border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-3 text-slate-600 hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-600 transition-all duration-300 shadow-sm active:scale-95">
+                                    <Pause size={24} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Pause</span>
                                 </button>
-                                <button className="bg-white border border-slate-200 p-6 rounded-3xl flex flex-col items-center gap-2 text-slate-600 hover:bg-slate-50 transition">
-                                    <MapPin size={20} />
-                                    <span className="text-xs font-bold uppercase tracking-widest">Standort</span>
+                                <button className="bg-white border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-3 text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-300 shadow-sm active:scale-95">
+                                    <Navigation size={24} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">GPS Fix</span>
                                 </button>
                             </div>
                         </div>
@@ -201,24 +215,25 @@ export default function TrackingPage() {
                 </AnimatePresence>
             </div>
 
-            {/* Info Cards */}
-            <div className="grid grid-cols-1 gap-4">
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 flex items-center gap-4 transition hover:bg-blue-50/50">
-                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+            {/* Monitoring Cards */}
+            <div className="grid grid-cols-1 gap-4 pt-4">
+                <div className="bg-white p-7 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center gap-5 transition hover:shadow-lg duration-500">
+                    <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition duration-500">
+                        <Zap size={24} />
+                    </div>
+                    <div>
+                        <h4 className="font-black text-slate-900 leading-none mb-2">Live Reporting</h4>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deine Position wird live an Admin übertragen.</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-7 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center gap-5">
+                    <div className="w-14 h-14 bg-green-50 text-green-600 rounded-2xl flex items-center justify-center">
                         <CheckCircle2 size={24} />
                     </div>
                     <div>
-                        <h4 className="font-bold text-slate-900 leading-none mb-1">Pausen-Compliance</h4>
-                        <p className="text-xs text-slate-500 font-medium">Alle vorgeschriebenen Pausen eingehalten.</p>
-                    </div>
-                </div>
-                <div className="bg-white p-6 rounded-3xl border border-slate-100 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-600">
-                        <AlertCircle size={24} />
-                    </div>
-                    <div>
-                        <h4 className="font-bold text-slate-900 leading-none mb-1">Nächste Prüfung</h4>
-                        <p className="text-xs text-slate-500 font-medium">Fahrzeugprüfung in 3 Tagen fällig.</p>
+                        <h4 className="font-black text-slate-900 leading-none mb-2">System Status</h4>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hardware OK • Verbindung Stabil</p>
                     </div>
                 </div>
             </div>

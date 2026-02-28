@@ -20,7 +20,9 @@ import {
     FileText,
     MapPin,
     Calendar,
-    X
+    X,
+    MessageSquare,
+    Key
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +35,8 @@ const mainLinks = [
 
 const operationsLinks = [
     { name: "Aufträge", icon: ClipboardList, href: "/admin/orders" },
-    { name: "Fahrzeuge", icon: Car, href: "/admin/fleet" },
+    { name: "Fuhrpark", icon: Car, href: "/admin/fleet" },
+    { name: "Vermietung", icon: Key, href: "/admin/rentals" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
     { name: "Dokumente", icon: FileText, href: "/admin/documents" },
 ];
@@ -41,6 +44,10 @@ const operationsLinks = [
 const financeLinks = [
     { name: "Buchhaltung", icon: Wallet, href: "/admin/accounting" },
     { name: "Auszahlungen", icon: Calendar, href: "/admin/payouts" },
+];
+
+const communicationLinks = [
+    { name: "Nachrichten", icon: MessageSquare, href: "/admin/messages" },
 ];
 
 const analyticLinks = [
@@ -109,6 +116,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-4 mb-3">Finanzen</div>
                         <div className="space-y-1">
                             {financeLinks.map((link) => (
+                                <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] px-4 mb-3">Kommunikation</div>
+                        <div className="space-y-1">
+                            {communicationLinks.map((link) => (
                                 <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
                             ))}
                         </div>

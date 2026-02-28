@@ -40,7 +40,7 @@ interface Driver {
     lastName: string;
     phone: string | null;
     birthday: string | null;
-    type: "EMPLOYED" | "FREELANCE";
+    type: "ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG";
     user?: {
         email: string;
     };
@@ -74,7 +74,7 @@ export default function DriversPage() {
         phone: "",
         email: "",
         birthday: "",
-        employmentType: "ANGEMELDET" as "ANGEMELDET" | "SELBSTSTANDIG",
+        employmentType: "ECHTER_DIENSTNEHMER" as "ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG",
         street: "",
         zip: "",
         city: "",
@@ -85,11 +85,17 @@ export default function DriversPage() {
     });
 
     const docRequirements = {
-        ANGEMELDET: [
+        ECHTER_DIENSTNEHMER: [
             "Lichtbildausweis/Reisepass",
             "Führerschein (Klasse B)",
             "Meldezettel",
             "ÖGK Anmeldung"
+        ],
+        FREIER_DIENSTNEHMER: [
+            "Lichtbildausweis/Reisepass",
+            "Führerschein (Klasse B)",
+            "Meldezettel",
+            "SVS Bestätigung"
         ],
         SELBSTSTANDIG: [
             "Lichtbildausweis/Reisepass",
@@ -173,7 +179,7 @@ export default function DriversPage() {
                 phone: "",
                 email: "",
                 birthday: "",
-                employmentType: "ANGEMELDET",
+                employmentType: "ECHTER_DIENSTNEHMER",
                 street: "",
                 zip: "",
                 city: "",
@@ -259,10 +265,14 @@ export default function DriversPage() {
                                 <div className="flex items-center gap-3 mt-1 text-slate-400 text-sm font-medium">
                                     <div className={cn(
                                         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                        driver.type === "FREELANCE" ? "bg-amber-50 text-amber-600" : "bg-blue-50 text-blue-600"
+                                        driver.type === "SELBSTSTANDIG" ? "bg-amber-50 text-amber-600" :
+                                            driver.type === "FREIER_DIENSTNEHMER" ? "bg-purple-50 text-purple-600" :
+                                                "bg-blue-50 text-blue-600"
                                     )}>
                                         <Briefcase size={10} />
-                                        {driver.type === "FREELANCE" ? "Subunternehmer" : "Angestellt"}
+                                        {driver.type === "SELBSTSTANDIG" ? "Selbstständig" :
+                                            driver.type === "FREIER_DIENSTNEHMER" ? "Freier Dienstnehmer" :
+                                                "Echter Dienstnehmer"}
                                     </div>
                                     <span>•</span>
                                     <span className="flex items-center gap-1 truncate max-w-[150px]"><Mail size={12} /> {driver.user?.email || "-"}</span>
@@ -339,7 +349,7 @@ export default function DriversPage() {
             {/* Document View Modal */}
             <AnimatePresence>
                 {viewingDocs && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -404,7 +414,7 @@ export default function DriversPage() {
                                 <div className="pt-8 border-t border-slate-50">
                                     <p className="text-xs font-bold text-slate-400 mb-4 px-2 uppercase tracking-widest">Gesetzlich erforderlich:</p>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {(viewingDocs.type === "FREELANCE" ? docRequirements.SELBSTSTANDIG : docRequirements.ANGEMELDET).map((req: string) => {
+                                        {(docRequirements[viewingDocs.type] || []).map((req: string) => {
                                             const hasDoc = docs.some(d => d.title.toLowerCase().includes(req.toLowerCase()) || d.type.toLowerCase().includes(req.toLowerCase()));
                                             return (
                                                 <div key={req} className={cn(
@@ -427,7 +437,7 @@ export default function DriversPage() {
             {/* Detailed Add Driver Modal */}
             <AnimatePresence>
                 {showAddModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -442,26 +452,36 @@ export default function DriversPage() {
 
                             <form onSubmit={handleCreateDriver} className="space-y-8">
                                 {/* Type Selector */}
-                                <div className="flex p-1 bg-slate-100 rounded-2xl max-w-md">
+                                <div className="flex p-1 bg-slate-100 rounded-2xl w-full">
                                     <button
                                         type="button"
-                                        onClick={() => setNewDriver({ ...newDriver, employmentType: "ANGEMELDET" })}
+                                        onClick={() => setNewDriver({ ...newDriver, employmentType: "ECHTER_DIENSTNEHMER" })}
                                         className={cn(
-                                            "flex-1 py-3 rounded-xl text-sm font-black transition-all",
-                                            newDriver.employmentType === "ANGEMELDET" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                            "flex-1 py-3 rounded-xl text-[11px] font-black transition-all",
+                                            newDriver.employmentType === "ECHTER_DIENSTNEHMER" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
                                         )}
                                     >
-                                        Angestellt
+                                        Echter DN
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setNewDriver({ ...newDriver, employmentType: "FREIER_DIENSTNEHMER" })}
+                                        className={cn(
+                                            "flex-1 py-3 rounded-xl text-[11px] font-black transition-all",
+                                            newDriver.employmentType === "FREIER_DIENSTNEHMER" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                                        )}
+                                    >
+                                        Freier DN
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setNewDriver({ ...newDriver, employmentType: "SELBSTSTANDIG" })}
                                         className={cn(
-                                            "flex-1 py-3 rounded-xl text-sm font-black transition-all",
+                                            "flex-1 py-3 rounded-xl text-[11px] font-black transition-all",
                                             newDriver.employmentType === "SELBSTSTANDIG" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
                                         )}
                                     >
-                                        Selbstständig (Sub)
+                                        Selbstständig
                                     </button>
                                 </div>
 
@@ -514,7 +534,7 @@ export default function DriversPage() {
                                         <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Gesetzliche Anforderungen (Österreich)</h4>
                                         <p className="text-[10px] text-slate-500 font-medium leading-relaxed mb-4 uppercase tracking-widest">Die folgenden Dokumente werden für diesen Typ benötigt:</p>
                                         <div className="flex flex-wrap gap-2">
-                                            {(newDriver.employmentType === "SELBSTSTANDIG" ? docRequirements.SELBSTSTANDIG : docRequirements.ANGEMELDET).map(req => (
+                                            {(docRequirements[newDriver.employmentType] || []).map(req => (
                                                 <span key={req} className="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-blue-700 border border-blue-100">{req}</span>
                                             ))}
                                         </div>
