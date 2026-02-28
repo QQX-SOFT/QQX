@@ -17,6 +17,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const MapNoSSR = dynamic(() => import("@/components/LiveMap"), { ssr: false, loading: () => <div className="h-full w-full flex items-center justify-center bg-slate-100 rounded-[2.5rem] animate-pulse">Lade Karte...</div> });
 
 export default function TrackingPage() {
     const [driverId, setDriverId] = useState<string | null>(null);
@@ -24,6 +27,7 @@ export default function TrackingPage() {
     const [seconds, setSeconds] = useState(0);
     const [activeEntryId, setActiveEntryId] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
 
     useEffect(() => {
         const id = localStorage.getItem("driverId");
@@ -54,29 +58,36 @@ export default function TrackingPage() {
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        let locationInterval: NodeJS.Timeout;
+        let watchId: number;
 
-        if (status === "RUNNING" && activeEntryId) {
+        if (status === "RUNNING") {
             interval = setInterval(() => {
                 setSeconds((s) => s + 1);
             }, 1000);
 
-            let lat = 52.5200;
-            let lng = 13.4050;
+            if (navigator.geolocation && activeEntryId) {
+                watchId = navigator.geolocation.watchPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        setLocation({ lat: latitude, lng: longitude });
 
-            locationInterval = setInterval(async () => {
-                lat += (Math.random() - 0.5) * 0.001;
-                lng += (Math.random() - 0.5) * 0.001;
-                try {
-                    await api.patch(`/time-entries/location/${activeEntryId}`, { lat, lng });
-                } catch (e) {
-                    console.error("Location update failed", e);
-                }
-            }, 10000);
+                        try {
+                            await api.patch(`/time-entries/location/${activeEntryId}`, {
+                                lat: latitude,
+                                lng: longitude
+                            });
+                        } catch (e) {
+                            console.error("Location update failed", e);
+                        }
+                    },
+                    (error) => console.error(error),
+                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+                );
+            }
         }
         return () => {
-            clearInterval(interval);
-            clearInterval(locationInterval);
+            if (interval) clearInterval(interval);
+            if (watchId && navigator.geolocation) navigator.geolocation.clearWatch(watchId);
         };
     }, [status, activeEntryId]);
 
@@ -89,11 +100,29 @@ export default function TrackingPage() {
 
     const handleStart = async () => {
         setLoading(true);
+        let startLat = 52.5200;
+        let startLng = 13.4050;
+
         try {
+            if (navigator.geolocation) {
+                await new Promise<void>((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => {
+                            startLat = pos.coords.latitude;
+                            startLng = pos.coords.longitude;
+                            setLocation({ lat: startLat, lng: startLng });
+                            resolve();
+                        },
+                        () => resolve(), // Fallback on error
+                        { timeout: 3000 }
+                    );
+                });
+            }
+
             const { data } = await api.post("/time-entries/start", {
                 driverId: driverId,
-                lat: 52.5200,
-                lng: 13.4050
+                lat: startLat,
+                lng: startLng
             });
             setActiveEntryId(data.id);
             setStatus("RUNNING");
@@ -109,8 +138,8 @@ export default function TrackingPage() {
         setLoading(true);
         try {
             await api.patch(`/time-entries/stop/${activeEntryId}`, {
-                lat: 52.5200,
-                lng: 13.4050
+                lat: location?.lat || 52.5200,
+                lng: location?.lng || 13.4050
             });
             setStatus("IDLE");
             setSeconds(0);
@@ -214,6 +243,13 @@ export default function TrackingPage() {
                     )}
                 </AnimatePresence>
             </div>
+
+            {/* Live Map Display */}
+            {status === "RUNNING" && location && (
+                <div className="bg-slate-100 rounded-[2.5rem] p-2 shadow-inner border border-slate-200 h-64 overflow-hidden relative">
+                    <MapNoSSR locations={[{ id: "me", lat: location.lat, lng: location.lng, name: "Meine Position" }]} singleMarker={true} />
+                </div>
+            )}
 
             {/* Monitoring Cards */}
             <div className="grid grid-cols-1 gap-4 pt-4">

@@ -14,6 +14,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+
+const MapNoSSR = dynamic(() => import("@/components/LiveMap"), { ssr: false, loading: () => <div className="h-full w-full flex items-center justify-center bg-slate-100 rounded-[3rem] animate-pulse">Lade Karte...</div> });
 
 type Location = {
     id: string; // TimeEntry ID
@@ -92,71 +95,22 @@ export default function TrackingPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 flex-1 min-h-0">
                 {/* Master Map View */}
-                <div className="lg:col-span-3 bg-slate-900 rounded-[3rem] p-4 shadow-2xl relative overflow-hidden flex flex-col border border-slate-800">
-                    {/* Simulated Map Background */}
-                    <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
-                        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M0,50 Q25,25 50,50 T100,50" fill="none" stroke="%234f46e5" stroke-width="2"/><circle cx="50" cy="50" r="3" fill="%234f46e5"/></svg>')`,
-                        backgroundSize: '150px 150px'
-                    }}></div>
+                <div className="lg:col-span-3 bg-slate-100 rounded-[3rem] p-4 shadow-sm relative overflow-hidden flex flex-col border border-slate-200">
+                    <div className="absolute inset-0 z-0">
+                        {locations.length > 0 ? (
+                            <MapNoSSR locations={locations.map(loc => ({ id: loc.id, lat: loc.lat, lng: loc.lng, name: loc.driverName }))} />
+                        ) : (
+                            <MapNoSSR locations={[]} />
+                        )}
+                    </div>
 
                     {locations.length === 0 && !loading && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-10">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-10 bg-white/50 backdrop-blur-sm rounded-[3rem]">
                             <WifiOff size={64} className="mb-6 opacity-20" />
-                            <h3 className="text-xl font-black text-slate-300">Keine aktiven Einheiten</h3>
+                            <h3 className="text-xl font-black text-slate-700">Keine aktiven Einheiten</h3>
                             <p className="text-sm font-medium mt-2 max-w-sm text-center">Aktuell werden keine Telemetriedaten empfangen. Warten auf Fahrer-Logins.</p>
                         </div>
                     )}
-
-                    {/* Entities on "Map" */}
-                    <AnimatePresence>
-                        {locations.map((loc, i) => {
-                            // Map generic coords to our div
-                            // Berlin Lat/Lng rough scale logic for demo
-                            const baseX = 52.52;
-                            const baseY = 13.40;
-                            const diffX = (loc.lat - baseX) * 2000;
-                            const diffY = (loc.lng - baseY) * 2000;
-
-                            // Keep in bounds
-                            const top = Math.max(10, Math.min(90, 50 - diffX)) + "%";
-                            const left = Math.max(10, Math.min(90, 50 + diffY)) + "%";
-
-                            return (
-                                <motion.div
-                                    key={loc.id}
-                                    initial={{ scale: 0, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1, top, left }}
-                                    transition={{ duration: 1 }}
-                                    className="absolute z-20"
-                                >
-                                    <div className="relative group cursor-pointer">
-                                        {/* Ping animation */}
-                                        <div className="absolute -inset-4 bg-blue-500/20 rounded-full animate-ping pointer-events-none"></div>
-
-                                        {/* Marker */}
-                                        <div className="relative w-10 h-10 bg-white shadow-xl shadow-blue-900/50 rounded-2xl flex items-center justify-center border-2 border-blue-500 group-hover:scale-110 transition duration-300">
-                                            <Truck size={20} className="text-blue-600" />
-                                        </div>
-
-                                        {/* Tooltip */}
-                                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 whitespace-nowrap bg-slate-800 text-white text-xs font-bold py-2 px-4 rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none z-30">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                                                {loc.driverName}
-                                            </div>
-                                            <div className="text-[10px] text-slate-400 font-mono">
-                                                {loc.lat.toFixed(5)}, {loc.lng.toFixed(5)}
-                                            </div>
-                                            {/* Arrow */}
-                                            <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
-
-                    {/* Overlay UI Controls */}
                     <div className="mt-auto flex justify-between items-end p-4 z-20">
                         <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700 p-4 rounded-2xl">
                             <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Flottenstatus</h4>
@@ -221,6 +175,6 @@ export default function TrackingPage() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
