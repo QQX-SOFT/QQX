@@ -35,6 +35,7 @@ function DocumentEditorForm() {
         title: "",
         expiryDate: ""
     });
+    const [file, setFile] = useState<File | null>(null);
 
     const docTypes: Record<string, string> = {
         IDENTITY: "Lichtbildausweis/Reisepass",
@@ -68,17 +69,30 @@ function DocumentEditorForm() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.driverId || !formData.type || !formData.title) {
-            alert("Bitte füllen Sie alle Pflichtfelder aus.");
+        if (!formData.driverId || !formData.type || !formData.title || (!id && !file)) {
+            alert("Bitte füllen Sie alle Pflichtfelder aus und wählen Sie eine Datei.");
             return;
         }
 
         setSaving(true);
         try {
+            let uploadedFileUrl = "https://example.com/placeholder.pdf";
+
+            if (file) {
+                const formDataUpload = new FormData();
+                formDataUpload.append("file", file);
+
+                const uploadRes = await api.post("/upload", formDataUpload, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                uploadedFileUrl = uploadRes.data.url;
+            }
+
             const payload = {
                 ...formData,
-                fileUrl: "https://example.com/placeholder.pdf" // Placeholder
+                fileUrl: uploadedFileUrl
             };
+
             if (id) {
                 // If edit is supported: await api.patch(`/documents/${id}`, payload);
                 await api.post("/documents", payload);
@@ -165,9 +179,23 @@ function DocumentEditorForm() {
                         />
                     </div>
 
-                    <div className="p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] text-center hover:border-blue-400 transition group cursor-pointer">
-                        <UploadCloud className="mx-auto text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition mb-2" size={32} />
-                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Datei auswählen oder hierher ziehen</p>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Dokument-Datei *</label>
+                        <div className="relative p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2rem] text-center hover:border-blue-400 transition group cursor-pointer bg-slate-50 dark:bg-slate-900/50">
+                            <input
+                                type="file"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setFile(e.target.files[0]);
+                                    }
+                                }}
+                            />
+                            <UploadCloud className="mx-auto text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition mb-2" size={32} />
+                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                                {file ? file.name : "Datei auswählen oder hierher ziehen"}
+                            </p>
+                        </div>
                     </div>
 
                 </div>
