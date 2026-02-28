@@ -26,6 +26,10 @@ type Location = {
     lng: number;
     lastUpdate: string;
     status: string;
+    phone?: string;
+    speed?: number;
+    vehicle?: string;
+    order?: string;
 };
 
 export default function TrackingPage() {
@@ -46,8 +50,11 @@ export default function TrackingPage() {
                 driverName: `${entry.driver.firstName} ${entry.driver.lastName}`,
                 lat: entry.currentLat,
                 lng: entry.currentLng,
-                lastUpdate: entry.updatedAt,
-                status: 'ACTIVE'
+                lastUpdate: new Date(entry.updatedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                status: 'ACTIVE',
+                phone: entry.driver.phone,
+                speed: undefined, // calculated on device if needed later
+                vehicle: entry.vehicle?.licensePlate || undefined,
             })));
         } catch (error) {
             console.error("Failed to load locations", error);
@@ -98,7 +105,18 @@ export default function TrackingPage() {
                 <div className="lg:col-span-3 bg-slate-100 rounded-[3rem] p-4 shadow-sm relative overflow-hidden flex flex-col border border-slate-200">
                     <div className="absolute inset-0 z-0">
                         {locations.length > 0 ? (
-                            <MapNoSSR locations={locations.map(loc => ({ id: loc.id, lat: loc.lat, lng: loc.lng, name: loc.driverName }))} />
+                            <MapNoSSR locations={locations.map(loc => ({
+                                id: loc.id,
+                                lat: loc.lat,
+                                lng: loc.lng,
+                                name: loc.driverName,
+                                status: loc.status,
+                                phone: loc.phone,
+                                lastUpdate: loc.lastUpdate,
+                                speed: loc.speed,
+                                vehicle: loc.vehicle,
+                                order: loc.order
+                            }))} />
                         ) : (
                             <MapNoSSR locations={[]} />
                         )}

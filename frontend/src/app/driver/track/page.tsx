@@ -247,7 +247,7 @@ export default function TrackingPage() {
             {/* Live Map Display */}
             {status === "RUNNING" && location && (
                 <div className="bg-slate-100 rounded-[2.5rem] p-2 shadow-inner border border-slate-200 h-64 overflow-hidden relative">
-                    <MapNoSSR locations={[{ id: "me", lat: location.lat, lng: location.lng, name: "Meine Position" }]} singleMarker={true} />
+                    <MapNoSSR locations={[{ id: "me", lat: location.lat, lng: location.lng, name: "Meine Position", status: status }]} singleMarker={true} />
                 </div>
             )}
 

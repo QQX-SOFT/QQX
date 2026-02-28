@@ -14,16 +14,22 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Custom icon for drivers
-const driverIcon = new L.Icon({
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    shadowSize: [41, 41],
-    className: "hue-rotate-[140deg] saturate-200 contrast-150" // turn it reddish or green
-});
+// Custom dynamic icon for drivers
+const createDriverIcon = (status: string) => {
+    let markerColor = '#94a3b8'; // offline (gray)
+    if (status === 'online' || status === 'ACTIVE' || status === 'RUNNING') markerColor = '#4ade80'; // active (green)
+    if (status === 'busy' || status === 'beschäftigt') markerColor = '#fbbf24'; // busy (yellow)
+    if (status === 'pause' || status === 'PAUSED') markerColor = '#fbbf24'; // pause (yellow)
+    if (status === 'mahlzeit') markerColor = '#a78bfa'; // meal (purple)
+
+    return new L.DivIcon({
+        className: 'custom-marker',
+        html: `<div style="background: ${markerColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">🚗</div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -15],
+    });
+};
 
 const defaultCenter: [number, number] = [52.5200, 13.4050]; // Berlin Default
 
@@ -41,6 +47,19 @@ function MapBounds({ markers }: { markers: any[] }) {
     return null;
 }
 
+export interface LiveMapLocation {
+    id: string;
+    lat: number;
+    lng: number;
+    name?: string;
+    status?: string;
+    phone?: string;
+    lastUpdate?: string;
+    speed?: number;
+    vehicle?: string;
+    order?: string;
+}
+
 export default function LiveMap({
     locations = [],
     center = defaultCenter,
@@ -48,7 +67,7 @@ export default function LiveMap({
     singleMarker = false,
     className = "h-full w-full rounded-3xl"
 }: {
-    locations?: { id: string, name?: string, lat: number, lng: number }[],
+    locations?: LiveMapLocation[],
     center?: [number, number],
     zoom?: number,
     singleMarker?: boolean,
@@ -75,12 +94,33 @@ export default function LiveMap({
                 <Marker
                     key={loc.id}
                     position={[loc.lat, loc.lng]}
-                    icon={driverIcon}
+                    icon={createDriverIcon(loc.status || 'offline')}
                 >
                     {loc.name && (
                         <Popup>
-                            <div className="font-bold text-sm">{loc.name}</div>
-                            <div className="text-[10px] text-slate-500">{loc.lat.toFixed(5)}, {loc.lng.toFixed(5)}</div>
+                            <div className="min-w-[200px] font-sans">
+                                <h6 className="m-0 mb-3 font-bold text-[15px] border-b pb-2">{loc.name}</h6>
+                                <div className="text-[13px] leading-relaxed space-y-1 mt-2">
+                                    <div className="flex items-center gap-2">
+                                        <strong>Status:</strong>
+                                        <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider text-white ${(loc.status === 'RUNNING' || loc.status === 'online' || loc.status === 'ACTIVE') ? 'bg-green-500' :
+                                                (loc.status === 'PAUSED' || loc.status === 'busy' || loc.status === 'beschäftigt') ? 'bg-yellow-500' :
+                                                    'bg-slate-400'
+                                            }`}>{loc.status || 'offline'}</span>
+                                    </div>
+                                    {loc.phone && <div><strong>Telefon:</strong> <a href={`tel:${loc.phone}`} className="text-blue-600 no-underline">{loc.phone}</a></div>}
+                                    {loc.lastUpdate && <div><strong>Letztes Update:</strong> {loc.lastUpdate}</div>}
+                                    {loc.speed !== undefined && <div><strong>Geschwindigkeit:</strong> {loc.speed} km/h</div>}
+                                    {loc.vehicle && <div><strong>Kennzeichen:</strong> {loc.vehicle}</div>}
+                                    {loc.order && <div className="mt-2 pt-2 border-t"><strong>Aktiver Auftrag:</strong><br /><span className="text-blue-600 font-medium">{loc.order}</span></div>}
+
+                                </div>
+                                <div className="mt-4">
+                                    <a href={`/admin/drivers/${loc.id.replace('me', '')}`} className="block w-full text-center bg-blue-600 text-white font-bold py-2 rounded-lg no-underline hover:bg-blue-700 transition">
+                                        Profil ansehen
+                                    </a>
+                                </div>
+                            </div>
                         </Popup>
                     )}
                 </Marker>
