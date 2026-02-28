@@ -22,7 +22,10 @@ import {
     Calendar,
     X,
     MessageSquare,
-    Key
+    Key,
+    Building2,
+    Banknote,
+    ScrollText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,14 +39,17 @@ const mainLinks = [
 const operationsLinks = [
     { name: "Aufträge", icon: ClipboardList, href: "/admin/orders" },
     { name: "Fuhrpark", icon: Car, href: "/admin/fleet" },
+    { name: "Kunden", icon: Building2, href: "/admin/customers" },
     { name: "Vermietung", icon: Key, href: "/admin/rentals" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
+    { name: "Verträge", icon: ScrollText, href: "/admin/contracts" },
     { name: "Dokumente", icon: FileText, href: "/admin/documents" },
 ];
 
 const financeLinks = [
     { name: "Buchhaltung", icon: Wallet, href: "/admin/accounting" },
     { name: "Auszahlungen", icon: Calendar, href: "/admin/payouts" },
+    { name: "Preise", icon: Banknote, href: "/admin/pricing" },
 ];
 
 const communicationLinks = [

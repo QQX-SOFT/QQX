@@ -1,0 +1,58 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.prisma = void 0;
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const dotenv_1 = __importDefault(require("dotenv"));
+const client_1 = require("@prisma/client");
+const tenantRoutes_1 = __importDefault(require("./routes/tenantRoutes"));
+const driverRoutes_1 = __importDefault(require("./routes/driverRoutes"));
+const vehicleRoutes_1 = __importDefault(require("./routes/vehicleRoutes"));
+const timeRoutes_1 = __importDefault(require("./routes/timeRoutes"));
+const reportRoutes_1 = __importDefault(require("./routes/reportRoutes"));
+const ratingRoutes_1 = __importDefault(require("./routes/ratingRoutes"));
+const invoiceRoutes_1 = __importDefault(require("./routes/invoiceRoutes"));
+const dashboardRoutes_1 = __importDefault(require("./routes/dashboardRoutes"));
+const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
+const complaintRoutes_1 = __importDefault(require("./routes/complaintRoutes"));
+const documentRoutes_1 = __importDefault(require("./routes/documentRoutes"));
+const walletRoutes_1 = __importDefault(require("./routes/walletRoutes"));
+const settingsRoutes_1 = __importDefault(require("./routes/settingsRoutes"));
+const superadminRoutes_1 = __importDefault(require("./routes/superadminRoutes"));
+const customerRoutes_1 = __importDefault(require("./routes/customerRoutes"));
+const contractRoutes_1 = __importDefault(require("./routes/contractRoutes"));
+const tenantMiddleware_1 = require("./middleware/tenantMiddleware");
+dotenv_1.default.config();
+const app = (0, express_1.default)();
+const prisma = new client_1.PrismaClient();
+exports.prisma = prisma;
+const PORT = process.env.PORT || 3001;
+app.use((0, cors_1.default)());
+app.use(express_1.default.json());
+app.use(tenantMiddleware_1.tenantMiddleware);
+// Routes
+app.use('/api/tenants', tenantRoutes_1.default);
+app.use('/api/drivers', driverRoutes_1.default);
+app.use('/api/vehicles', vehicleRoutes_1.default);
+app.use('/api/time-entries', timeRoutes_1.default);
+app.use('/api/reports', reportRoutes_1.default);
+app.use('/api/ratings', ratingRoutes_1.default);
+app.use('/api/invoices', invoiceRoutes_1.default);
+app.use('/api/dashboard', dashboardRoutes_1.default);
+app.use('/api/orders', orderRoutes_1.default);
+app.use('/api/complaints', complaintRoutes_1.default);
+app.use('/api/documents', documentRoutes_1.default);
+app.use('/api/wallet', walletRoutes_1.default);
+app.use('/api/settings', settingsRoutes_1.default);
+app.use('/api/superadmin', superadminRoutes_1.default);
+app.use('/api/customers', customerRoutes_1.default);
+app.use('/api/contracts', contractRoutes_1.default);
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+app.listen(PORT, () => {
+    console.log(`Backend server running on port ${PORT}`);
+});
