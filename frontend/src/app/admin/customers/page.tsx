@@ -18,7 +18,7 @@ import {
     ChevronRight,
     User
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -37,16 +37,7 @@ export default function CustomersPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [customers, setCustomers] = useState<Customer[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
     const [creating, setCreating] = useState(false);
-
-    const [newCustomer, setNewCustomer] = useState({
-        name: "",
-        contactPerson: "",
-        email: "",
-        phone: "",
-        address: ""
-    });
 
     useEffect(() => {
         fetchCustomers();
@@ -63,26 +54,7 @@ export default function CustomersPage() {
         }
     };
 
-    const handleCreateCustomer = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        try {
-            await api.post("/customers", newCustomer);
-            setShowAddModal(false);
-            setNewCustomer({
-                name: "",
-                contactPerson: "",
-                email: "",
-                phone: "",
-                address: ""
-            });
-            fetchCustomers();
-        } catch (error: any) {
-            alert(error.response?.data?.error || "Fehler beim Erstellen des Kunden");
-        } finally {
-            setCreating(false);
-        }
-    };
+    // Creating logic moved to editor page
 
     const handleDeleteCustomer = async (id: string, name: string) => {
         if (!confirm(`Möchtest du ${name} wirklich löschen?`)) return;
@@ -115,13 +87,13 @@ export default function CustomersPage() {
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Kunden-Management</h1>
                     <p className="text-slate-500 font-medium font-sans">Verwalten Sie Ihre Geschäftskunden und Auftraggeber.</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
+                <Link
+                    href="/admin/customers/editor"
                     className="flex items-center gap-3 px-8 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition shadow-xl shadow-blue-200"
                 >
                     <Plus size={20} />
                     Kunde hinzufügen
-                </button>
+                </Link>
             </header>
 
             {/* Filters & Search */}
@@ -213,10 +185,10 @@ export default function CustomersPage() {
                                         <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Aktiv seit</span>
                                         <span className="text-xs font-bold text-slate-500 font-sans">{new Date(customer.createdAt).toLocaleDateString('de-DE')}</span>
                                     </div>
-                                    <button className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform">
-                                        Details
+                                    <Link href={`/admin/customers/editor?id=${customer.id}`} className="flex items-center gap-2 text-blue-600 font-black text-[10px] uppercase tracking-widest hover:translate-x-1 transition-transform">
+                                        Details bearbeiten
                                         <ChevronRight size={14} />
-                                    </button>
+                                    </Link>
                                 </div>
                             </motion.div>
                         ))}
@@ -224,105 +196,7 @@ export default function CustomersPage() {
                 )}
             </div>
 
-            {/* Add Customer Modal */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[3rem] p-10 w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto font-sans text-slate-900"
-                        >
-                            <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition p-2 hover:bg-slate-50 rounded-full">
-                                <X size={24} />
-                            </button>
-
-                            <div className="mb-8">
-                                <div className="flex items-center gap-3 mb-2">
-                                    <div className="p-2 bg-blue-600 rounded-lg text-white">
-                                        <Building2 size={20} />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">Operations</span>
-                                </div>
-                                <h2 className="text-3xl font-black text-slate-900 mb-2">Neuen Kunden anlegen</h2>
-                                <p className="text-slate-500 font-medium">Fügen Sie ein Unternehmen zur Kundendatenbank hinzu.</p>
-                            </div>
-
-                            <form onSubmit={handleCreateCustomer} className="space-y-6">
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Unternehmensname *</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="z.B. Logistik Pro GmbH"
-                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
-                                            value={newCustomer.name}
-                                            onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Kontaktperson</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Vor- und Nachname"
-                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
-                                                value={newCustomer.contactPerson}
-                                                onChange={e => setNewCustomer({ ...newCustomer, contactPerson: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">E-Mail</label>
-                                            <input
-                                                type="email"
-                                                placeholder="info@firma.at"
-                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
-                                                value={newCustomer.email}
-                                                onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Telefon</label>
-                                            <input
-                                                type="tel"
-                                                placeholder="+43..."
-                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
-                                                value={newCustomer.phone}
-                                                onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Anschrift</label>
-                                            <input
-                                                type="text"
-                                                placeholder="Straße, PLZ, Stadt"
-                                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
-                                                value={newCustomer.address}
-                                                onChange={e => setNewCustomer({ ...newCustomer, address: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-8 flex gap-4 border-t border-slate-50">
-                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-5 rounded-2xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition shadow-sm font-sans uppercase text-[10px] tracking-widest">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 py-5 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-xl shadow-blue-200 uppercase text-[10px] tracking-widest"
-                                    >
-                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Kunde Speichern"}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+            {/* Modal removed */}
         </div>
     );
 }
