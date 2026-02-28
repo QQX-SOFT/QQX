@@ -18,7 +18,8 @@ import {
     Save,
     Trash2,
     AlertCircle,
-    CheckCircle2
+    CheckCircle2,
+    Type
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,7 @@ export default function ContractsPage() {
 
     const [drivers, setDrivers] = useState<any[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
+    const [templates, setTemplates] = useState<any[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -75,14 +77,16 @@ export default function ContractsPage() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [contractsRes, driversRes, customersRes] = await Promise.all([
+            const [contractsRes, driversRes, customersRes, templatesRes] = await Promise.all([
                 api.get("/contracts"),
                 api.get("/drivers"),
-                api.get("/customers")
+                api.get("/customers"),
+                api.get("/contract-templates")
             ]);
             setContracts(contractsRes.data);
             setDrivers(driversRes.data);
             setCustomers(customersRes.data);
+            setTemplates(templatesRes.data);
         } catch (error) {
             console.error("Failed to load contracts data", error);
         } finally {
@@ -204,13 +208,22 @@ export default function ContractsPage() {
                     <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Verträge</h1>
                     <p className="text-slate-500 font-medium">Verwalten Sie Kunden-, Fahrer- und generelle Verträge.</p>
                 </div>
-                <button
-                    onClick={() => handleOpenForm()}
-                    className="px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-500/20"
-                >
-                    <Plus size={20} />
-                    Neuer Vertrag
-                </button>
+                <div className="flex items-center gap-4">
+                    <a
+                        href="/admin/contracts/templates"
+                        className="px-6 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+                    >
+                        <Type size={20} />
+                        Vorlagen
+                    </a>
+                    <button
+                        onClick={() => handleOpenForm()}
+                        className="px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition shadow-lg shadow-blue-500/20"
+                    >
+                        <Plus size={20} />
+                        Neuer Vertrag
+                    </button>
+                </div>
             </header>
 
             {/* Toolbar */}
@@ -371,6 +384,33 @@ export default function ContractsPage() {
 
                             <div className="flex-1 overflow-y-auto p-8">
                                 <form id="contractForm" onSubmit={handleSave} className="space-y-6">
+
+                                    {!editingContract && (
+                                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-2xl p-6 mb-6">
+                                            <label className="block text-xs font-black text-blue-700 dark:text-blue-300 uppercase tracking-widest mb-2">Aus Vorlage laden (Optional)</label>
+                                            <select
+                                                onChange={(e) => {
+                                                    const t = templates.find(temp => temp.id === e.target.value);
+                                                    if (t) {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            title: t.name,
+                                                            description: t.description || "",
+                                                            type: t.type
+                                                        }));
+                                                    }
+                                                }}
+                                                className="w-full bg-white dark:bg-slate-800 border-2 border-transparent rounded-xl px-4 py-3 outline-none focus:border-blue-500/20 transition font-bold"
+                                            >
+                                                <option value="">Keine Vorlage verwenden...</option>
+                                                {templates.map(t => (
+                                                    <option key={t.id} value={t.id}>{t.name} ({t.type})</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-blue-600/70 dark:text-blue-400 mt-2">Wählen Sie eine Vorlage wie "Freier Dienstnehmer", um Basisdaten automatisch zu laden.</p>
+                                        </div>
+                                    )}
+
                                     <div>
                                         <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Vertragstitel</label>
                                         <input

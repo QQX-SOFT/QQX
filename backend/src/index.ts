@@ -18,6 +18,7 @@ import settingsRoutes from './routes/settingsRoutes';
 import superadminRoutes from './routes/superadminRoutes';
 import customerRoutes from './routes/customerRoutes';
 import contractRoutes from './routes/contractRoutes';
+import contractTemplateRoutes from './routes/contractTemplateRoutes';
 
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 
@@ -48,6 +49,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/superadmin', superadminRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/contracts', contractRoutes);
+app.use('/api/contract-templates', contractTemplateRoutes);
 
 app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

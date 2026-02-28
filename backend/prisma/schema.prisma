@@ -42,6 +42,7 @@ model Tenant {
   customers  Customer[]
   complaints Complaint[]
   contracts  Contract[]
+  contractTemplates ContractTemplate[]
   
   // New SaaS relations
   locations    Location[]
@@ -561,6 +562,8 @@ model Contract {
   customer    Customer? @relation(fields: [customerId], references: [id])
   driverId    String?
   driver      Driver?   @relation(fields: [driverId], references: [id])
+  templateId  String?
+  template    ContractTemplate? @relation(fields: [templateId], references: [id])
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -568,6 +571,27 @@ model Contract {
   @@index([tenantId])
   @@index([customerId])
   @@index([driverId])
+  @@index([templateId])
+}
+
+model ContractTemplate {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name        String
+  description String?
+  content     String   // The HTML/Markdown template with placeholders like {{driver_name}}, {{address}} etc.
+  
+  type        ContractType @default(GENERAL)
+  driverType  DriverType?  // If it's a driver contract, specify which type (z.B. FREELANCE, EMPLOYED)
+  
+  contracts   Contract[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 enum ContractType {
