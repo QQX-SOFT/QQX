@@ -35,6 +35,21 @@ type Location = {
 export default function TrackingPage() {
     const [locations, setLocations] = useState<Location[]>([]);
     const [loading, setLoading] = useState(true);
+    const [adminLocation, setAdminLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    setAdminLocation({
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude
+                    });
+                },
+                (err) => console.error("Admin location error:", err)
+            );
+        }
+    }, []);
 
     const fetchLocations = async () => {
         try {
@@ -104,25 +119,32 @@ export default function TrackingPage() {
                 {/* Master Map View */}
                 <div className="lg:col-span-3 bg-slate-100 rounded-[3rem] p-4 shadow-sm relative overflow-hidden flex flex-col border border-slate-200">
                     <div className="absolute inset-0 z-0">
-                        {locations.length > 0 ? (
-                            <MapNoSSR locations={locations.map(loc => ({
-                                id: loc.id,
-                                lat: loc.lat,
-                                lng: loc.lng,
-                                name: loc.driverName,
-                                status: loc.status,
-                                phone: loc.phone,
-                                lastUpdate: loc.lastUpdate,
-                                speed: loc.speed,
-                                vehicle: loc.vehicle,
-                                order: loc.order
-                            }))} />
-                        ) : (
-                            <MapNoSSR locations={[]} />
-                        )}
+                        <MapNoSSR
+                            locations={[
+                                ...locations.map(loc => ({
+                                    id: loc.id,
+                                    lat: loc.lat,
+                                    lng: loc.lng,
+                                    name: loc.driverName,
+                                    status: loc.status,
+                                    phone: loc.phone,
+                                    lastUpdate: loc.lastUpdate,
+                                    speed: loc.speed,
+                                    vehicle: loc.vehicle,
+                                    order: loc.order
+                                })),
+                                ...(adminLocation ? [{
+                                    id: 'admin',
+                                    lat: adminLocation.lat,
+                                    lng: adminLocation.lng,
+                                    name: 'Admin (Sie)',
+                                    status: 'online'
+                                }] : [])
+                            ]}
+                        />
                     </div>
 
-                    {locations.length === 0 && !loading && (
+                    {locations.length === 0 && !loading && !adminLocation && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-10 bg-white/50 backdrop-blur-sm rounded-[3rem]">
                             <WifiOff size={64} className="mb-6 opacity-20" />
                             <h3 className="text-xl font-black text-slate-700">Keine aktiven Einheiten</h3>
