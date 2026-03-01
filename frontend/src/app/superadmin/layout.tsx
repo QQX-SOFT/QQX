@@ -36,31 +36,31 @@ const navigationLinks = [
         group: "Plattform",
         links: [
             { name: "Dashboard", icon: LayoutDashboard, href: "/superadmin" },
-            { name: "Şirketler", icon: Globe, href: "/superadmin/tenants" },
-            { name: "Kullanıcılar", icon: Users, href: "/superadmin/users" },
+            { name: "Unternehmen", icon: Globe, href: "/superadmin/tenants" },
+            { name: "Benutzer", icon: Users, href: "/superadmin/users" },
         ]
     },
     {
-        group: "Ürün & Gelir",
+        group: "Produkt & Erlös",
         links: [
-            { name: "Paketler", icon: CreditCard, href: "/superadmin/plans" },
-            { name: "Özellikler", icon: Zap, href: "/superadmin/features" },
-            { name: "Abonelikler", icon: TrendingUp, href: "/superadmin/billing" },
+            { name: "Pakete", icon: CreditCard, href: "/superadmin/plans" },
+            { name: "Features", icon: Zap, href: "/superadmin/features" },
+            { name: "Abone", icon: TrendingUp, href: "/superadmin/billing" },
         ]
     },
     {
-        group: "Altyapı",
+        group: "Infrastruktur",
         links: [
-            { name: "Maps Tanılama", icon: MapPin, href: "/superadmin/debug-maps" },
-            { name: "Sistem Logları", icon: Terminal, href: "/superadmin/logs" },
-            { name: "Sistem Ayarları", icon: Settings, href: "/superadmin/settings" },
+            { name: "Maps Diagnose", icon: MapPin, href: "/superadmin/debug-maps" },
+            { name: "System-Logs", icon: Terminal, href: "/superadmin/logs" },
+            { name: "Einstellungen", icon: Settings, href: "/superadmin/settings" },
         ]
     },
     {
-        group: "Destek",
+        group: "Support",
         links: [
-            { name: "Biletler", icon: LifeBuoy, href: "/superadmin/support" },
-            { name: "Duyurular", icon: Bell, href: "/superadmin/notifications" },
+            { name: "Tickets", icon: LifeBuoy, href: "/superadmin/support" },
+            { name: "Mitteilungen", icon: Bell, href: "/superadmin/notifications" },
         ]
     }
 ];
@@ -90,40 +90,38 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
             {/* Sidebar */}
             <aside className={cn(
-                "fixed inset-y-0 left-0 w-80 bg-[#0c0e14] text-white flex flex-col z-[60] lg:relative lg:flex transition-all duration-500 ease-in-out border-r border-white/5 shadow-2xl shadow-black/50",
+                "fixed inset-y-0 left-0 w-64 bg-[#0c0e14] text-white flex flex-col z-[60] lg:relative lg:flex transition-all duration-500 ease-in-out border-r border-white/5 shadow-2xi",
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
             )}>
-                {/* Sidebar Header */}
-                <div className="p-8 pb-10 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-[1.25rem] flex items-center justify-center text-white font-black shadow-xl shadow-indigo-500/20 group relative overflow-hidden">
-                            <Boxes size={24} />
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                {/* Sidebar Header - Compact */}
+                <div className="p-6 pb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-indigo-500/20 group relative overflow-hidden">
+                            <Boxes size={20} />
                         </div>
                         <div className="flex flex-col">
-                            <span className="text-xl font-black tracking-tighter leading-none mb-1 uppercase italic">QQX <span className="text-indigo-400 not-italic">OS</span></span>
-                            <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] leading-none">Global Control</span>
+                            <span className="text-lg font-black tracking-tighter leading-none mb-1 uppercase italic">QQX <span className="text-indigo-400 not-italic">OS</span></span>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none">Global Control</span>
                         </div>
                     </div>
                     <button
-                        className="lg:hidden p-3 bg-white/5 rounded-2xl text-white/40 hover:text-white transition active:scale-95"
+                        className="lg:hidden p-2 bg-white/5 rounded-xl text-white/40 hover:text-white transition"
                         onClick={() => setIsSidebarOpen(false)}
                     >
-                        <X size={20} />
+                        <X size={18} />
                     </button>
                 </div>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-white/5 to-transparent mx-8 mb-4" />
+                <div className="h-px bg-white/5 mx-6 mb-2" />
 
-                {/* Sidebar Nav */}
-                <nav className="flex-1 px-4 space-y-10 overflow-y-auto scrollbar-hide pt-6 pb-12">
+                {/* Sidebar Nav - Compacted spacing */}
+                <nav className="flex-1 px-3 space-y-5 overflow-y-auto scrollbar-hide pt-4 pb-8">
                     {navigationLinks.map((group) => (
-                        <div key={group.group} className="space-y-4">
-                            <div className="text-[10px] font-black text-slate-600 uppercase tracking-[0.25em] px-5 flex items-center gap-2">
+                        <div key={group.group} className="space-y-1">
+                            <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] px-4 mb-2 flex items-center gap-2">
                                 {group.group}
-                                <div className="h-px flex-1 bg-white/5" />
                             </div>
-                            <div className="space-y-1">
+                            <div className="space-y-0.5">
                                 {group.links.map((link) => (
                                     <SidebarLink key={link.href} link={link} isActive={pathname === link.href} />
                                 ))}
@@ -132,23 +130,12 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                     ))}
                 </nav>
 
-                {/* Sidebar Footer */}
-                <div className="p-6 mt-auto">
-                    <div className="bg-gradient-to-b from-white/5 to-transparent rounded-[2.5rem] p-6 border border-white/5 mb-6 group cursor-pointer hover:border-indigo-500/30 transition-all duration-500">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-10 h-10 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-indigo-400 transition-colors duration-500">
-                                <UserCircle size={22} />
-                            </div>
-                            <div>
-                                <p className="text-[11px] font-black text-white uppercase tracking-tight">Super Admin</p>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">V1.4.2 stable</p>
-                            </div>
-                        </div>
-                        <button className="w-full py-4 flex items-center justify-center gap-3 px-4 bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white rounded-2xl transition-all duration-500 font-black text-[10px] uppercase tracking-widest border border-red-500/10 active:scale-95 shadow-lg shadow-red-500/0 hover:shadow-red-500/20">
-                            <LogOut size={16} />
-                            Oturumu Kapat
-                        </button>
-                    </div>
+                {/* Sidebar Footer - Minimalist */}
+                <div className="p-4 border-t border-white/5">
+                    <button className="w-full py-3 flex items-center justify-center gap-3 px-4 bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest active:scale-95">
+                        <LogOut size={14} />
+                        Abmelden
+                    </button>
                 </div>
             </aside>
 
