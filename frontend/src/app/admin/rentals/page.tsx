@@ -58,7 +58,7 @@ export default function AdminRentalsPage() {
 
     const [loading, setLoading] = useState(false);
     const [showAddCarModal, setShowAddCarModal] = useState(false);
-    const [activeTab, setActiveTab] = useState<"REQUESTS" | "FLEET">("REQUESTS");
+    const [activeTab, setActiveTab] = useState<"REQUESTS" | "VEHICLES">("REQUESTS");
 
     const handleApprove = (id: string) => {
         setRequests(prev => prev.map(req => req.id === id ? { ...req, status: "APPROVED" } : req));
@@ -80,7 +80,7 @@ export default function AdminRentalsPage() {
                         <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Operations</span>
                     </div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight">Fahrzeugvermietung</h1>
-                    <p className="text-slate-500 font-medium">Verwalten Sie Mietanfragen und den speziellen Miet-Fuhrpark.</p>
+                    <p className="text-slate-500 font-medium">Verwalten Sie Mietanfragen und die verfügbaren Mietfahrzeuge.</p>
                 </div>
                 <div className="flex gap-4">
                     <button
@@ -111,14 +111,14 @@ export default function AdminRentalsPage() {
                     {activeTab === "REQUESTS" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-full" />}
                 </button>
                 <button
-                    onClick={() => setActiveTab("FLEET")}
+                    onClick={() => setActiveTab("VEHICLES")}
                     className={cn(
                         "px-6 py-4 text-sm font-black uppercase tracking-widest transition-all relative",
-                        activeTab === "FLEET" ? "text-blue-600" : "text-slate-400 hover:text-slate-600"
+                        activeTab === "VEHICLES" ? "text-blue-600" : "text-slate-400 hover:text-slate-600"
                     )}
                 >
-                    Miet-Fuhrpark
-                    {activeTab === "FLEET" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-full" />}
+                    Mietfahrzeuge
+                    {activeTab === "VEHICLES" && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-full" />}
                 </button>
             </div>
 

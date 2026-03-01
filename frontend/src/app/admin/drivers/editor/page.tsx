@@ -34,7 +34,8 @@ function DriverEditorForm() {
         ssn: "",
         taxId: "",
         iban: "",
-        bic: ""
+        bic: "",
+        isKleinunternehmer: false
     });
 
     const docRequirements = {
@@ -56,7 +57,8 @@ function DriverEditorForm() {
             "Meldezettel",
             "GISA-Auszug",
             "SVS Bestätigung",
-            "UID / Steuer-ID"
+            "UID / Steuer-ID",
+            "Gewerbeschein"
         ]
     };
 
@@ -83,7 +85,8 @@ function DriverEditorForm() {
                 ssn: data.ssn || "",
                 taxId: data.taxId || "",
                 iban: data.iban || "",
-                bic: data.bic || ""
+                bic: data.bic || "",
+                isKleinunternehmer: data.isKleinunternehmer || false
             });
         } catch (error) {
             console.error("Failed to load driver", error);
@@ -211,28 +214,49 @@ function DriverEditorForm() {
                     {/* Legal Info */}
                     <div className="space-y-6">
                         <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Rechtliches / Steuern</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">SV-Nummer (SSN)</label>
-                                <input type="text" placeholder="1234 010190" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.ssn} onChange={e => setFormData({ ...formData, ssn: e.target.value })} />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Steuer-ID / UID</label>
-                                <input type="text" placeholder="Steuernummer / UID" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.taxId} onChange={e => setFormData({ ...formData, taxId: e.target.value })} />
-                            </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {(formData.employmentType === "ECHTER_DIENSTNEHMER" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">SV-Nummer (SSN) *</label>
+                                    <input type="text" placeholder="1234 010190" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.ssn} onChange={e => setFormData({ ...formData, ssn: e.target.value })} />
+                                </div>
+                            )}
+                            {(formData.employmentType === "SELBSTSTANDIG" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
+                                <div>
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Steuer-ID / UID *</label>
+                                    <input type="text" placeholder="Steuernummer / UID" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.taxId} onChange={e => setFormData({ ...formData, taxId: e.target.value })} />
+                                </div>
+                            )}
                         </div>
+
+                        {formData.employmentType === "SELBSTSTANDIG" && (
+                            <div className="mt-4 flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <input
+                                    type="checkbox"
+                                    id="kleinunternehmer"
+                                    className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    checked={formData.isKleinunternehmer}
+                                    onChange={e => setFormData({ ...formData, isKleinunternehmer: e.target.checked })}
+                                />
+                                <label htmlFor="kleinunternehmer" className="text-xs font-bold text-slate-700 cursor-pointer">
+                                    Kleinunternehmerregelung (Umsatzsteuerbefreit)
+                                </label>
+                            </div>
+                        )}
                     </div>
 
                     {/* Bank Info */}
                     <div className="space-y-6">
                         <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Bankverbindung</h3>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">IBAN</label>
-                            <input type="text" placeholder="AT..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.iban} onChange={e => setFormData({ ...formData, iban: e.target.value })} />
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">BIC</label>
-                            <input type="text" placeholder="BIC" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.bic} onChange={e => setFormData({ ...formData, bic: e.target.value })} />
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">IBAN *</label>
+                                <input type="text" placeholder="AT..." required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.iban} onChange={e => setFormData({ ...formData, iban: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">BIC</label>
+                                <input type="text" placeholder="BIC" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.bic} onChange={e => setFormData({ ...formData, bic: e.target.value })} />
+                            </div>
                         </div>
                     </div>
                 </div>

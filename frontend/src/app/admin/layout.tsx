@@ -38,7 +38,6 @@ const mainLinks = [
 
 const operationsLinks = [
     { name: "Aufträge", icon: ClipboardList, href: "/admin/orders" },
-    { name: "Fuhrpark", icon: Car, href: "/admin/fleet" },
     { name: "Kunden", icon: Building2, href: "/admin/customers" },
     { name: "Vermietung", icon: Key, href: "/admin/rentals" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
