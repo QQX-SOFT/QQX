@@ -112,13 +112,25 @@ router.post('/', async (req: express.Request, res: Response) => {
 router.get('/:id', async (req: express.Request, res: Response) => {
     try {
         const id = req.params.id as string;
+
+        if (!id || id === "undefined" || id === "null") {
+            return res.status(400).json({ error: 'Valid Tenant ID is required' });
+        }
+
+        console.log(`[GET] Fetching tenant: ${id}`);
         const tenant = await prisma.tenant.findUnique({
             where: { id }
         });
-        if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
+
+        if (!tenant) {
+            console.warn(`[GET] Tenant not found: ${id}`);
+            return res.status(404).json({ error: 'Tenant not found' });
+        }
+
         res.json(tenant);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch tenant' });
+    } catch (error: any) {
+        console.error(`[GET] Fetch tenant error [${req.params.id}]:`, error.message);
+        res.status(500).json({ error: 'Failed to fetch tenant', details: error.message });
     }
 });
 
