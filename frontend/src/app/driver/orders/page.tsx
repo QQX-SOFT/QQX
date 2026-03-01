@@ -41,15 +41,11 @@ export default function DriverOrdersPage() {
 
     const fetchAvailableOrders = async () => {
         try {
-            // Mocking available approved orders
-            const mockOrders: Order[] = [
-                { id: "ORD-9921", customerName: "Max Mustermann", address: "Handelskai 214, 1020 Wien", amount: 25.50, status: "PENDING", createdAt: new Date().toISOString() },
-                { id: "ORD-8842", customerName: "Sabine Mayer", address: "Laxenburger Str. 80, 1100 Wien", amount: 18.20, status: "PENDING", createdAt: new Date(Date.now() - 3600000).toISOString() },
-            ];
-            setOrders(mockOrders);
-            setLoading(false);
+            const { data } = await api.get("/orders/available");
+            setOrders(data);
         } catch (e) {
             console.error("Failed to fetch available orders", e);
+        } finally {
             setLoading(false);
         }
     };

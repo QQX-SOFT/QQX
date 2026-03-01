@@ -28,15 +28,42 @@ import api from "@/lib/api";
 
 export default function DriverProfilePage() {
     const [driverInfo, setDriverInfo] = useState({
-        firstName: "Maximilian",
-        lastName: "Weber",
-        email: "m.weber@example.com",
-        phone: "+43 660 1234567",
-        address: "Favoritenstraße 12, 1100 Wien",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
         employmentType: "ECHTER_DIENSTNEHMER" as "ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG",
-        joinedDate: "12. Januar 2024",
-        profilePic: null
+        joinedDate: "",
+        profilePic: null,
+        iban: ""
     });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            const { data } = await api.get("/drivers/me");
+            setDriverInfo({
+                firstName: data.firstName || "",
+                lastName: data.lastName || "",
+                email: data.user?.email || "",
+                phone: data.phone || "",
+                address: `${data.street || ""}, ${data.zip || ""} ${data.city || ""}`,
+                employmentType: data.type || "ECHTER_DIENSTNEHMER",
+                joinedDate: new Date(data.createdAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }),
+                profilePic: data.profilePic,
+                iban: data.iban || ""
+            });
+        } catch (e) {
+            console.error("Failed to load profile", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const docRequirements = {
         ECHTER_DIENSTNEHMER: [

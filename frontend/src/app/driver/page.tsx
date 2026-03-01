@@ -17,15 +17,39 @@ import {
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import api from "@/lib/api";
 
 export default function DriverDashboard() {
-    const [driverName, setDriverName] = useState("Maximilian");
+    const [driverName, setDriverName] = useState("Laden...");
     const [stats, setStats] = useState({
-        todayEarnings: 124.50,
-        orders: 12,
-        onlineHours: "6.5",
-        rating: 4.9
+        todayEarnings: 0,
+        orders: 0,
+        onlineHours: "0",
+        rating: 5.0
     });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            const { data } = await api.get("/drivers/me");
+            setDriverName(data.firstName);
+            // In a real app, these stats would come from a dedicated stats endpoint
+            setStats({
+                todayEarnings: data.stats?.todayEarnings || 0,
+                orders: data.stats?.todayOrders || 0,
+                onlineHours: data.stats?.onlineHours || "0",
+                rating: data.rating || 5.0
+            });
+        } catch (e) {
+            console.error("Failed to fetch driver stats", e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
