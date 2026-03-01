@@ -1,51 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import React, { useEffect, useState } from "react";
+import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
+import { useGoogleMaps } from "./GoogleMapsProvider";
 
-// Fix for default marker icon in Leaflet + Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-// Custom dynamic icon for drivers
-const createDriverIcon = (status: string) => {
-    let markerColor = '#94a3b8'; // offline (gray)
-    if (status === 'online' || status === 'ACTIVE' || status === 'RUNNING') markerColor = '#4ade80'; // active (green)
-    if (status === 'busy' || status === 'beschäftigt') markerColor = '#fbbf24'; // busy (yellow)
-    if (status === 'pause' || status === 'PAUSED') markerColor = '#fbbf24'; // pause (yellow)
-    if (status === 'mahlzeit') markerColor = '#a78bfa'; // meal (purple)
-
-    return new L.DivIcon({
-        className: 'custom-marker',
-        html: `<div style="background: ${markerColor}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px;">🚗</div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15],
-        popupAnchor: [0, -15],
-    });
-};
-
-const defaultCenter: [number, number] = [52.5200, 13.4050]; // Berlin Default
-
-// Component to dynamically set bounds when markers change
-function MapBounds({ markers }: { markers: any[] }) {
-    const map = useMap();
-
-    useEffect(() => {
-        if (markers.length > 0) {
-            const group = new L.FeatureGroup(markers.map(m => L.marker([m.lat, m.lng])));
-            map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 16 });
-        }
-    }, [markers, map]);
-
-    return null;
-}
+const defaultCenter = { lat: 48.2082, lng: 16.3738 }; // Vienna Default for Austria focus
 
 export interface LiveMapLocation {
     id: string;
@@ -60,71 +19,115 @@ export interface LiveMapLocation {
     order?: string;
 }
 
+interface LiveMapProps {
+    locations?: LiveMapLocation[];
+    center?: { lat: number, lng: number };
+    zoom?: number;
+    singleMarker?: boolean;
+    className?: string;
+}
+
 export default function LiveMap({
     locations = [],
-    center = defaultCenter,
+    center,
     zoom = 13,
     singleMarker = false,
-    className = "h-full w-full rounded-3xl"
-}: {
-    locations?: LiveMapLocation[],
-    center?: [number, number],
-    zoom?: number,
-    singleMarker?: boolean,
-    className?: string
-}) {
-    // Determine map center based on points
-    const mapCenter = locations.length > 0 && singleMarker ? [locations[0].lat, locations[0].lng] as [number, number] : center;
+    className = "h-full w-full rounded-3xl overflow-hidden"
+}: LiveMapProps) {
+    const { isLoaded } = useGoogleMaps();
+    const [selectedLoc, setSelectedLoc] = useState<LiveMapLocation | null>(null);
+    const [map, setMap] = useState<google.maps.Map | null>(null);
+
+    const mapCenter = locations.length > 0 && singleMarker
+        ? { lat: locations[0].lat, lng: locations[0].lng }
+        : (center || defaultCenter);
+
+    useEffect(() => {
+        if (map && locations.length > 1 && !singleMarker) {
+            const bounds = new google.maps.LatLngBounds();
+            locations.forEach(loc => bounds.extend({ lat: loc.lat, lng: loc.lng }));
+            map.fitBounds(bounds);
+        }
+    }, [map, locations, singleMarker]);
+
+    if (!isLoaded) return <div className="h-full w-full flex items-center justify-center bg-slate-100 dark:bg-slate-900 animate-pulse text-slate-400 font-bold uppercase tracking-widest text-xs">Lade Google Maps...</div>;
+
+    const getStatusColor = (status?: string) => {
+        if (status === 'RUNNING' || status === 'online' || status === 'ACTIVE') return '#22c55e'; // green
+        if (status === 'PAUSED' || status === 'busy') return '#eab308'; // yellow
+        return '#94a3b8'; // gray
+    };
 
     return (
-        <MapContainer
+        <GoogleMap
+            mapContainerClassName={className}
             center={mapCenter}
             zoom={zoom}
-            className={className}
-            style={{ zIndex: 0 }}
+            onLoad={map => setMap(map)}
+            options={{
+                styles: [
+                    {
+                        "featureType": "all",
+                        "elementType": "labels.text.fill",
+                        "stylers": [{ "color": "#747474" }, { "lightness": "24" }]
+                    },
+                    {
+                        "featureType": "all",
+                        "elementType": "labels.text.stroke",
+                        "stylers": [{ "visibility": "on" }, { "color": "#ffffff" }, { "lightness": 16 }]
+                    },
+                    // Add more premium dark/light styles if desired
+                ],
+                disableDefaultUI: true,
+                zoomControl: true,
+            }}
         >
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" // Nice crisp map style
-            />
-
-            {locations.length > 1 && !singleMarker && <MapBounds markers={locations} />}
-
             {locations.map((loc) => (
                 <Marker
                     key={loc.id}
-                    position={[loc.lat, loc.lng]}
-                    icon={createDriverIcon(loc.status || 'offline')}
-                >
-                    {loc.name && (
-                        <Popup>
-                            <div className="min-w-[200px] font-sans">
-                                <h6 className="m-0 mb-3 font-bold text-[15px] border-b pb-2">{loc.name}</h6>
-                                <div className="text-[13px] leading-relaxed space-y-1 mt-2">
-                                    <div className="flex items-center gap-2">
-                                        <strong>Status:</strong>
-                                        <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider text-white ${(loc.status === 'RUNNING' || loc.status === 'online' || loc.status === 'ACTIVE') ? 'bg-green-500' :
-                                                (loc.status === 'PAUSED' || loc.status === 'busy' || loc.status === 'beschäftigt') ? 'bg-yellow-500' :
-                                                    'bg-slate-400'
-                                            }`}>{loc.status || 'offline'}</span>
-                                    </div>
-                                    {loc.phone && <div><strong>Telefon:</strong> <a href={`tel:${loc.phone}`} className="text-blue-600 no-underline">{loc.phone}</a></div>}
-                                    {loc.lastUpdate && <div><strong>Letztes Update:</strong> {loc.lastUpdate}</div>}
-                                    {loc.speed !== undefined && <div><strong>Geschwindigkeit:</strong> {loc.speed} km/h</div>}
-                                    {loc.vehicle && <div><strong>Kennzeichen:</strong> {loc.vehicle}</div>}
-                                    {loc.order && <div className="mt-2 pt-2 border-t"><strong>Aktiver Auftrag:</strong><br /><span className="text-blue-600 font-medium">{loc.order}</span></div>}
-
-                                </div>
-                                <div className="mt-4">
-                                    <a href={`/admin/drivers/${loc.id.replace('me', '')}`} className="block w-full text-center bg-blue-600 text-white font-bold py-2 rounded-lg no-underline hover:bg-blue-700 transition">
-                                        Profil ansehen
-                                    </a>
-                                </div>
-                            </div>
-                        </Popup>
-                    )}
-                </Marker>
+                    position={{ lat: loc.lat, lng: loc.lng }}
+                    onClick={() => setSelectedLoc(loc)}
+                    icon={{
+                        path: google.maps.SymbolPath.CIRCLE,
+                        fillColor: getStatusColor(loc.status),
+                        fillOpacity: 1,
+                        strokeWeight: 2,
+                        strokeColor: "white",
+                        scale: 10,
+                    }}
+                />
             ))}
-        </MapContainer>
+
+            {selectedLoc && (
+                <InfoWindow
+                    position={{ lat: selectedLoc.lat, lng: selectedLoc.lng }}
+                    onCloseClick={() => setSelectedLoc(null)}
+                >
+                    <div className="p-2 min-w-[200px] font-sans text-slate-900">
+                        <h6 className="m-0 mb-2 font-black text-[14px] uppercase border-b border-slate-100 pb-2">{selectedLoc.name}</h6>
+                        <div className="space-y-2 mt-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">Status</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase text-white" style={{ background: getStatusColor(selectedLoc.status) }}>
+                                    {selectedLoc.status || 'offline'}
+                                </span>
+                            </div>
+                            {selectedLoc.phone && (
+                                <div className="flex justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">Tel</span>
+                                    <span className="text-[11px] font-bold">{selectedLoc.phone}</span>
+                                </div>
+                            )}
+                            {selectedLoc.vehicle && (
+                                <div className="flex justify-between">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase">KFZ</span>
+                                    <span className="text-[11px] font-bold">{selectedLoc.vehicle}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </InfoWindow>
+            )}
+        </GoogleMap>
     );
 }

@@ -2,6 +2,7 @@ import express, { Router, Response } from 'express';
 import { prisma } from '../index';
 import { z } from 'zod';
 import { TenantRequest } from '../middleware/tenantMiddleware';
+import { getDistanceMatrix } from '../services/googleMaps';
 
 const router = Router();
 
@@ -23,6 +24,32 @@ const orderSchema = z.object({
     priority: z.string().optional(),
     driverId: z.string().optional(),
     customerId: z.string().optional(),
+});
+
+// GET quote based on distance
+router.get('/quote', async (req: TenantRequest, res: Response) => {
+    const { origin, destination } = req.query;
+
+    if (!origin || !destination) {
+        return res.status(400).json({ error: 'Origin and destination are required' });
+    }
+
+    try {
+        const matrix = await getDistanceMatrix(origin as string, destination as string);
+
+        // Simple pricing logic (could be fetched from tenant settings in future)
+        const basePrice = 12.00;
+        const perKmPrice = 0.85;
+        const totalPrice = basePrice + (matrix.distanceKm * perKmPrice);
+
+        res.json({
+            ...matrix,
+            price: Math.max(15.00, Math.ceil(totalPrice)), // Min price 15€
+            currency: 'EUR'
+        });
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // GET all orders for a tenant
