@@ -1,7 +1,7 @@
-import express, { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../index';
 
-export interface TenantRequest extends express.Request {
+export interface TenantRequest extends Request {
     tenantId?: string;
     subdomain?: string;
 }
