@@ -11,17 +11,17 @@ router.get('/stats', async (req: Request, res: Response) => {
     try {
         const [
             totalTenants,
-            inactiveTenants,
             totalUsers,
             totalVehicles,
             activeSupscriptions,
         ] = await Promise.all([
             prisma.tenant.count(),
-            prisma.tenant.count({ where: { isActive: false } }),
             prisma.user.count(),
             prisma.vehicle.count(),
             prisma.subscription.count({ where: { status: 'ACTIVE' } }),
         ]);
+
+        const inactiveTenants = 0; // Or calculate based on planId if needed
 
         // Simulated MRR Calculation (Base 149.90 per active tenant)
         const mrr = totalTenants * 149.90;

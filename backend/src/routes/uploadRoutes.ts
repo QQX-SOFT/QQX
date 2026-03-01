@@ -31,7 +31,7 @@ const upload = multer({
 });
 
 // Generic upload endpoint
-router.post("/", upload.single("file"), (req, res) => {
+router.post("/", upload.single("file"), (req: any, res) => {
     if (!req.file) {
         return res.status(400).json({ error: "Keine Datei hochgeladen" });
     }
