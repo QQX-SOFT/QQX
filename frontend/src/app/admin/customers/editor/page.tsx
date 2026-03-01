@@ -25,7 +25,8 @@ function CustomerEditorForm() {
         contactPerson: "",
         email: "",
         phone: "",
-        address: ""
+        address: "",
+        password: ""
     });
 
     useEffect(() => {
@@ -43,7 +44,8 @@ function CustomerEditorForm() {
                 contactPerson: data.contactPerson || "",
                 email: data.email || "",
                 phone: data.phone || "",
-                address: data.address || ""
+                address: data.address || "",
+                password: ""
             });
         } catch (error) {
             console.error("Failed to load customer", error);
@@ -139,23 +141,34 @@ function CustomerEditorForm() {
                             />
                         </div>
                     </div>
-                </div>
+                    <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Passwort {id ? "(leer lassen für keine Änderung)" : "*"}</label>
+                        <input
+                            type="password"
+                            placeholder="••••••••"
+                            required={!id}
+                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
+                            value={formData.password}
+                            onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        />
+                    </div>
 
-                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                    <Link
-                        href="/admin/customers"
-                        className="px-6 py-3.5 rounded-2xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    >
-                        Abbrechen
-                    </Link>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="px-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition disabled:opacity-50 shadow-lg shadow-blue-500/20"
-                    >
-                        {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                        Kunde speichern
-                    </button>
+                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                        <Link
+                            href="/admin/customers"
+                            className="px-6 py-3.5 rounded-2xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                        >
+                            Abbrechen
+                        </Link>
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="px-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                        >
+                            {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                            Kunde speichern
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>

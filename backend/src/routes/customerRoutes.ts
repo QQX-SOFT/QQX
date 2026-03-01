@@ -38,6 +38,24 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// PATCH update customer
+router.patch('/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+
+    if (!tenantId) return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+
+    try {
+        const customer = await prisma.customer.update({
+            where: { id, tenantId: tenantId as string },
+            data: req.body
+        });
+        res.json(customer);
+    } catch (error) {
+        res.status(500).json({ error: 'Kunde konnte nicht aktualisiert werden' });
+    }
+});
+
 // DELETE customer
 router.delete('/:id', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;

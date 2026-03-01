@@ -19,6 +19,7 @@ const driverSchema = z.object({
     taxId: z.string().optional().nullable(),
     iban: z.string().optional().nullable(),
     bic: z.string().optional().nullable(),
+    password: z.string().optional().nullable(),
 });
 
 // GET all drivers
@@ -93,6 +94,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
             data: {
                 email: validatedData.email || `${validatedData.firstName.toLowerCase()}.${validatedData.lastName.toLowerCase()}@${subdomain || 'qqx'}.local`,
                 clerkId: `manual-${Date.now()}`,
+                password: validatedData.password, // Ideally hash this
                 role: 'DRIVER',
                 tenantId: tenantId as string
             }
@@ -127,6 +129,48 @@ router.post('/', async (req: TenantRequest, res: Response) => {
         }
         console.error("Create driver error:", error);
         res.status(500).json({ error: 'Fahrer konnte nicht erstellt werden' });
+    }
+});
+
+// PATCH update driver
+router.patch('/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+
+    if (!tenantId) return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+
+    try {
+        const validatedData = driverSchema.partial().parse(req.body);
+        const { password, ...driverData } = validatedData;
+
+        const driver = await prisma.driver.findFirst({
+            where: { id, tenantId: tenantId as string },
+        });
+
+        if (!driver) return res.status(404).json({ error: 'Fahrer nicht gefunden' });
+
+        // Update Driver
+        const updatedDriver = await prisma.driver.update({
+            where: { id },
+            data: {
+                ...driverData as any,
+                birthday: driverData.birthday ? new Date(driverData.birthday) : undefined,
+                type: driverData.employmentType === 'SELBSTSTANDIG' ? 'FREELANCE' : (driverData.employmentType ? 'EMPLOYED' : undefined),
+            }
+        });
+
+        // Update User password if provided
+        if (password) {
+            await prisma.user.update({
+                where: { id: driver.userId },
+                data: { password }
+            });
+        }
+
+        res.json(updatedDriver);
+    } catch (error) {
+        console.error("Update driver error:", error);
+        res.status(500).json({ error: 'Fahrer konnte nicht aktualisiert werden' });
     }
 });
 

@@ -35,7 +35,8 @@ function DriverEditorForm() {
         taxId: "",
         iban: "",
         bic: "",
-        isKleinunternehmer: false
+        isKleinunternehmer: false,
+        password: ""
     });
 
     const docRequirements = {
@@ -86,7 +87,8 @@ function DriverEditorForm() {
                 taxId: data.taxId || "",
                 iban: data.iban || "",
                 bic: data.bic || "",
-                isKleinunternehmer: data.isKleinunternehmer || false
+                isKleinunternehmer: data.isKleinunternehmer || false,
+                password: ""
             });
         } catch (error) {
             console.error("Failed to load driver", error);
@@ -189,6 +191,17 @@ function DriverEditorForm() {
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Geburtsdatum *</label>
                                 <input type="date" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-slate-600" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
                             </div>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Passwort {id ? "(leer lassen für keine Änderung)" : "*"}</label>
+                            <input
+                                type="password"
+                                placeholder="••••••••"
+                                required={!id}
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold"
+                                value={formData.password}
+                                onChange={e => setFormData({ ...formData, password: e.target.value })}
+                            />
                         </div>
                     </div>
 
