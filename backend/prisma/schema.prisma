@@ -17,22 +17,15 @@ model Tenant {
   subdomain  String   @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  // Settings
-  notificationsEnabled Boolean @default(true)
-  autoAssignDrivers    Boolean @default(false)
-  currency             String  @default("EUR")
-  timezone             String  @default("Europe/Berlin")
-  isActive             Boolean  @default(true)
-
-  // Pricing Settings
-  basePrice            Float   @default(15.00)
-  distanceMultiplier   Float   @default(0.50)
-  expressExtra         Float   @default(10.00)
-  heavyPackageExtra    Float   @default(5.00)
-  minPrice             Float   @default(1.00)
-  maxPrice             Float   @default(500.00)
-  essenBasePrice       Float   @default(3.00)
-  essenDistanceMultiplier Float @default(0.20)
+  // Legal & Address (Austrian Requirements)
+  address              String?
+  zipCode              String?
+  city                 String?
+  country              String?  @default("Austria")
+  uidNumber            String?  // VAT ID (UID-Nummer)
+  companyRegister      String?  // Firmenbuchnummer
+  legalForm            String?  // Rechtsform
+  commercialCourt      String?  // Gerichtsstand
 
   users      User[]
   drivers    Driver[]

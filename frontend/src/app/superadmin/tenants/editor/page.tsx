@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     ShieldCheck,
@@ -8,15 +8,13 @@ import {
     ArrowLeft,
     Building2,
     Users,
-    Settings,
-    Currency,
-    Clock,
-    Truck,
     Mail,
     Lock,
-    Loader2
+    Loader2,
+    MapPin,
+    FileText,
+    Gavel
 } from "lucide-react";
-import { motion } from "framer-motion";
 import api from "@/lib/api";
 import Link from "next/link";
 
@@ -25,34 +23,28 @@ function TenantEditorForm() {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
 
-    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
     const [formData, setFormData] = useState({
         name: "",
         subdomain: "",
-        currency: "EUR",
-        timezone: "Europe/Berlin",
-        basePrice: 15.00,
-        distanceMultiplier: 0.50,
+        address: "",
+        zipCode: "",
+        city: "",
+        uidNumber: "",
+        companyRegister: "",
+        legalForm: "GmbH",
+        commercialCourt: "",
         adminEmail: "",
         adminPassword: ""
     });
-
-    useEffect(() => {
-        if (id) {
-            // Fetch tenant logic would go here if editing
-            // for now we focus on creating as per user request
-        }
-    }, [id]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
         try {
             if (id) {
-                // await api.patch(`/tenants/${id}`, formData);
-                alert("Edit-Modus ist in Vorbereitung (Mock)");
+                alert("Edit-Modus ist in Vorbereitung");
             } else {
                 await api.post("/tenants", formData);
             }
@@ -67,7 +59,7 @@ function TenantEditorForm() {
     };
 
     return (
-        <form onSubmit={handleSave} className="space-y-8">
+        <form onSubmit={handleSave} className="space-y-8 pb-20">
             {/* Basic Info */}
             <section className="bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-[2.5rem] p-10 space-y-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-2">
@@ -79,18 +71,18 @@ function TenantEditorForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Name des Unternehmens</label>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Name des Unternehmens *</label>
                         <input
                             type="text"
                             required
-                            placeholder="z.B. Müller Logistik"
+                            placeholder="z.B. Müller Logistik GmbH"
                             className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
                             value={formData.name}
                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Subdomain</label>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Subdomain *</label>
                         <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 focus-within:border-indigo-500 transition">
                             <input
                                 type="text"
@@ -104,77 +96,108 @@ function TenantEditorForm() {
                         </div>
                     </div>
                 </div>
+            </section>
+
+            {/* Address & Legal (Austria) */}
+            <section className="bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-[2.5rem] p-10 space-y-8 shadow-sm">
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500">
+                        <MapPin size={24} />
+                    </div>
+                    <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Standort & Rechtliches (Österreich)</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Straße & Hausnummer</label>
+                        <input
+                            type="text"
+                            placeholder="Musterstraße 12/4"
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            value={formData.address}
+                            onChange={e => setFormData({ ...formData, address: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">PLZ</label>
+                        <input
+                            type="text"
+                            placeholder="1010"
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            value={formData.zipCode}
+                            onChange={e => setFormData({ ...formData, zipCode: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Ort</label>
+                        <input
+                            type="text"
+                            placeholder="Wien"
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            value={formData.city}
+                            onChange={e => setFormData({ ...formData, city: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Rechtsform</label>
+                        <select
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold appearance-none"
+                            value={formData.legalForm}
+                            onChange={e => setFormData({ ...formData, legalForm: e.target.value })}
+                        >
+                            <option value="GmbH">GmbH</option>
+                            <option value="Einzelunternehmen">Einzelunternehmen</option>
+                            <option value="KG">KG</option>
+                            <option value="OG">OG</option>
+                            <option value="AG">AG</option>
+                        </select>
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Währung</label>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">UID-Nummer</label>
                         <div className="relative">
-                            <Currency className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                            <select
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold appearance-none"
-                                value={formData.currency}
-                                onChange={e => setFormData({ ...formData, currency: e.target.value })}
-                            >
-                                <option value="EUR">Euro (€)</option>
-                                <option value="USD">Dollar ($)</option>
-                                <option value="TRY">Lira (₺)</option>
-                            </select>
+                            <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                            <input
+                                type="text"
+                                placeholder="ATU12345678"
+                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                value={formData.uidNumber}
+                                onChange={e => setFormData({ ...formData, uidNumber: e.target.value })}
+                            />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Zeitzone</label>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Firmenbuchnummer</label>
                         <div className="relative">
-                            <Clock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                            <select
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold appearance-none"
-                                value={formData.timezone}
-                                onChange={e => setFormData({ ...formData, timezone: e.target.value })}
-                            >
-                                <option value="Europe/Berlin">Europe/Berlin</option>
-                                <option value="Europe/Istanbul">Europe/Istanbul</option>
-                                <option value="Europe/Vienna">Europe/Vienna</option>
-                            </select>
+                            <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                            <input
+                                type="text"
+                                placeholder="FN 123456 x"
+                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                value={formData.companyRegister}
+                                onChange={e => setFormData({ ...formData, companyRegister: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Zuständiges Gericht (Gerichtsstand)</label>
+                        <div className="relative">
+                            <Gavel className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                            <input
+                                type="text"
+                                placeholder="Handelsgericht Wien"
+                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                value={formData.commercialCourt}
+                                onChange={e => setFormData({ ...formData, commercialCourt: e.target.value })}
+                            />
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Pricing Config */}
-            {!id && (
-                <section className="bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-[2.5rem] p-10 space-y-8 shadow-sm">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500">
-                            <Truck size={24} />
-                        </div>
-                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Tarif-Konfiguration</h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Basispreis (€)</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
-                                value={formData.basePrice}
-                                onChange={e => setFormData({ ...formData, basePrice: parseFloat(e.target.value) })}
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Kilometer-Konstante</label>
-                            <input
-                                type="number"
-                                step="0.01"
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
-                                value={formData.distanceMultiplier}
-                                onChange={e => setFormData({ ...formData, distanceMultiplier: parseFloat(e.target.value) })}
-                            />
-                        </div>
-                    </div>
-                </section>
-            )}
-
-            {/* First Admin Account */}
+            {/* Admin Account */}
             {!id && (
                 <section className="bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-[2.5rem] p-10 space-y-8 shadow-sm">
                     <div className="flex items-center gap-4 mb-2">
@@ -192,7 +215,7 @@ function TenantEditorForm() {
                                 <input
                                     type="email"
                                     required
-                                    placeholder="admin@kunde.de"
+                                    placeholder="admin@kunde.at"
                                     className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
                                     value={formData.adminEmail}
                                     onChange={e => setFormData({ ...formData, adminEmail: e.target.value })}
@@ -218,7 +241,7 @@ function TenantEditorForm() {
                 </section>
             )}
 
-            <div className="flex justify-end gap-4 pb-20">
+            <div className="flex justify-end gap-4">
                 <Link
                     href="/superadmin/tenants"
                     className="px-10 py-5 bg-white dark:bg-white/5 text-slate-400 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-white/10 transition"
@@ -240,7 +263,7 @@ function TenantEditorForm() {
 
 export default function TenantEditorPage() {
     return (
-        <div className="max-w-4xl mx-auto space-y-12">
+        <div className="max-w-4xl mx-auto space-y-12 pb-20">
             {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
@@ -253,8 +276,8 @@ export default function TenantEditorPage() {
                         </div>
                         <span className="text-xs font-black uppercase tracking-[0.3em] text-indigo-500">Super Admin</span>
                     </div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Kunden-Setup (Tenant)</h1>
-                    <p className="text-slate-500 font-medium mt-2">Erstellen Sie eine neue, isolierte Umgebung für Ihren Kunden.</p>
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Kunden-Setup (Avusturya)</h1>
+                    <p className="text-slate-500 font-medium mt-2">Legen Sie ein neues österreichisches Unternehmen im System an.</p>
                 </div>
             </header>
 

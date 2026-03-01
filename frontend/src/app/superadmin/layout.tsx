@@ -33,7 +33,6 @@ const navigationLinks = [
         links: [
             { name: "Dashboard", icon: LayoutDashboard, href: "/superadmin" },
             { name: "Firmenverwaltung", icon: Globe, href: "/superadmin/tenants" },
-            { name: "Standortverwaltung", icon: MapPin, href: "/superadmin/locations" },
         ]
     },
     {

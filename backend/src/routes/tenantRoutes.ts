@@ -7,10 +7,16 @@ const router = Router();
 const tenantSchema = z.object({
     name: z.string().min(2),
     subdomain: z.string().min(2).regex(/^[a-z0-9-]+$/, "Subdomain must be lowercase alphanumeric"),
-    currency: z.string().optional().default("EUR"),
-    timezone: z.string().optional().default("Europe/Berlin"),
-    basePrice: z.number().optional().default(15.00),
-    distanceMultiplier: z.number().optional().default(0.50),
+
+    // Austrian Legal & Address
+    address: z.string().optional(),
+    zipCode: z.string().optional(),
+    city: z.string().optional(),
+    uidNumber: z.string().optional(), // UID-Nummer
+    companyRegister: z.string().optional(), // Firmenbuchnummer
+    legalForm: z.string().optional(), // Rechtsform
+    commercialCourt: z.string().optional(), // Gerichtsstand
+
     // Admin info
     adminEmail: z.string().email().optional(),
     adminPassword: z.string().min(6).optional(),
