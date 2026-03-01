@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
+import AddressPicker from "@/components/AddressPicker";
 
 function TenantEditorForm() {
     const router = useRouter();
@@ -109,13 +110,18 @@ function TenantEditorForm() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Straße & Hausnummer</label>
-                        <input
-                            type="text"
-                            placeholder="Musterstraße 12/4"
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Straße & Hausnummer (Suchen)</label>
+                        <AddressPicker
                             className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
-                            value={formData.address}
-                            onChange={e => setFormData({ ...formData, address: e.target.value })}
+                            onAddressSelect={(addr) => {
+                                setFormData({
+                                    ...formData,
+                                    address: addr.fullAddress,
+                                    zipCode: addr.zipCode,
+                                    city: addr.city
+                                });
+                            }}
+                            placeholder="Musterstraße 12, Wien"
                         />
                     </div>
                     <div>

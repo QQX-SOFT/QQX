@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Enterprise-Lösungen für Logistik und Flottenmanagement.",
 };
 
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +30,9 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${inter.className} antialiased`}>
-        {children}
+        <GoogleMapsProvider>
+          {children}
+        </GoogleMapsProvider>
         <DevToolbar />
       </body>
     </html>
