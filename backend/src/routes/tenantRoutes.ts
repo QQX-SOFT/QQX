@@ -108,17 +108,40 @@ router.post('/', async (req: express.Request, res: Response) => {
     }
 });
 
+// GET single tenant
+router.get('/:id', async (req: express.Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const tenant = await prisma.tenant.findUnique({
+            where: { id }
+        });
+        if (!tenant) return res.status(404).json({ error: 'Tenant not found' });
+        res.json(tenant);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch tenant' });
+    }
+});
+
 // PATCH update tenant (SuperAdmin)
 router.patch('/:id', async (req: express.Request, res: Response) => {
     try {
         const id = req.params.id as string;
+        // Partial validation for updates
+        const validatedData = tenantSchema.partial().parse(req.body);
+
+        // Remove admin fields from update, they are handled separately
+        const { adminEmail, adminPassword, ...updateData } = validatedData;
+
         const tenant = await prisma.tenant.update({
             where: { id },
-            data: req.body
+            data: updateData
         });
         res.json(tenant);
     } catch (error) {
         console.error("Update tenant error:", error);
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
         res.status(500).json({ error: 'Failed to update tenant' });
     }
 });
@@ -171,7 +194,7 @@ router.post('/:id/admins', async (req: express.Request, res: Response) => {
 // DELETE tenant admin
 router.delete('/:id/admins/:userId', async (req: express.Request, res: Response) => {
     try {
-        const { id, userId } = req.params;
+        const { id, userId } = req.params as any;
         await prisma.user.delete({
             where: { id: userId, tenantId: id }
         });

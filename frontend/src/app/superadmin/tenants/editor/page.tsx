@@ -18,6 +18,22 @@ import {
 import api from "@/lib/api";
 import Link from "next/link";
 import AddressPicker from "@/components/AddressPicker";
+import { useEffect } from "react";
+import { motion } from "framer-motion";
+
+const INITIAL_FORM = {
+    name: "",
+    subdomain: "",
+    address: "",
+    zipCode: "",
+    city: "",
+    uidNumber: "",
+    companyRegister: "",
+    legalForm: "GmbH",
+    commercialCourt: "",
+    adminEmail: "",
+    adminPassword: ""
+};
 
 function TenantEditorForm() {
     const router = useRouter();
@@ -25,27 +41,52 @@ function TenantEditorForm() {
     const id = searchParams.get("id");
 
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(!!id);
+    const [admins, setAdmins] = useState<any[]>([]);
 
-    const [formData, setFormData] = useState({
-        name: "",
-        subdomain: "",
-        address: "",
-        zipCode: "",
-        city: "",
-        uidNumber: "",
-        companyRegister: "",
-        legalForm: "GmbH",
-        commercialCourt: "",
-        adminEmail: "",
-        adminPassword: ""
-    });
+    const [formData, setFormData] = useState(INITIAL_FORM);
+
+    // Fetch existing data
+    useEffect(() => {
+        if (id) {
+            const fetchData = async () => {
+                try {
+                    const [tenantRes, adminsRes] = await Promise.all([
+                        api.get(`/tenants/${id}`),
+                        api.get(`/tenants/${id}/admins`)
+                    ]);
+
+                    const t = tenantRes.data;
+                    setFormData({
+                        ...INITIAL_FORM,
+                        name: t.name || "",
+                        subdomain: t.subdomain || "",
+                        address: t.address || "",
+                        zipCode: t.zipCode || "",
+                        city: t.city || "",
+                        uidNumber: t.uidNumber || "",
+                        companyRegister: t.companyRegister || "",
+                        legalForm: t.legalForm || "GmbH",
+                        commercialCourt: t.commercialCourt || "",
+                    });
+                    setAdmins(adminsRes.data);
+                } catch (error) {
+                    console.error("Fetch error:", error);
+                    alert("Veriler yüklenemedi.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+            fetchData();
+        }
+    }, [id]);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
         try {
             if (id) {
-                alert("Edit-Modus ist in Vorbereitung");
+                await api.patch(`/tenants/${id}`, formData);
             } else {
                 await api.post("/tenants", formData);
             }
@@ -58,6 +99,23 @@ function TenantEditorForm() {
             setSaving(false);
         }
     };
+
+    const deleteAdmin = async (userId: string) => {
+        if (!confirm("Bu yöneticiyi silmek istediğinize emin misiniz?")) return;
+        try {
+            await api.delete(`/tenants/${id}/admins/${userId}`);
+            setAdmins(admins.filter(a => a.id !== userId));
+        } catch (error) {
+            alert("Admin silinemedi.");
+        }
+    };
+
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center p-20 gap-4">
+            <Loader2 className="animate-spin text-indigo-500" size={48} />
+            <p className="font-bold text-slate-500 animate-pulse uppercase tracking-widest text-xs">Yükleniyor...</p>
+        </div>
+    );
 
     return (
         <form onSubmit={handleSave} className="space-y-8 pb-20">
@@ -204,7 +262,44 @@ function TenantEditorForm() {
             </section>
 
             {/* Admin Account */}
-            {!id && (
+            {/* Admin Management */}
+            {id ? (
+                <section className="bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-[2.5rem] p-10 space-y-8 shadow-sm">
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500">
+                            <Users size={24} />
+                        </div>
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight font-sans">Mevcut Yöneticiler</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        {admins.length === 0 ? (
+                            <p className="text-slate-500 font-bold italic">Kayıtlı yönetici bulunamadı.</p>
+                        ) : (
+                            admins.map(admin => (
+                                <div key={admin.id} className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-white/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white font-bold">
+                                            {admin.email[0].toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-bold text-slate-900 dark:text-white">{admin.email}</p>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{admin.role}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => deleteAdmin(admin.id)}
+                                        className="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition"
+                                    >
+                                        Kaldır
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </section>
+            ) : (
                 <section className="bg-white dark:bg-[#131720] border border-slate-100 dark:border-white/5 rounded-[2.5rem] p-10 space-y-8 shadow-sm">
                     <div className="flex items-center gap-4 mb-2">
                         <div className="w-12 h-12 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500">
