@@ -17,7 +17,9 @@ import {
     Shield,
     X,
     Server,
-    Zap as ZapIcon
+    Zap as ZapIcon,
+    Power,
+    Edit3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
@@ -43,8 +45,6 @@ export default function TenantManagement() {
             setLoading(false);
         }
     };
-
-    // Creation moved to editor page
 
     const handleDelete = async (id: string, name: string) => {
         if (!confirm(`Möchten Sie den Mandanten "${name}" wirklich unwiderruflich löschen?`)) return;
@@ -201,7 +201,8 @@ export default function TenantManagement() {
                                         <div className="flex items-center justify-end gap-2">
                                             <button
                                                 onClick={() => handleOpenExternal(t.subdomain)}
-                                                className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-xl transition duration-300"
+                                                title="Dashboard öffnen"
+                                                className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-600 rounded-xl transition duration-300"
                                             >
                                                 <LayoutDashboard size={18} />
                                             </button>
@@ -215,10 +216,18 @@ export default function TenantManagement() {
                                                         : "bg-slate-50 dark:bg-white/5 hover:bg-green-50 dark:hover:bg-green-500/10 text-slate-400 hover:text-green-600"
                                                 )}
                                             >
-                                                <Settings size={18} />
+                                                <Power size={18} />
                                             </button>
+                                            <Link
+                                                href={`/superadmin/tenants/editor?id=${t.id}`}
+                                                title="Bearbeiten"
+                                                className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-slate-400 hover:text-blue-600 rounded-xl transition duration-300"
+                                            >
+                                                <Settings size={18} />
+                                            </Link>
                                             <button
                                                 onClick={() => handleDelete(t.id, t.name)}
+                                                title="Löschen"
                                                 className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-red-50 dark:hover:bg-red-500/10 text-slate-400 hover:text-red-600 rounded-xl transition duration-300"
                                             >
                                                 <Trash2 size={18} />
@@ -231,8 +240,6 @@ export default function TenantManagement() {
                     </table>
                 </div>
             </div>
-
-            {/* Add Modal removed */}
         </div>
     );
 }
