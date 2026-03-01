@@ -16,40 +16,40 @@ import { motion } from "framer-motion";
 
 const panels = [
     {
-        title: "Super Admin",
-        description: "Master control for all tenants and system settings.",
+        title: "Super-Admin",
+        description: "Zentrale Steuerung für alle Mandanten und Systemeinstellungen.",
         href: "/super-admin",
         icon: ShieldCheck,
         color: "bg-red-500",
         shadow: "shadow-red-200"
     },
     {
-        title: "Admin Panel",
-        description: "Manage orders, drivers, fleet and accounting.",
+        title: "Admin-Panel",
+        description: "Verwalten Sie Aufträge, Fahrer, Fahrzeuge und Buchhaltung.",
         href: "/admin",
         icon: LayoutDashboard,
         color: "bg-blue-600",
         shadow: "shadow-blue-200"
     },
     {
-        title: "Driver Portal",
-        description: "Interface for drivers to manage deliveries and tracking.",
+        title: "Fahrer-Portal",
+        description: "Schnittstelle für Fahrer zur Auftragsbearbeitung und Tracking.",
         href: "/driver",
         icon: HardHat,
         color: "bg-orange-500",
         shadow: "shadow-orange-200"
     },
     {
-        title: "Customer Portal",
-        description: "Client interface for tracking and new requests.",
+        title: "Kunden-Portal",
+        description: "Kundenoberfläche für Tracking und neue Anfragen.",
         href: "/customer",
         icon: ShoppingBag,
         color: "bg-emerald-500",
         shadow: "shadow-emerald-200"
     },
     {
-        title: "System Setup",
-        description: "Initial configuration and tenant onboarding.",
+        title: "System-Setup",
+        description: "Erstkonfiguration und Onboarding von Mandanten.",
         href: "/setup",
         icon: Settings,
         color: "bg-slate-700",
@@ -69,7 +69,7 @@ export default function NavigationGate() {
                         className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-xs font-black uppercase tracking-[0.3em] mb-6"
                     >
                         <Zap size={14} className="fill-current" />
-                        Quick Access Gate
+                        Schnellzugriff-Gate
                     </motion.div>
                     <motion.h1
                         initial={{ opacity: 0, y: -10 }}
@@ -85,7 +85,7 @@ export default function NavigationGate() {
                         transition={{ delay: 0.2 }}
                         className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-lg mx-auto"
                     >
-                        Gecici yönlendirme sayfası. Tüm aktif panellere buradan hızlıca erişebilirsiniz.
+                        Temporäre Navigationsseite. Greifen Sie hier schnell auf alle aktiven Panels zu.
                     </motion.p>
                 </div>
 
@@ -131,7 +131,7 @@ export default function NavigationGate() {
                     transition={{ delay: 0.6 }}
                     className="mt-16 text-center text-slate-400 text-xs font-bold uppercase tracking-widest"
                 >
-                    &copy; 2026 QQX Control System • Temporary Gate
+                    &copy; 2026 QQX Control System • Temporäres Gate
                 </motion.div>
             </div>
         </div>
