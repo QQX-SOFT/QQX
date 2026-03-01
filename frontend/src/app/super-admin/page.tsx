@@ -20,6 +20,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
+import Link from "next/link";
 
 interface Tenant {
     id: string;
@@ -42,9 +43,6 @@ interface AdminUser {
 export default function SuperAdminPage() {
     const [tenants, setTenants] = useState<Tenant[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [newTenant, setNewTenant] = useState({ name: "", subdomain: "" });
-    const [creating, setCreating] = useState(false);
 
     // Admin Management State
     const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
@@ -65,21 +63,6 @@ export default function SuperAdminPage() {
             console.error("Failed to fetch tenants", e);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleCreateTenant = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setCreating(true);
-        try {
-            await api.post("/tenants", newTenant);
-            setShowAddModal(false);
-            setNewTenant({ name: "", subdomain: "" });
-            fetchTenants();
-        } catch (e: any) {
-            alert(e.response?.data?.error || "Fehler beim Erstellen des Mandanten");
-        } finally {
-            setCreating(false);
         }
     };
 
@@ -143,13 +126,13 @@ export default function SuperAdminPage() {
                     <h1 className="text-4xl font-black text-white tracking-tight">Super Admin Dashboard</h1>
                     <p className="text-slate-500 font-medium mt-2">Willkommen im zentralen Kontrollzentrum von QQX. Verwalten Sie alle Kunden und Systemressourcen.</p>
                 </div>
-                <button
-                    onClick={() => setShowAddModal(true)}
+                <Link
+                    href="/super-admin/tenants/editor"
                     className="px-8 py-4 bg-blue-600 text-white rounded-2xl font-black flex items-center gap-3 hover:bg-blue-700 transition shadow-2xl shadow-blue-900/20"
                 >
                     <Plus size={20} />
                     Neues Kunden-Setup (Tenant)
-                </button>
+                </Link>
             </header>
 
             {/* System Stats */}
@@ -257,66 +240,6 @@ export default function SuperAdminPage() {
                     </table>
                 </div>
             </div>
-
-            {/* Add Tenant Modal */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
-                            onClick={() => setShowAddModal(false)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="relative bg-slate-900 border border-white/10 rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl"
-                        >
-                            <h2 className="text-2xl font-black text-white mb-8">Neuen Mandanten anlegen</h2>
-                            <form onSubmit={handleCreateTenant} className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Unternehmensname</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="z.B. Müller Logistik"
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition text-white"
-                                        value={newTenant.name}
-                                        onChange={(e) => setNewTenant({ ...newTenant, name: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Subdomain</label>
-                                    <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus-within:border-blue-500 transition">
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="mueller"
-                                            className="bg-transparent border-none outline-none flex-1 text-white"
-                                            value={newTenant.subdomain}
-                                            onChange={(e) => setNewTenant({ ...newTenant, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                                        />
-                                        <span className="text-slate-500 font-bold">.qqx-app.de</span>
-                                    </div>
-                                </div>
-                                <div className="pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 py-4 rounded-2xl bg-white/5 font-black hover:bg-white/10 transition">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={creating}
-                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2"
-                                    >
-                                        {creating ? <Loader2 className="animate-spin" size={20} /> : "Tenant Erstellen"}
-                                    </button>
-                                </div>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* Admin Management Modal */}
             <AnimatePresence>

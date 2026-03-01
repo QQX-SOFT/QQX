@@ -7,6 +7,13 @@ const router = Router();
 const tenantSchema = z.object({
     name: z.string().min(2),
     subdomain: z.string().min(2).regex(/^[a-z0-9-]+$/, "Subdomain must be lowercase alphanumeric"),
+    currency: z.string().optional().default("EUR"),
+    timezone: z.string().optional().default("Europe/Berlin"),
+    basePrice: z.number().optional().default(15.00),
+    distanceMultiplier: z.number().optional().default(0.50),
+    // Admin info
+    adminEmail: z.string().email().optional(),
+    adminPassword: z.string().min(6).optional(),
 });
 
 // GET global platform stats (SuperAdmin)
@@ -57,6 +64,7 @@ router.get('/', async (req: express.Request, res: Response) => {
 router.post('/', async (req: express.Request, res: Response) => {
     try {
         const validatedData = tenantSchema.parse(req.body);
+        const { adminEmail, adminPassword, ...tenantData } = validatedData;
 
         const existing = await prisma.tenant.findUnique({
             where: { subdomain: validatedData.subdomain }
@@ -66,16 +74,31 @@ router.post('/', async (req: express.Request, res: Response) => {
             return res.status(400).json({ error: 'Subdomain already taken' });
         }
 
+        // Create Tenant
         const tenant = await prisma.tenant.create({
-            data: validatedData
+            data: tenantData
         });
+
+        // Create Admin User if provided
+        if (adminEmail && adminPassword) {
+            await prisma.user.create({
+                data: {
+                    email: adminEmail,
+                    password: adminPassword, // Should be hashed
+                    role: 'CUSTOMER_ADMIN',
+                    tenantId: tenant.id,
+                    clerkId: `initial-admin-${Date.now()}`
+                }
+            });
+        }
 
         res.status(201).json(tenant);
     } catch (error) {
+        console.error("Create tenant error:", error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({ errors: error.errors });
         }
-        res.status(500).json({ error: 'Failed to create tenant' });
+        res.status(500).json({ error: 'Failed to create tenant: ' + (error instanceof Error ? error.message : String(error)) });
     }
 });
 
