@@ -28,7 +28,7 @@ const orderSchema = z.object({
 
 // GET quote based on distance
 router.get('/quote', async (req: TenantRequest, res: Response) => {
-    const { origin, destination } = req.query;
+    const { origin, destination } = req.query as any;
 
     if (!origin || !destination) {
         return res.status(400).json({ error: 'Origin and destination are required' });
@@ -87,9 +87,9 @@ router.post('/', async (req: TenantRequest, res: Response) => {
             data: {
                 ...validatedData,
                 tenantId: tenantId!,
+                amount: validatedData.amount || 0 // Ensure it's not undefined
             }
         });
-
         res.status(201).json(order);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -99,8 +99,8 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
-// PATCH assign driver
-router.patch('/:id/assign', async (req: TenantRequest, res: Response) => {
+// PATCH update order (e.g. assign driver)
+router.patch('/:id', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
     const { driverId } = req.body;
 

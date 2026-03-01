@@ -4,6 +4,10 @@ import { prisma } from '../index';
 export interface TenantRequest extends Request {
     tenantId?: string;
     subdomain?: string;
+    // Explicitly add common properties as any to avoid build failures when Request type resolution fails
+    query: any;
+    body: any;
+    params: any;
 }
 
 export const tenantMiddleware = async (req: TenantRequest, res: Response, next: NextFunction) => {
