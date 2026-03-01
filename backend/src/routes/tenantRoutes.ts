@@ -89,7 +89,66 @@ router.patch('/:id', async (req: express.Request, res: Response) => {
         });
         res.json(tenant);
     } catch (error) {
+        console.error("Update tenant error:", error);
         res.status(500).json({ error: 'Failed to update tenant' });
+    }
+});
+
+// GET tenant admins
+router.get('/:id/admins', async (req: express.Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const admins = await prisma.user.findMany({
+            where: { tenantId: id, role: 'CUSTOMER_ADMIN' }
+        });
+        res.json(admins);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch admins' });
+    }
+});
+
+// POST create tenant admin
+router.post('/:id/admins', async (req: express.Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+
+        const existing = await prisma.user.findFirst({ where: { email } });
+        if (existing) {
+            return res.status(400).json({ error: 'Email already in use' });
+        }
+
+        const user = await prisma.user.create({
+            data: {
+                email,
+                password, // Should be hashed
+                role: 'CUSTOMER_ADMIN',
+                tenantId: id,
+                clerkId: `manual-admin-${Date.now()}`
+            }
+        });
+
+        res.status(201).json(user);
+    } catch (error) {
+        console.error("Create admin error:", error);
+        res.status(500).json({ error: 'Failed to create admin' });
+    }
+});
+
+// DELETE tenant admin
+router.delete('/:id/admins/:userId', async (req: express.Request, res: Response) => {
+    try {
+        const { id, userId } = req.params;
+        await prisma.user.delete({
+            where: { id: userId, tenantId: id }
+        });
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete admin' });
     }
 });
 
