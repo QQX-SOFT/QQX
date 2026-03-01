@@ -39,8 +39,7 @@ interface Driver {
     firstName: string;
     lastName: string;
     phone: string | null;
-    birthday: string | null;
-    type: "ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG";
+    type: "EMPLOYED" | "FREELANCE" | "COMMERCIAL";
     user?: {
         email: string;
     };
@@ -68,19 +67,19 @@ export default function DriversPage() {
 
 
     const docRequirements = {
-        ECHTER_DIENSTNEHMER: [
+        EMPLOYED: [
             "Lichtbildausweis/Reisepass",
             "Führerschein (Klasse B)",
             "Meldezettel",
             "ÖGK Anmeldung"
         ],
-        FREIER_DIENSTNEHMER: [
+        FREELANCE: [
             "Lichtbildausweis/Reisepass",
             "Führerschein (Klasse B)",
             "Meldezettel",
             "SVS Bestätigung"
         ],
-        SELBSTSTANDIG: [
+        COMMERCIAL: [
             "Lichtbildausweis/Reisepass",
             "Führerschein (Klasse B)",
             "Meldezettel",
@@ -218,13 +217,13 @@ export default function DriversPage() {
                                 <div className="flex items-center gap-3 mt-1 text-slate-400 text-sm font-medium">
                                     <div className={cn(
                                         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                        driver.type === "SELBSTSTANDIG" ? "bg-amber-50 text-amber-600" :
-                                            driver.type === "FREIER_DIENSTNEHMER" ? "bg-purple-50 text-purple-600" :
+                                        driver.type === "COMMERCIAL" ? "bg-amber-50 text-amber-600" :
+                                            driver.type === "FREELANCE" ? "bg-purple-50 text-purple-600" :
                                                 "bg-blue-50 text-blue-600"
                                     )}>
                                         <Briefcase size={10} />
-                                        {driver.type === "SELBSTSTANDIG" ? "Selbstständig" :
-                                            driver.type === "FREIER_DIENSTNEHMER" ? "Freier Dienstnehmer" :
+                                        {driver.type === "COMMERCIAL" ? "Selbstständig" :
+                                            driver.type === "FREELANCE" ? "Freier Dienstnehmer" :
                                                 "Echter Dienstnehmer"}
                                     </div>
                                     <span>•</span>

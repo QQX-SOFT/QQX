@@ -73,13 +73,17 @@ function DriverEditorForm() {
         try {
             setLoading(true);
             const { data } = await api.get(`/drivers/${driverId}`);
+            let eType: "ECHTER_DIENSTNEHMER" | "FREIER_DIENSTNEHMER" | "SELBSTSTANDIG" = "ECHTER_DIENSTNEHMER";
+            if (data.type === "FREELANCE") eType = "FREIER_DIENSTNEHMER";
+            if (data.type === "COMMERCIAL") eType = "SELBSTSTANDIG";
+
             setFormData({
                 firstName: data.firstName || "",
                 lastName: data.lastName || "",
                 phone: data.phone || "",
                 email: data.user?.email || "",
                 birthday: data.birthday ? data.birthday.split('T')[0] : "",
-                employmentType: data.type || "ECHTER_DIENSTNEHMER",
+                employmentType: eType,
                 street: data.street || "",
                 zip: data.zip || "",
                 city: data.city || "",

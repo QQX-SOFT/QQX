@@ -11,7 +11,7 @@ const driverSchema = z.object({
     phone: z.string().optional().nullable(),
     email: z.string().email().optional().nullable(),
     birthday: z.string().optional().nullable(),
-    employmentType: z.enum(['ANGEMELDET', 'SELBSTSTANDIG']).optional(),
+    employmentType: z.enum(['ECHTER_DIENSTNEHMER', 'FREIER_DIENSTNEHMER', 'SELBSTSTANDIG']).optional(),
     street: z.string().optional().nullable(),
     zip: z.string().optional().nullable(),
     city: z.string().optional().nullable(),
@@ -87,8 +87,10 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     try {
         const validatedData = driverSchema.parse(req.body);
 
-        // Map employmentType to Prisma DriverType
-        const prismaType = validatedData.employmentType === 'SELBSTSTANDIG' ? 'FREELANCE' : 'EMPLOYED';
+        // Map frontend employmentType to Prisma DriverType
+        let prismaType: 'EMPLOYED' | 'FREELANCE' | 'COMMERCIAL' = 'EMPLOYED';
+        if (validatedData.employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';
+        if (validatedData.employmentType === 'SELBSTSTANDIG') prismaType = 'COMMERCIAL';
 
         const user = await prisma.user.create({
             data: {
@@ -150,12 +152,17 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
         if (!driver) return res.status(404).json({ error: 'Fahrer nicht gefunden' });
 
         // Update Driver
+        let prismaType = undefined;
+        if (driverData.employmentType === 'ECHTER_DIENSTNEHMER') prismaType = 'EMPLOYED';
+        if (driverData.employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';
+        if (driverData.employmentType === 'SELBSTSTANDIG') prismaType = 'COMMERCIAL';
+
         const updatedDriver = await prisma.driver.update({
             where: { id },
             data: {
                 ...driverData as any,
                 birthday: driverData.birthday ? new Date(driverData.birthday) : undefined,
-                type: driverData.employmentType === 'SELBSTSTANDIG' ? 'FREELANCE' : (driverData.employmentType ? 'EMPLOYED' : undefined),
+                type: prismaType,
             }
         });
 

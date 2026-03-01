@@ -10,7 +10,7 @@ const driverSchema = zod_1.z.object({
     phone: zod_1.z.string().optional().nullable(),
     email: zod_1.z.string().email().optional().nullable(),
     birthday: zod_1.z.string().optional().nullable(),
-    employmentType: zod_1.z.enum(['ANGEMELDET', 'SELBSTSTANDIG']).optional(),
+    employmentType: zod_1.z.enum(['ECHTER_DIENSTNEHMER', 'FREIER_DIENSTNEHMER', 'SELBSTSTANDIG']).optional(),
     street: zod_1.z.string().optional().nullable(),
     zip: zod_1.z.string().optional().nullable(),
     city: zod_1.z.string().optional().nullable(),
@@ -18,6 +18,7 @@ const driverSchema = zod_1.z.object({
     taxId: zod_1.z.string().optional().nullable(),
     iban: zod_1.z.string().optional().nullable(),
     bic: zod_1.z.string().optional().nullable(),
+    password: zod_1.z.string().optional().nullable(),
 });
 // GET all drivers
 router.get('/', async (req, res) => {
@@ -75,12 +76,17 @@ router.post('/', async (req, res) => {
     }
     try {
         const validatedData = driverSchema.parse(req.body);
-        // Map employmentType to Prisma DriverType
-        const prismaType = validatedData.employmentType === 'SELBSTSTANDIG' ? 'FREELANCE' : 'EMPLOYED';
+        // Map frontend employmentType to Prisma DriverType
+        let prismaType = 'EMPLOYED';
+        if (validatedData.employmentType === 'FREIER_DIENSTNEHMER')
+            prismaType = 'FREELANCE';
+        if (validatedData.employmentType === 'SELBSTSTANDIG')
+            prismaType = 'COMMERCIAL';
         const user = await index_1.prisma.user.create({
             data: {
                 email: validatedData.email || `${validatedData.firstName.toLowerCase()}.${validatedData.lastName.toLowerCase()}@${subdomain || 'qqx'}.local`,
                 clerkId: `manual-${Date.now()}`,
+                password: validatedData.password, // Ideally hash this
                 role: 'DRIVER',
                 tenantId: tenantId
             }
@@ -114,6 +120,50 @@ router.post('/', async (req, res) => {
         }
         console.error("Create driver error:", error);
         res.status(500).json({ error: 'Fahrer konnte nicht erstellt werden' });
+    }
+});
+// PATCH update driver
+router.patch('/:id', async (req, res) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+    if (!tenantId)
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+    try {
+        const validatedData = driverSchema.partial().parse(req.body);
+        const { password, ...driverData } = validatedData;
+        const driver = await index_1.prisma.driver.findFirst({
+            where: { id, tenantId: tenantId },
+        });
+        if (!driver)
+            return res.status(404).json({ error: 'Fahrer nicht gefunden' });
+        // Update Driver
+        let prismaType = undefined;
+        if (driverData.employmentType === 'ECHTER_DIENSTNEHMER')
+            prismaType = 'EMPLOYED';
+        if (driverData.employmentType === 'FREIER_DIENSTNEHMER')
+            prismaType = 'FREELANCE';
+        if (driverData.employmentType === 'SELBSTSTANDIG')
+            prismaType = 'COMMERCIAL';
+        const updatedDriver = await index_1.prisma.driver.update({
+            where: { id },
+            data: {
+                ...driverData,
+                birthday: driverData.birthday ? new Date(driverData.birthday) : undefined,
+                type: prismaType,
+            }
+        });
+        // Update User password if provided
+        if (password) {
+            await index_1.prisma.user.update({
+                where: { id: driver.userId },
+                data: { password }
+            });
+        }
+        res.json(updatedDriver);
+    }
+    catch (error) {
+        console.error("Update driver error:", error);
+        res.status(500).json({ error: 'Fahrer konnte nicht aktualisiert werden' });
     }
 });
 // PATCH update driver status
