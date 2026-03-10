@@ -46,6 +46,10 @@ function TenantEditorForm() {
 
     const [formData, setFormData] = useState(INITIAL_FORM);
 
+    const [newAdminEmail, setNewAdminEmail] = useState("");
+    const [newAdminPassword, setNewAdminPassword] = useState("");
+    const [addingAdmin, setAddingAdmin] = useState(false);
+
     // Fetch existing data
     useEffect(() => {
         if (id) {
@@ -110,6 +114,21 @@ function TenantEditorForm() {
         }
     };
 
+    const handleAddAdmin = async () => {
+        if (!newAdminEmail || !newAdminPassword) return;
+        setAddingAdmin(true);
+        try {
+            const res = await api.post(`/tenants/${id}/admins`, { email: newAdminEmail, password: newAdminPassword });
+            setAdmins([...admins, res.data]);
+            setNewAdminEmail("");
+            setNewAdminPassword("");
+        } catch (error: any) {
+            alert(error.response?.data?.error || "Administrator konnte nicht hinzugefügt werden.");
+        } finally {
+            setAddingAdmin(false);
+        }
+    };
+
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
             <Loader2 className="animate-spin text-indigo-500" size={48} />
@@ -151,7 +170,7 @@ function TenantEditorForm() {
                                 value={formData.subdomain}
                                 onChange={e => setFormData({ ...formData, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
                             />
-                            <span className="text-slate-400 dark:text-slate-500 font-bold">.qqx-app.de</span>
+                            <span className="text-slate-400 dark:text-slate-500 font-bold">.qqxsoft.com</span>
                         </div>
                     </div>
                 </div>
@@ -297,6 +316,50 @@ function TenantEditorForm() {
                                 </div>
                             ))
                         )}
+                    </div>
+
+                    <div className="mt-8 pt-8 border-t border-slate-100 dark:border-white/5 space-y-6">
+                        <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-tight">Neuen Administrator hinzufügen</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Admin E-Mail</label>
+                                <div className="relative">
+                                    <Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                                    <input
+                                        type="email"
+                                        placeholder="neu@kunde.at"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                        value={newAdminEmail}
+                                        onChange={e => setNewAdminEmail(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Passwort</label>
+                                <div className="relative">
+                                    <Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                                    <input
+                                        type="text"
+                                        minLength={6}
+                                        placeholder="••••••••"
+                                        className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                        value={newAdminPassword}
+                                        onChange={e => setNewAdminPassword(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end">
+                            <button
+                                type="button"
+                                onClick={handleAddAdmin}
+                                disabled={addingAdmin || !newAdminEmail || !newAdminPassword}
+                                className="px-8 py-4 bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {addingAdmin ? <Loader2 className="animate-spin" size={18} /> : null}
+                                Benutzer anlegen
+                            </button>
+                        </div>
                     </div>
                 </section>
             ) : (
