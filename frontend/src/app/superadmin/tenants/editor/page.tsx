@@ -90,7 +90,9 @@ function TenantEditorForm() {
         setSaving(true);
         try {
             if (id) {
-                await api.patch(`/tenants/${id}`, formData);
+                // For updates, we MUST remove admin fields, otherwise Zod on backend fails if they are empty
+                const { adminEmail, adminPassword, ...updatePayload } = formData;
+                await api.patch(`/tenants/${id}`, updatePayload);
             } else {
                 await api.post("/tenants", formData);
             }
