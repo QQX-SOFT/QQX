@@ -16,6 +16,7 @@ export default function CustomerLoginPage() {
 
         // Actual implementation would call api.post("/auth/login")
         setTimeout(() => {
+            document.cookie = "role=CUSTOMER; path=/; max-age=86400; SameSite=Lax";
             localStorage.setItem("role", "CUSTOMER");
             router.push("/customer");
         }, 1000);

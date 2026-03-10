@@ -16,6 +16,7 @@ export default function AdminLoginPage() {
 
         // Actual implementation would call api.post("/auth/login")
         setTimeout(() => {
+            document.cookie = "role=ADMIN; path=/; max-age=86400; SameSite=Lax";
             localStorage.setItem("role", "ADMIN");
             router.push("/admin");
         }, 1000);

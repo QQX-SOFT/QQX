@@ -14,10 +14,30 @@ export function middleware(req: NextRequest) {
 
     // If it's a subdomain and NOT the main domain
     if (!isMainDomain && subdomain && subdomain !== 'www') {
-        // In a real production setup with wildcard domains, 
-        // you would rewrite the URL to a dynamic segment like:
-        // url.pathname = `/_tenants/${subdomain}${url.pathname}`;
-        // For now, we just pass the subdomain as a header for our API client to pick up
+        const role = req.cookies.get('role')?.value;
+        const pathname = url.pathname;
+
+        // If at the root of a subdomain, redirect based on login status and role
+        if (pathname === '/') {
+            if (!role) {
+                // Not logged in, go to login
+                url.pathname = '/login';
+                return NextResponse.redirect(url);
+            }
+
+            // Logged in, redirect to correct portal
+            if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'CUSTOMER_ADMIN') {
+                url.pathname = '/admin';
+            } else if (role === 'DRIVER') {
+                url.pathname = '/driver';
+            } else if (role === 'CUSTOMER') {
+                url.pathname = '/customer';
+            } else {
+                url.pathname = '/login';
+            }
+            return NextResponse.redirect(url);
+        }
+
         const response = NextResponse.next();
         response.headers.set('x-tenant-subdomain', subdomain);
         return response;

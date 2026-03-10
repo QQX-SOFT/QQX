@@ -16,7 +16,9 @@ export default function LoginPage() {
 
         // Mock Login: Store demo driver ID
         setTimeout(() => {
+            document.cookie = "role=DRIVER; path=/; max-age=86400; SameSite=Lax";
             localStorage.setItem("driverId", "demo-driver-1");
+            localStorage.setItem("role", "DRIVER");
             router.push("/driver/track");
         }, 1000);
     };
