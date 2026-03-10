@@ -85,7 +85,7 @@ export default function AccountingPage() {
             {/* Finance Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
-                    { label: "Bezahlter Gesamtumsatz", value: `€${totalRevenue.toLocaleString()}`, trend: "+5.2%", color: "blue", up: true },
+                    { label: "Bezahlter Gesamtumsatz", value: `€${totalRevenue.toLocaleString()}`, trend: "Laufendes Jahr", color: "blue", up: null },
                     { label: "Ausstehende Zahlungen", value: `€${pendingAmount.toLocaleString()}`, trend: `${invoices.filter(i => i.status === 'PENDING').length} Rechnungen`, color: "slate", icon: Clock },
                     { label: "Rechnungen Gesamt", value: invoices.length.toString(), trend: "Aktueller Stand", color: "indigo", up: null },
                 ].map((stat, i) => (

@@ -65,6 +65,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const pathname = usePathname();
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [companyName, setCompanyName] = useState<string>("");
+    const [userName, setUserName] = useState<string>("");
+    const [userInitials, setUserInitials] = useState<string>("AD");
+
+    // Load user data from localStorage
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem("user");
+            if (stored) {
+                const user = JSON.parse(stored);
+                // Company name from tenant
+                if (user.tenant?.name) {
+                    setCompanyName(user.tenant.name);
+                }
+                // User display name: use email
+                if (user.email) {
+                    setUserName(user.email);
+                    // Generate initials from email (before @)
+                    const localPart = user.email.split("@")[0];
+                    const parts = localPart.split(/[._-]/);
+                    if (parts.length >= 2) {
+                        setUserInitials((parts[0][0] + parts[1][0]).toUpperCase());
+                    } else {
+                        setUserInitials(localPart.substring(0, 2).toUpperCase());
+                    }
+                }
+            }
+        } catch (e) {
+            // ignore parse errors
+        }
+    }, []);
 
     const handleLogout = () => {
         // Clear cookie
@@ -171,14 +202,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Top Header */}
                 <header className="h-20 bg-card/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between sticky top-0 z-40 transition-colors duration-300">
-                    <div className="flex items-center gap-4 lg:hidden">
+                    <div className="flex items-center gap-4">
                         <button
-                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition"
+                            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition lg:hidden"
                             onClick={() => setIsSidebarOpen(true)}
                         >
                             <Menu size={24} />
                         </button>
-                        <span className="font-black text-xl">QQX</span>
+                        {companyName && (
+                            <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-500/20">
+                                    {companyName.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="hidden sm:block">
+                                    <p className="text-sm font-black text-slate-900 dark:text-white leading-none">{companyName}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Firma</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="hidden md:flex items-center gap-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-5 py-2.5 rounded-2xl w-96 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
@@ -201,10 +242,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
                         <div className="flex items-center gap-3 text-left group cursor-pointer">
-                            <div className="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-500/20 group-hover:scale-105 transition duration-300">AD</div>
+                            <div className="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-lg shadow-blue-500/20 group-hover:scale-105 transition duration-300">{userInitials}</div>
                             <div className="hidden sm:block">
-                                <p className="text-sm font-black text-slate-900 dark:text-white leading-none mb-1">Admin Benutzer</p>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Global Master</p>
+                                <p className="text-sm font-black text-slate-900 dark:text-white leading-none mb-1">{userName || "Admin Benutzer"}</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Admin</p>
                             </div>
                         </div>
                     </div>

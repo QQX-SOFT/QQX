@@ -252,9 +252,9 @@ export default function DriversPage() {
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Bewertung</p>
-                                <div className="flex items-center gap-1 text-yellow-500 font-black">
-                                    <Star size={14} className="fill-current" />
-                                    <span>4.8</span>
+                                <div className="flex items-center gap-1 text-slate-300 font-black">
+                                    <Star size={14} />
+                                    <span>-</span>
                                 </div>
                             </div>
                         </div>
