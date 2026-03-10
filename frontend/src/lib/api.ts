@@ -25,11 +25,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
         } else if (parts.length === 2 && parts[1] === "localhost") {
             // Case: tenant.localhost
             config.headers["x-tenant-subdomain"] = parts[0];
-        } else if (mainDomains.includes(hostname) || hostname === "localhost") {
-            // Case: main domain - use a fallback for now or handle via session
-            // For testing/demo purposes, we can default to 'demo' if we are on the admin path
-            // This allows browsing the panel directly on the main domain
-            config.headers["x-tenant-subdomain"] = "demo";
         }
     }
     return config;

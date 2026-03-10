@@ -44,16 +44,12 @@ export default function CustomerDashboard() {
 
     const fetchOrders = async () => {
         try {
-            // Mocking for now to show premium experience
-            const mockOrders: Order[] = [
-                { id: "1", address: "Handelskai 214, 1020 Wien", amount: 45.90, status: "WAITING_APPROVAL", createdAt: new Date().toISOString() },
-                { id: "2", address: "Gürtel 45, 1160 Wien", amount: 32.50, status: "ON_THE_WAY", createdAt: new Date(Date.now() - 3600000).toISOString() },
-                { id: "3", address: "Favoritenstraße 12, 1100 Wien", amount: 15.00, status: "DELIVERED", createdAt: new Date(Date.now() - 86400000).toISOString() },
-            ];
-            setOrders(mockOrders);
-            setLoading(false);
+            const { data } = await api.get("/orders");
+            setOrders(data);
         } catch (e) {
             console.error("Failed to fetch customer orders", e);
+            setOrders([]);
+        } finally {
             setLoading(false);
         }
     };

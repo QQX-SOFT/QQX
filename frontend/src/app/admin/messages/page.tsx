@@ -61,54 +61,12 @@ export default function MessagesPage() {
     useEffect(() => {
         const fetchChats = async () => {
             try {
-                // Mocking data for now as per system instructions to provide a WOW experience
-                // In a real app, this would be api.get("/messages/chats")
-                const mockChats: Chat[] = [
-                    {
-                        id: "1",
-                        driverId: "d1",
-                        driverName: "Maximilian Weber",
-                        lastMessage: "Habe die Lieferung gerade abgeschlossen.",
-                        lastMessageTime: "10:45",
-                        unreadCount: 2,
-                        status: "ONLINE",
-                        type: "ECHTER_DIENSTNEHMER"
-                    },
-                    {
-                        id: "2",
-                        driverId: "d2",
-                        driverName: "Sarah Schneider",
-                        lastMessage: "Können wir die Route für morgen besprechen?",
-                        lastMessageTime: "Gestern",
-                        unreadCount: 0,
-                        status: "OFFLINE",
-                        type: "FREIER_DIENSTNEHMER"
-                    },
-                    {
-                        id: "3",
-                        driverId: "d3",
-                        driverName: "Andreas Huber",
-                        lastMessage: "Rechnung wurde hochgeladen.",
-                        lastMessageTime: "Montag",
-                        unreadCount: 0,
-                        status: "ONLINE",
-                        type: "SELBSTSTANDIG"
-                    },
-                    {
-                        id: "4",
-                        driverId: "d4",
-                        driverName: "Elena Fischer",
-                        lastMessage: "Bin in 5 Minuten am Depot.",
-                        lastMessageTime: "09:12",
-                        unreadCount: 0,
-                        status: "ONLINE",
-                        type: "ECHTER_DIENSTNEHMER"
-                    }
-                ];
-                setChats(mockChats);
-                setLoading(false);
+                const { data } = await api.get("/messages/chats");
+                setChats(data);
             } catch (error) {
                 console.error("Failed to load chats", error);
+                setChats([]);
+            } finally {
                 setLoading(false);
             }
         };
@@ -118,40 +76,28 @@ export default function MessagesPage() {
 
     const fetchMessages = async (chat: Chat) => {
         setActiveChat(chat);
-        setMessages([
-            { id: "1", senderId: "admin", text: "Hallo " + chat.driverName.split(' ')[0] + ", alles klar bei dir?", timestamp: "09:00", isRead: true },
-            { id: "2", senderId: chat.driverId, text: "Ja, danke! Bin gerade auf dem Weg zur nächsten Station.", timestamp: "09:05", isRead: true },
-            { id: "3", senderId: "admin", text: "Super, gib Bescheid wenn du fertig bist.", timestamp: "09:10", isRead: true },
-            { id: "4", senderId: chat.driverId, text: chat.lastMessage, timestamp: chat.lastMessageTime, isRead: false },
-        ]);
+        try {
+            const { data } = await api.get(`/messages/${chat.driverId}`);
+            setMessages(data);
+        } catch (error) {
+            console.error("Failed to load messages", error);
+            setMessages([]);
+        }
     };
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !activeChat) return;
 
-        const msg: Message = {
-            id: Date.now().toString(),
-            senderId: "admin",
-            text: newMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isRead: false
-        };
-
-        setMessages([...messages, msg]);
+        const sentText = newMessage;
         setNewMessage("");
 
-        // Simulated reply
-        setTimeout(() => {
-            const reply: Message = {
-                id: (Date.now() + 1).toString(),
-                senderId: activeChat.driverId,
-                text: "Verstanden!",
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                isRead: false
-            };
-            setMessages(prev => [...prev, reply]);
-        }, 1500);
+        try {
+            const { data } = await api.post(`/messages/${activeChat.driverId}`, { text: sentText });
+            setMessages([...messages, data]);
+        } catch (e) {
+            console.error("Failed to send message", e);
+        }
     };
 
     const filteredChats = chats.filter(c =>

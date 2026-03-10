@@ -17,7 +17,7 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
     console.log(`[TenantMiddleware] Path: ${path}, Subdomain: ${subdomain}`);
 
     // Skip tenant check for tenant creation/listing or health checks
-    if (path.includes('/tenants') || path.includes('/health') || !subdomain) {
+    if (path.includes('/tenants') || path.includes('/health') || path.includes('/auth') || !subdomain) {
         console.log(`[TenantMiddleware] Bypassing check for ${path}`);
         return next();
     }

@@ -88,17 +88,10 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         try {
             const { data } = await api.get("/orders");
-            // Injecting a mock customer order for demo
-            const ordersWithCustomer = data.length > 0 ? data : [
-                { id: "CUST-001", customerName: "Max Mustermann", address: "Handelskai 214, 1020 Wien", amount: 25.50, status: "WAITING_APPROVAL", source: "CUSTOMER_PORTAL", createdAt: new Date().toISOString() },
-                { id: "ORD-1234", customerName: "Restaurant Bella", address: " Mariahilfer Str. 12, 1070 Wien", amount: 120.00, status: "PENDING", source: "DIRECT", createdAt: new Date().toISOString() }
-            ];
-            setOrders(ordersWithCustomer);
+            setOrders(data);
         } catch (e) {
             console.error("Failed to fetch orders", e);
-            setOrders([
-                { id: "CUST-001", customerName: "Max Mustermann", address: "Handelskai 214, 1020 Wien", amount: 25.50, status: "WAITING_APPROVAL", source: "CUSTOMER_PORTAL", createdAt: new Date().toISOString() }
-            ]);
+            setOrders([]);
         } finally {
             setLoading(false);
         }

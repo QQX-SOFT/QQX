@@ -11,6 +11,7 @@ import {
     AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "@/lib/api";
 
 export default function UnifiedLoginPage() {
     const [email, setEmail] = useState("");
@@ -19,36 +20,30 @@ export default function UnifiedLoginPage() {
     const [error, setError] = useState("");
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError("");
 
-        // Simulation eines API-Calls
-        // In einer echten App würde der Server die Rolle des Benutzers zurückgeben
-        setTimeout(() => {
-            let detectedRole = "";
+        try {
+            const response = await api.post("/auth/login", { email, password });
+            const detectedRole = response.data.role;
 
-            // Simulation der Logik basierend auf der E-Mail für Demo-Zwecke
-            if (email.includes("admin")) {
-                detectedRole = "ADMIN";
-            } else if (email.includes("driver")) {
-                detectedRole = "DRIVER";
-            } else if (email.includes("customer") || email.includes("kunde")) {
-                detectedRole = "CUSTOMER";
-            } else {
-                // Standardmäßig Admin für Demo
-                detectedRole = "ADMIN";
+            // Set cookie for middleware
+            // Map "CUSTOMER_ADMIN" to "ADMIN" in cookie for frontend redirection matching
+            const cookieRole = detectedRole === "CUSTOMER_ADMIN" ? "ADMIN" : detectedRole;
+            document.cookie = `role=${cookieRole}; path=/; max-age=86400; SameSite=Lax`;
+
+            // LocalStorage for generic frontend use
+            localStorage.setItem("role", cookieRole);
+            if (response.data.user) {
+                localStorage.setItem("user", JSON.stringify(response.data.user));
             }
 
-            // Cookie für Middleware setzen
-            document.cookie = `role=${detectedRole}; path=/; max-age=86400; SameSite=Lax`;
-
-            // LocalStorage für Legacy-Kompatibilität
-            localStorage.setItem("role", detectedRole);
-
-            // Automatische Weiterleitung basierend auf der erkannten Rolle
-            if (detectedRole === "ADMIN") {
+            // Automatic redirect
+            if (detectedRole === "SUPER_ADMIN") {
+                router.push("/superadmin");
+            } else if (detectedRole === "CUSTOMER_ADMIN" || detectedRole === "ADMIN") {
                 router.push("/admin");
             } else if (detectedRole === "DRIVER") {
                 router.push("/driver");
@@ -58,7 +53,14 @@ export default function UnifiedLoginPage() {
                 setLoading(false);
                 setError("Ungültige Rolle oder Zugriff verweigert.");
             }
-        }, 1500);
+        } catch (err: any) {
+            setLoading(false);
+            if (err.response?.data?.error) {
+                setError(err.response.data.error);
+            } else {
+                setError("Anmeldefehler. E-Mail oder Passwort falsch.");
+            }
+        }
     };
 
     return (

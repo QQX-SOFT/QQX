@@ -78,7 +78,7 @@ router.post('/plans', async (req: Request, res: Response) => {
 
 router.patch('/plans/:id', async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         const data = planSchema.partial().parse(req.body);
         const plan = await prisma.plan.update({
             where: { id },
@@ -92,7 +92,7 @@ router.patch('/plans/:id', async (req: Request, res: Response) => {
 
 router.delete('/plans/:id', async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         await prisma.plan.delete({ where: { id } });
         res.status(204).send();
     } catch (error) {
@@ -126,7 +126,7 @@ router.post('/features', async (req: Request, res: Response) => {
 
 router.delete('/features/:id', async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         await prisma.feature.delete({ where: { id } });
         res.status(204).send();
     } catch (error) {
@@ -165,7 +165,7 @@ router.post('/locations', async (req: Request, res: Response) => {
 
 router.delete('/locations/:id', async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id as string;
         await prisma.location.delete({ where: { id } });
         res.status(204).send();
     } catch (error) {

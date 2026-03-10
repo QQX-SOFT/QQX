@@ -2,24 +2,51 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, Lock, User, Loader2 } from "lucide-react";
+import { LayoutDashboard, Lock, User, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "@/lib/api";
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
 
-        // Actual implementation would call api.post("/auth/login")
-        setTimeout(() => {
-            document.cookie = "role=ADMIN; path=/; max-age=86400; SameSite=Lax";
-            localStorage.setItem("role", "ADMIN");
-            router.push("/admin");
-        }, 1000);
+        try {
+            const response = await api.post("/auth/login", { email, password });
+            const detectedRole = response.data.role;
+
+            if (detectedRole === 'CUSTOMER_ADMIN' || detectedRole === 'SUPER_ADMIN' || detectedRole === 'ADMIN') {
+                const cookieRole = detectedRole === "CUSTOMER_ADMIN" ? "ADMIN" : detectedRole;
+                document.cookie = `role=${cookieRole}; path=/; max-age=86400; SameSite=Lax`;
+                localStorage.setItem("role", cookieRole);
+                if (response.data.user) {
+                    localStorage.setItem("user", JSON.stringify(response.data.user));
+                }
+
+                if (detectedRole === 'SUPER_ADMIN') {
+                    router.push("/superadmin");
+                } else {
+                    router.push("/admin");
+                }
+            } else {
+                setLoading(false);
+                setError("Ungültige Rolle: Kein Administrator-Zugang.");
+            }
+        } catch (err: any) {
+            setLoading(false);
+            if (err.response?.data?.error) {
+                setError(err.response.data.error);
+            } else {
+                setError("Anmeldefehler. Bitte überprüfen Sie Ihre Daten.");
+            }
+        }
     };
 
     return (
@@ -39,6 +66,12 @@ export default function AdminLoginPage() {
 
                 <div className="bg-white border border-slate-100 rounded-[2.5rem] p-10 shadow-xl shadow-slate-200/50">
                     <form onSubmit={handleLogin} className="space-y-6">
+                        {error && (
+                            <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-sm font-bold">
+                                <AlertCircle size={16} />
+                                {error}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Email</label>
                             <div className="relative group">
@@ -63,6 +96,8 @@ export default function AdminLoginPage() {
                                     required
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-14 pr-6 text-slate-900 outline-none focus:border-blue-600 focus:bg-white transition"
                                     placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
                         </div>

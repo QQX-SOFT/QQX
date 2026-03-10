@@ -26,6 +26,7 @@ const customerRoutes_1 = __importDefault(require("./routes/customerRoutes"));
 const contractRoutes_1 = __importDefault(require("./routes/contractRoutes"));
 const contractTemplateRoutes_1 = __importDefault(require("./routes/contractTemplateRoutes"));
 const uploadRoutes_1 = __importDefault(require("./routes/uploadRoutes"));
+const authRoutes_1 = __importDefault(require("./routes/authRoutes"));
 const tenantMiddleware_1 = require("./middleware/tenantMiddleware");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -54,6 +55,7 @@ app.use('/api/customers', customerRoutes_1.default);
 app.use('/api/contracts', contractRoutes_1.default);
 app.use('/api/contract-templates', contractTemplateRoutes_1.default);
 app.use('/api/upload', uploadRoutes_1.default);
+app.use('/api/auth', authRoutes_1.default);
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

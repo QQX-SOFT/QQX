@@ -2,25 +2,46 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Truck, Lock, User, Loader2 } from "lucide-react";
+import { Truck, Lock, User, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "@/lib/api";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
 
-        // Mock Login: Store demo driver ID
-        setTimeout(() => {
-            document.cookie = "role=DRIVER; path=/; max-age=86400; SameSite=Lax";
-            localStorage.setItem("driverId", "demo-driver-1");
-            localStorage.setItem("role", "DRIVER");
-            router.push("/driver/track");
-        }, 1000);
+        try {
+            const response = await api.post("/auth/login", { email, password });
+            const detectedRole = response.data.role;
+
+            if (detectedRole === 'DRIVER') {
+                document.cookie = `role=DRIVER; path=/; max-age=86400; SameSite=Lax`;
+                localStorage.setItem("role", "DRIVER");
+                if (response.data.user) {
+                    localStorage.setItem("user", JSON.stringify(response.data.user));
+                    localStorage.setItem("driverId", response.data.user.id);
+                }
+                router.push("/driver/track");
+            } else {
+                setLoading(false);
+                setError("Ungültige Rolle: Kein Fahrer-Zugang.");
+            }
+        } catch (err: any) {
+            setLoading(false);
+            if (err.response?.data?.error) {
+                setError(err.response.data.error);
+            } else {
+                setError("Anmeldefehler. Bitte überprüfen Sie Ihre Daten.");
+            }
+        }
     };
 
     return (
@@ -40,6 +61,12 @@ export default function LoginPage() {
 
                 <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl">
                     <form onSubmit={handleLogin} className="space-y-6">
+                        {error && (
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-red-500 text-sm font-bold">
+                                <AlertCircle size={16} />
+                                {error}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Email Adresse</label>
                             <div className="relative group">
@@ -64,6 +91,8 @@ export default function LoginPage() {
                                     required
                                     className="w-full bg-slate-900/50 border border-white/5 rounded-2xl py-4 pl-14 pr-6 text-white outline-none focus:border-blue-500 transition"
                                     placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -78,7 +107,7 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-8 text-center pt-8 border-t border-white/5">
-                        <p className="text-slate-500 text-xs font-medium italic">Demodaten: driver@qqxsoft.com / beliebig</p>
+                        <p className="text-slate-500 text-xs font-medium italic">Bitte verwenden Sie Ihre registrierte E-Mail und Ihr Passwort.</p>
                     </div>
                 </div>
             </motion.div>

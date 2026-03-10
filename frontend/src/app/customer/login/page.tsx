@@ -2,24 +2,45 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingBag, Lock, User, Loader2 } from "lucide-react";
+import { ShoppingBag, Lock, User, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import api from "@/lib/api";
 
 export default function CustomerLoginPage() {
     const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
     const router = useRouter();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        setError("");
 
-        // Actual implementation would call api.post("/auth/login")
-        setTimeout(() => {
-            document.cookie = "role=CUSTOMER; path=/; max-age=86400; SameSite=Lax";
-            localStorage.setItem("role", "CUSTOMER");
-            router.push("/customer");
-        }, 1000);
+        try {
+            const response = await api.post("/auth/login", { email, password });
+            const detectedRole = response.data.role;
+
+            if (detectedRole === 'CUSTOMER') {
+                document.cookie = `role=CUSTOMER; path=/; max-age=86400; SameSite=Lax`;
+                localStorage.setItem("role", "CUSTOMER");
+                if (response.data.user) {
+                    localStorage.setItem("user", JSON.stringify(response.data.user));
+                }
+                router.push("/customer");
+            } else {
+                setLoading(false);
+                setError("Ungültige Rolle: Kein Kunden-Zugang.");
+            }
+        } catch (err: any) {
+            setLoading(false);
+            if (err.response?.data?.error) {
+                setError(err.response.data.error);
+            } else {
+                setError("Anmeldefehler. Bitte überprüfen Sie Ihre Daten.");
+            }
+        }
     };
 
     return (
@@ -39,6 +60,12 @@ export default function CustomerLoginPage() {
 
                 <div className="bg-white border border-slate-100 rounded-[2.5rem] p-10 shadow-xl shadow-slate-200/50">
                     <form onSubmit={handleLogin} className="space-y-6">
+                        {error && (
+                            <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 text-red-600 text-sm font-bold">
+                                <AlertCircle size={16} />
+                                {error}
+                            </div>
+                        )}
                         <div className="space-y-2">
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Benutzername veya Email</label>
                             <div className="relative group">
@@ -63,6 +90,8 @@ export default function CustomerLoginPage() {
                                     required
                                     className="w-full bg-slate-50 border border-slate-100 rounded-2xl py-4 pl-14 pr-6 text-slate-900 outline-none focus:border-emerald-600 focus:bg-white transition"
                                     placeholder="••••••••"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
                         </div>

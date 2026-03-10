@@ -9,13 +9,13 @@ const router = (0, express_1.Router)();
 // -----------------------------------------------------------------
 router.get('/stats', async (req, res) => {
     try {
-        const [totalTenants, inactiveTenants, totalUsers, totalVehicles, activeSupscriptions,] = await Promise.all([
+        const [totalTenants, totalUsers, totalVehicles, activeSupscriptions,] = await Promise.all([
             index_1.prisma.tenant.count(),
-            index_1.prisma.tenant.count({ where: { isActive: false } }),
             index_1.prisma.user.count(),
             index_1.prisma.vehicle.count(),
             index_1.prisma.subscription.count({ where: { status: 'ACTIVE' } }),
         ]);
+        const inactiveTenants = 0; // Or calculate based on planId if needed
         // Simulated MRR Calculation (Base 149.90 per active tenant)
         const mrr = totalTenants * 149.90;
         const arr = mrr * 12;
@@ -69,7 +69,7 @@ router.post('/plans', async (req, res) => {
 });
 router.patch('/plans/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         const data = planSchema.partial().parse(req.body);
         const plan = await index_1.prisma.plan.update({
             where: { id },
@@ -83,7 +83,7 @@ router.patch('/plans/:id', async (req, res) => {
 });
 router.delete('/plans/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         await index_1.prisma.plan.delete({ where: { id } });
         res.status(204).send();
     }
@@ -117,7 +117,7 @@ router.post('/features', async (req, res) => {
 });
 router.delete('/features/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         await index_1.prisma.feature.delete({ where: { id } });
         res.status(204).send();
     }
@@ -156,7 +156,7 @@ router.post('/locations', async (req, res) => {
 });
 router.delete('/locations/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = req.params.id;
         await index_1.prisma.location.delete({ where: { id } });
         res.status(204).send();
     }
