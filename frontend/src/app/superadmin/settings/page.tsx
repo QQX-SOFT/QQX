@@ -40,7 +40,7 @@ export default function SuperAdminSettings() {
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2 uppercase italic">
-                        System <span className="text-indigo-500 not-italic">Config</span>
+                        System <span className="text-indigo-500 not-italic">Konfiguration</span>
                     </h1>
                     <p className="text-slate-500 font-medium tracking-tight">Mandantenübergreifende Plattform-Konfigurationen.</p>
                 </div>
@@ -90,7 +90,7 @@ export default function SuperAdminSettings() {
                                         />
                                     </div>
                                     <div className="space-y-3">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Main Domain</label>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Hauptdomain</label>
                                         <input
                                             type="text"
                                             defaultValue="qqxsoft.com"
@@ -131,7 +131,7 @@ export default function SuperAdminSettings() {
                                     <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-lg text-[10px] font-black uppercase tracking-widest">Verbunden</span>
                                 </div>
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Master API Key</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Master-API-Schlüssel</label>
                                     <div className="relative group">
                                         <input
                                             type={showApiKey ? "text" : "password"}
@@ -151,14 +151,14 @@ export default function SuperAdminSettings() {
                             </section>
 
                             <section className="pt-8 border-t border-slate-100 dark:border-white/5">
-                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 italic uppercase tracking-tight underline decoration-indigo-500 decoration-4">Database Persistence</h3>
+                                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-6 italic uppercase tracking-tight underline decoration-indigo-500 decoration-4">Datenbankpersistenz</h3>
                                 <div className="flex items-center gap-6 p-6 bg-slate-50 dark:bg-white/5 rounded-[2rem] border border-slate-100 dark:border-white/5">
                                     <div className="p-4 bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-500/20">
                                         <Database size={24} />
                                     </div>
                                     <div>
                                         <h4 className="font-black text-slate-900 dark:text-white uppercase tracking-tight text-sm">PostgreSQL Cluster</h4>
-                                        <p className="text-xs text-slate-500 font-medium">Status: Optimal (4 Node Cluster)</p>
+                                        <p className="text-xs text-slate-500 font-medium">Status: Optimal (4-Knoten-Cluster)</p>
                                     </div>
                                     <div className="ml-auto flex items-center gap-2">
                                         <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
@@ -181,12 +181,12 @@ export default function SuperAdminSettings() {
                                         </div>
                                         <div>
                                             <h4 className="font-black text-slate-900 dark:text-white">Amazon SES</h4>
-                                            <p className="text-xs text-slate-500">E-Mail Transaktions-Service</p>
+                                            <p className="text-xs text-slate-500">E-Mail-Transaktionsservice</p>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-lg">Aktiv</span>
-                                        <button className="text-xs font-black text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Config</button>
+                                        <button className="text-xs font-black text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Konfigurieren</button>
                                     </div>
                                 </div>
 
@@ -202,7 +202,7 @@ export default function SuperAdminSettings() {
                                     </div>
                                     <div className="flex items-center gap-4">
                                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-lg">Inaktiv</span>
-                                        <button className="text-xs font-black text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Setup</button>
+                                        <button className="text-xs font-black text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Einrichten</button>
                                     </div>
                                 </div>
                             </div>
@@ -214,7 +214,7 @@ export default function SuperAdminSettings() {
                             <div className="relative z-10">
                                 <h3 className="text-2xl font-black mb-8 italic uppercase tracking-tight flex items-center gap-4">
                                     <Lock className="text-indigo-400" />
-                                    Platform <span className="text-indigo-400">Security</span> Shield
+                                    Plattform- <span className="text-indigo-400">Sicherheitsschild</span>
                                 </h3>
 
                                 <div className="space-y-8">
@@ -222,7 +222,7 @@ export default function SuperAdminSettings() {
                                         <div className="flex items-center gap-4">
                                             <Shield className="text-indigo-400" />
                                             <div>
-                                                <p className="font-black text-sm uppercase mb-0.5">Automated Backups</p>
+                                                <p className="font-black text-sm uppercase mb-0.5">Automatisierte Backups</p>
                                                 <p className="text-[10px] text-slate-400">Täglich um 03:00 UTC</p>
                                             </div>
                                         </div>
@@ -235,8 +235,8 @@ export default function SuperAdminSettings() {
                                         <div className="flex items-center gap-4">
                                             <Shield className="text-indigo-400" />
                                             <div>
-                                                <p className="font-black text-sm uppercase mb-0.5">Audit Logging</p>
-                                                <p className="text-[10px] text-slate-400">Full compliance logging</p>
+                                                <p className="font-black text-sm uppercase mb-0.5">Audit-Protokollierung</p>
+                                                <p className="text-[10px] text-slate-400">Vollständige Compliance-Protokollierung</p>
                                             </div>
                                         </div>
                                         <div className="h-6 w-12 bg-indigo-600 rounded-full relative">

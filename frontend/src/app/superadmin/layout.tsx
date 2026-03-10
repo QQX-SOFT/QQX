@@ -45,7 +45,7 @@ const navigationLinks = [
         links: [
             { name: "Pakete", icon: CreditCard, href: "/superadmin/plans" },
             { name: "Features", icon: Zap, href: "/superadmin/features" },
-            { name: "Abone", icon: TrendingUp, href: "/superadmin/billing" },
+            { name: "Abonnements", icon: TrendingUp, href: "/superadmin/billing" },
         ]
     },
     {
@@ -111,7 +111,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                         </div>
                         <div className="flex flex-col">
                             <span className="text-lg font-black tracking-tighter leading-none mb-1 uppercase italic">QQX <span className="text-indigo-400 not-italic">OS</span></span>
-                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none">Global Control</span>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] leading-none">Globale Steuerung</span>
                         </div>
                     </div>
                     <button
@@ -167,7 +167,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                             <Search size={18} className="text-slate-400 group-focus-within:text-indigo-500 transition-colors" />
                             <input
                                 type="text"
-                                placeholder="Komut veya veri ara..."
+                                placeholder="Befehl oder Daten suchen..."
                                 className="bg-transparent border-none outline-none text-sm font-bold w-full placeholder:text-slate-400 dark:text-white"
                             />
                         </div>
@@ -176,7 +176,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                     <div className="flex items-center gap-6">
                         <div className="hidden sm:flex items-center gap-2 text-emerald-500 px-4 py-2 bg-emerald-500/5 rounded-full border border-emerald-500/10">
                             <Activity size={14} className="animate-pulse" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Network: High</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest">Netzwerk: Hoch</span>
                         </div>
 
                         <ThemeToggle />
@@ -193,7 +193,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
                         <div className="flex items-center gap-4 text-left group cursor-pointer">
                             <div className="hidden sm:block text-right">
                                 <p className="text-sm font-black text-slate-900 dark:text-white leading-none mb-1">Super Admin</p>
-                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Root Access</p>
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Root-Zugriff</p>
                             </div>
                             <div className="w-12 h-12 bg-gradient-to-tr from-indigo-600 to-indigo-400 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-indigo-500/20 group-hover:scale-105 group-hover:rotate-3 transition duration-500">
                                 SA

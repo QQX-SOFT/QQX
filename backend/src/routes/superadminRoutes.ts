@@ -44,6 +44,21 @@ router.get('/stats', async (req: Request, res: Response) => {
 });
 
 // -----------------------------------------------------------------
+// USERS (SUPER ADMINS)
+// -----------------------------------------------------------------
+router.get('/users', async (req: Request, res: Response) => {
+    try {
+        const users = await prisma.user.findMany({
+            where: { role: 'SUPER_ADMIN' },
+            select: { id: true, name: true, email: true, role: true, createdAt: true }
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch superadmin users' });
+    }
+});
+
+// -----------------------------------------------------------------
 // PLANS
 // -----------------------------------------------------------------
 const planSchema = z.object({

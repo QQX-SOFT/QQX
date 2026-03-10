@@ -120,7 +120,7 @@ export default function SuperAdminDashboard() {
                             </div>
                             <div className="flex justify-between items-center pt-6 border-t border-slate-100 dark:border-white/5">
                                 <div>
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Neu</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Gesamt Neu</p>
                                     <h4 className="text-2xl font-black text-slate-900 dark:text-white">+{tenants.filter(t => new Date(t.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).length}</h4>
                                 </div>
                                 <div className="text-right">
@@ -157,9 +157,9 @@ export default function SuperAdminDashboard() {
                     <div className="bg-white dark:bg-[#0f111a] rounded-[3rem] border border-slate-200 dark:border-white/5 shadow-sm p-10">
                         <div className="flex justify-between items-center mb-10">
                             <h3 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3 italic">
-                                RECENT <span className="text-indigo-500 not-italic">ACTIVITY</span>
+                                LETZTE <span className="text-indigo-500 not-italic">AKTIVITÄT</span>
                             </h3>
-                            <button className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all">Show All Tenants</button>
+                            <button className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] hover:tracking-[0.3em] transition-all">Alle Mandanten anzeigen</button>
                         </div>
 
                         <div className="space-y-2">
@@ -185,7 +185,7 @@ export default function SuperAdminDashboard() {
                                     </div>
                                     <div className="flex items-center gap-12 text-right">
                                         <div className="hidden md:block">
-                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 leading-none">Fleet Size</p>
+                                            <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1 leading-none">Flottengröße</p>
                                             <p className="text-lg font-black text-slate-900 dark:text-white tracking-tighter">{tenant._count?.vehicles || 0}</p>
                                         </div>
                                         <button className="p-4 bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white hover:bg-indigo-500 hover:text-white rounded-2xl transition duration-500 shadow-sm">
@@ -204,15 +204,15 @@ export default function SuperAdminDashboard() {
                     <div className="bg-slate-900 text-white rounded-[3rem] p-10 shadow-2xl relative overflow-hidden group">
                         <div className="relative z-10">
                             <div className="flex items-center justify-between mb-10">
-                                <h3 className="text-lg font-black uppercase tracking-tight">System Status</h3>
+                                <h3 className="text-lg font-black uppercase tracking-tight">Systemstatus</h3>
                                 <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                             </div>
 
                             <div className="space-y-6">
                                 {[
-                                    { service: "Core API", status: "Operational", color: "text-emerald-400" },
-                                    { service: "Auth & SSO", status: "Operational", color: "text-emerald-400" },
-                                    { service: "Billing Engine", status: "Operational", color: "text-emerald-400" },
+                                    { service: "Core API", status: "Betriebsbereit", color: "text-emerald-400" },
+                                    { service: "Auth & SSO", status: "Betriebsbereit", color: "text-emerald-400" },
+                                    { service: "Abrechnung", status: "Betriebsbereit", color: "text-emerald-400" },
                                     { service: "CDN / Assets", status: stats?.latency || "12ms", color: "text-amber-400" },
                                 ].map((s, i) => (
                                     <div key={i} className="flex justify-between items-center">
@@ -223,7 +223,7 @@ export default function SuperAdminDashboard() {
                             </div>
 
                             <div className="mt-12 pt-8 border-t border-white/5 text-center">
-                                <button className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] hover:text-white transition-all">Open Service Matrix</button>
+                                <button className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em] hover:text-white transition-all">Service-Matrix öffnen</button>
                             </div>
                         </div>
                         <Activity size={200} className="absolute bottom-[-60px] right-[-60px] text-white/5 group-hover:scale-110 transition duration-[2s]" />

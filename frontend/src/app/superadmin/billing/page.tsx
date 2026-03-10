@@ -33,7 +33,7 @@ export default function SuperAdminBilling() {
     return (
         <div className="space-y-10 animate-in fade-in duration-700">
             <header>
-                <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2 uppercase italic">Abonnement <span className="text-indigo-500 not-italic">&</span> Billing</h1>
+                <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2 uppercase italic">Abonnement- <span className="text-indigo-500 not-italic">&</span> Abrechnung</h1>
                 <p className="text-slate-500 dark:text-slate-400 font-medium font-sans">Verwalten Sie Preismodelle und Abrechnungen der Mandanten systemweit.</p>
             </header>
 

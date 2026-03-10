@@ -1,16 +1,29 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Terminal, Search, Trash2, Filter, ChevronRight, Activity, Server, AlertTriangle, ShieldCheck } from "lucide-react";
+import { Terminal, Search, Trash2, Filter, ChevronRight, Activity, Server, AlertTriangle, ShieldCheck, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const LOGS = [
-    { id: 1, type: "SUCCESS", message: "Tenant 'Müller Logistik' created successfully", timestamp: "2024-03-01 17:45", user: "Root Admin" },
-    { id: 2, type: "ERROR", message: "Failed login attempt on subdomain 'birlik'", timestamp: "2024-03-01 17:40", user: "System" },
-    { id: 3, type: "WARNING", message: "Prisma connection latency exceeds 500ms", timestamp: "2024-03-01 17:35", user: "System Monitor" },
-];
+import api from "@/lib/api";
 
 export default function SuperAdminLogsPage() {
+    const [logs, setLogs] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                const { data } = await api.get("/superadmin/audit-logs");
+                setLogs(data);
+            } catch (error) {
+                console.error("Failed to fetch logs", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLogs();
+    }, []);
+
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -21,7 +34,7 @@ export default function SuperAdminLogsPage() {
                 <div className="flex gap-4">
                     <button className="px-6 py-4 bg-slate-100 dark:bg-white/5 text-slate-400 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-white/10 transition flex items-center gap-3 active:scale-95">
                         <Trash2 size={20} />
-                        Clear Logs
+                        Logs leeren
                     </button>
                     <button className="px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-indigo-700 transition flex items-center gap-3 shadow-xl shadow-indigo-500/20 active:scale-95">
                         <Filter size={20} />
@@ -72,7 +85,20 @@ export default function SuperAdminLogsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-mono">
-                            {LOGS.map((log) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={4} className="px-8 py-20 text-center">
+                                        <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mx-auto" />
+                                        <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Wird geladen...</p>
+                                    </td>
+                                </tr>
+                            ) : logs.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-8 py-20 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                        Keine Logs vorhanden.
+                                    </td>
+                                </tr>
+                            ) : logs.map((log) => (
                                 <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition group">
                                     <td className="px-8 py-6">
                                         <span className={cn(
@@ -81,14 +107,14 @@ export default function SuperAdminLogsPage() {
                                                 log.type === "ERROR" ? "bg-red-500/10 text-red-500" :
                                                     "bg-amber-500/10 text-amber-500"
                                         )}>
-                                            {log.type}
+                                            {log.action || "INFO"}
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-500 transition-colors uppercase tracking-tight">{log.message}</p>
+                                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-500 transition-colors uppercase tracking-tight">{JSON.stringify(log.payload) || log.action}</p>
                                     </td>
-                                    <td className="px-8 py-6 text-xs text-slate-500 font-bold">{log.timestamp}</td>
-                                    <td className="px-8 py-6 text-xs text-indigo-400 font-black tracking-widest uppercase">{log.user}</td>
+                                    <td className="px-8 py-6 text-xs text-slate-500 font-bold">{new Date(log.timestamp).toLocaleString("de-DE")}</td>
+                                    <td className="px-8 py-6 text-xs text-indigo-400 font-black tracking-widest uppercase">{log.actorId}</td>
                                 </tr>
                             ))}
                         </tbody>

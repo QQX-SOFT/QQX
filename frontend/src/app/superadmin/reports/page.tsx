@@ -36,8 +36,8 @@ export default function ReportsPage() {
 
     const kpis = [
         { label: "MRR (Live)", value: stats?.mrr || "€0", change: "+0%", trending: "up", icon: DollarSign, color: "blue" },
-        { label: "Active Tenants", value: (stats?.totalTenants || 0).toString(), change: "+0", trending: "up", icon: Users, color: "indigo" },
-        { label: "Active Subs", value: (stats?.activeSupscriptions || 0).toString(), change: "+0", trending: "up", icon: ArrowUpRight, color: "emerald" },
+        { label: "Aktive Mandanten", value: (stats?.totalTenants || 0).toString(), change: "+0", trending: "up", icon: Users, color: "indigo" },
+        { label: "Aktive Abos", value: (stats?.activeSupscriptions || 0).toString(), change: "+0", trending: "up", icon: ArrowUpRight, color: "emerald" },
         { label: "System Uptime", value: stats?.uptime || "100%", change: "stable", trending: "up", icon: TrendingUp, color: "purple" },
     ];
 
@@ -47,7 +47,7 @@ export default function ReportsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-2 uppercase italic">
-                        Analytics <span className="text-indigo-500 not-italic">&</span> Insights
+                        Analysen <span className="text-indigo-500 not-italic">&</span> Einblicke
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 font-medium">
                         Systemweite Leistungsmetriken und finanzielle Auswertungen.

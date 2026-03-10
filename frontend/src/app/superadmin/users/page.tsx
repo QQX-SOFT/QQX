@@ -1,15 +1,29 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, Search, Plus, MoreVertical, Shield, ChevronRight } from "lucide-react";
+import { Users, Search, Plus, MoreVertical, Shield, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
-
-const USERS = [
-    { id: 1, name: "Root Admin", email: "root@qqx.app", role: "Super Admin", status: "Active" },
-    { id: 2, name: "Customer Service", email: "support@qqx.app", role: "Support Staff", status: "Active" },
-];
+import api from "@/lib/api";
 
 export default function SuperAdminUsersPage() {
+    const [users, setUsers] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                const { data } = await api.get("/superadmin/users");
+                setUsers(data);
+            } catch (error) {
+                console.error("Failed to fetch superadmin users", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUsers();
+    }, []);
+
     return (
         <div className="space-y-8 max-w-7xl mx-auto">
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -43,15 +57,28 @@ export default function SuperAdminUsersPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                                {USERS.map((user) => (
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-8 py-20 text-center">
+                                            <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mx-auto" />
+                                            <p className="mt-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Wird geladen...</p>
+                                        </td>
+                                    </tr>
+                                ) : users.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={4} className="px-8 py-20 text-center text-xs font-bold text-slate-400 uppercase tracking-widest">
+                                            Keine Benutzer gefunden.
+                                        </td>
+                                    </tr>
+                                ) : users.map((user) => (
                                     <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition group">
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 font-bold">
-                                                    {user.name[0]}
+                                                    {user.name?.[0] || user.email[0].toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-slate-900 dark:text-white">{user.name}</p>
+                                                    <p className="font-bold text-slate-900 dark:text-white">{user.name || "Unbenannt"}</p>
                                                     <p className="text-xs text-slate-500 font-medium">{user.email}</p>
                                                 </div>
                                             </div>
@@ -64,7 +91,7 @@ export default function SuperAdminUsersPage() {
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
-                                                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{user.status}</span>
+                                                <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Aktiv</span>
                                             </div>
                                         </td>
                                         <td className="px-8 py-6">
@@ -84,12 +111,12 @@ export default function SuperAdminUsersPage() {
                         <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-6">
                             <Shield size={24} />
                         </div>
-                        <h3 className="text-xl font-black mb-2 uppercase italic tracking-tight">Access Control</h3>
+                        <h3 className="text-xl font-black mb-2 uppercase italic tracking-tight">Zugriffskontrolle</h3>
                         <p className="text-white/70 text-sm font-medium leading-relaxed mb-6">Sie verwalten hier die höchste Ebene der Systemberechtigungen. Gehen Sie vorsichtig vor.</p>
                         <div className="p-4 bg-white/10 rounded-2xl border border-white/10 backdrop-blur-sm">
                             <div className="flex justify-between items-center text-xs font-black uppercase tracking-widest opacity-80 mb-2">
                                 <span>Root Konten</span>
-                                <span>2 / 5</span>
+                                <span>{users.length} / 5</span>
                             </div>
                             <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
                                 <div className="h-full bg-white w-[40%]"></div>

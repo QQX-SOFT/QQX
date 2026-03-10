@@ -72,7 +72,7 @@ function TenantEditorForm() {
                     setAdmins(adminsRes.data);
                 } catch (error) {
                     console.error("Fetch error:", error);
-                    alert("Veriler yüklenemedi.");
+                    alert("Daten konnten nicht geladen werden.");
                 } finally {
                     setLoading(false);
                 }
@@ -101,19 +101,19 @@ function TenantEditorForm() {
     };
 
     const deleteAdmin = async (userId: string) => {
-        if (!confirm("Bu yöneticiyi silmek istediğinize emin misiniz?")) return;
+        if (!confirm("Möchten Sie diesen Administrator wirklich löschen?")) return;
         try {
             await api.delete(`/tenants/${id}/admins/${userId}`);
             setAdmins(admins.filter(a => a.id !== userId));
         } catch (error) {
-            alert("Admin silinemedi.");
+            alert("Admin konnte nicht gelöscht werden.");
         }
     };
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 gap-4">
             <Loader2 className="animate-spin text-indigo-500" size={48} />
-            <p className="font-bold text-slate-500 animate-pulse uppercase tracking-widest text-xs">Yükleniyor...</p>
+            <p className="font-bold text-slate-500 animate-pulse uppercase tracking-widest text-xs">Wird geladen...</p>
         </div>
     );
 
@@ -269,12 +269,12 @@ function TenantEditorForm() {
                         <div className="w-12 h-12 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-500">
                             <Users size={24} />
                         </div>
-                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight font-sans">Mevcut Yöneticiler</h2>
+                        <h2 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight font-sans">Vorhandene Administratoren</h2>
                     </div>
 
                     <div className="grid grid-cols-1 gap-4">
                         {admins.length === 0 ? (
-                            <p className="text-slate-500 font-bold italic">Kayıtlı yönetici bulunamadı.</p>
+                            <p className="text-slate-500 font-bold italic">Kein registrierter Administrator gefunden.</p>
                         ) : (
                             admins.map(admin => (
                                 <div key={admin.id} className="flex items-center justify-between p-6 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-100 dark:border-white/5">
@@ -292,7 +292,7 @@ function TenantEditorForm() {
                                         onClick={() => deleteAdmin(admin.id)}
                                         className="p-3 text-red-500 hover:bg-red-500/10 rounded-xl transition"
                                     >
-                                        Kaldır
+                                        Entfernen
                                     </button>
                                 </div>
                             ))
@@ -377,7 +377,7 @@ export default function TenantEditorPage() {
                         </div>
                         <span className="text-xs font-black uppercase tracking-[0.3em] text-indigo-500">Super Admin</span>
                     </div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Kunden-Setup (Avusturya)</h1>
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Kunden-Setup (Österreich)</h1>
                     <p className="text-slate-500 font-medium mt-2">Legen Sie ein neues österreichisches Unternehmen im System an.</p>
                 </div>
             </header>

@@ -176,11 +176,11 @@ export default function TenantManagement() {
                                     <td className="px-10 py-8">
                                         <div className="flex gap-6">
                                             <div className="text-xs">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Users</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Benutzer</p>
                                                 <p className="font-black text-slate-900 dark:text-white">{t._count?.users || 0}</p>
                                             </div>
                                             <div className="text-xs">
-                                                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Fleet</p>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase mb-1">Flotte</p>
                                                 <p className="font-black text-slate-900 dark:text-white">{t._count?.vehicles || 0}</p>
                                             </div>
                                         </div>

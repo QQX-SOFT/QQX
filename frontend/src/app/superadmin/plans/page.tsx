@@ -56,7 +56,7 @@ export default function PlansPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white mb-2 uppercase italic">
-                        Tarif <span className="text-indigo-500 not-italic">&</span> Price Management
+                        Tarif- <span className="text-indigo-500 not-italic">&</span> Preisverwaltung
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400 font-medium">
                         Erstellen und bearbeiten Sie Abonnements und Preismodelle.

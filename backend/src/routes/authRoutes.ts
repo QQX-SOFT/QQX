@@ -25,7 +25,7 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
 
         if (user) {
             // Check password
-            if (user.password !== password) {
+            if (!user.password || user.password !== password) {
                 return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
             }
 
@@ -57,7 +57,7 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
                 });
 
                 if (customer) {
-                    if (customer.password !== password) {
+                    if (!customer.password || customer.password !== password) {
                         return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
                     }
 

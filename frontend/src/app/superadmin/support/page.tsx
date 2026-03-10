@@ -89,7 +89,7 @@ export default function SupportPage() {
                                             ticket.priority === 'MEDIUM' ? 'border-amber-500/20 text-amber-500' :
                                                 'border-slate-200 text-slate-400'
                                             }`}>
-                                            {ticket.priority} Priority
+                                            {ticket.priority} Priorität
                                         </div>
                                     </div>
                                 </div>
