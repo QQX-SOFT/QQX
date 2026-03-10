@@ -25,12 +25,22 @@ import {
     Compass
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function CustomerLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
+
+    const handleLogout = () => {
+        // Clear cookie
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
+        // Clear local storage
+        localStorage.clear();
+        // Redirect to login
+        router.push("/login");
+    };
 
     const navLinks = [
         { name: "Übersicht", icon: LayoutDashboard, href: "/customer" },
@@ -76,6 +86,13 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
                         <ThemeToggle />
                         <button className="p-3 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-2xl hover:text-blue-600 transition">
                             <Bell size={20} />
+                        </button>
+                        <button
+                            onClick={handleLogout}
+                            className="p-3 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition"
+                            title="Abmelden"
+                        >
+                            <LogOut size={20} />
                         </button>
                     </div>
 

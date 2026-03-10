@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     LayoutDashboard,
@@ -67,7 +67,17 @@ const navigationLinks = [
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const handleLogout = () => {
+        // Clear cookie
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
+        // Clear local storage
+        localStorage.clear();
+        // Redirect to login
+        router.push("/login");
+    };
 
     useEffect(() => {
         setIsSidebarOpen(false);
@@ -132,7 +142,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
 
                 {/* Sidebar Footer - Minimalist */}
                 <div className="p-4 border-t border-white/5">
-                    <button className="w-full py-3 flex items-center justify-center gap-3 px-4 bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest active:scale-95">
+                    <button
+                        onClick={handleLogout}
+                        className="w-full py-3 flex items-center justify-center gap-3 px-4 bg-red-500/5 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest active:scale-95"
+                    >
                         <LogOut size={14} />
                         Abmelden
                     </button>

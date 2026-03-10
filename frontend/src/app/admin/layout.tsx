@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
     LayoutDashboard,
@@ -63,7 +63,18 @@ const analyticLinks = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const handleLogout = () => {
+        // Clear cookie
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
+        // Clear local storage
+        localStorage.removeItem("role");
+        localStorage.removeItem("driverId");
+        // Redirect to login
+        router.push("/login");
+    };
 
     // Close sidebar when route changes
     useEffect(() => {
@@ -146,7 +157,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </nav>
 
                 <div className="p-6 mt-auto">
-                    <button className="w-full py-4 flex items-center gap-4 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-2xl transition duration-300 font-bold group">
+                    <button
+                        onClick={handleLogout}
+                        className="w-full py-4 flex items-center gap-4 px-4 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-2xl transition duration-300 font-bold group"
+                    >
                         <LogOut size={20} className="group-hover:-translate-x-1 transition" />
                         <span>Abmelden</span>
                     </button>

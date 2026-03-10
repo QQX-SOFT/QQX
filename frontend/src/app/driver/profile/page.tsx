@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
     User,
     ShieldCheck,
@@ -27,6 +28,7 @@ import Link from "next/link";
 import api from "@/lib/api";
 
 export default function DriverProfilePage() {
+    const router = useRouter();
     const [driverInfo, setDriverInfo] = useState({
         firstName: "",
         lastName: "",
@@ -39,6 +41,15 @@ export default function DriverProfilePage() {
         iban: ""
     });
     const [loading, setLoading] = useState(true);
+
+    const handleLogout = () => {
+        // Clear cookie
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
+        // Clear local storage
+        localStorage.clear();
+        // Redirect to login
+        router.push("/login");
+    };
 
     useEffect(() => {
         fetchProfile();
@@ -88,7 +99,7 @@ export default function DriverProfilePage() {
         ]
     };
 
-    const currentDocs = docRequirements[driverInfo.employmentType];
+    const currentDocs = docRequirements[driverInfo.employmentType as keyof typeof docRequirements] || docRequirements.ECHTER_DIENSTNEHMER;
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [selectedDoc, setSelectedDoc] = useState<any>(null);
 
@@ -108,7 +119,10 @@ export default function DriverProfilePage() {
                     <button className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-blue-600 transition">
                         <Settings size={20} />
                     </button>
-                    <button className="p-3 bg-red-50 border border-red-100 rounded-2xl text-red-400 hover:text-red-600 transition">
+                    <button
+                        onClick={handleLogout}
+                        className="p-3 bg-red-50 border border-red-100 rounded-2xl text-red-400 hover:text-red-600 transition"
+                    >
                         <LogOut size={20} />
                     </button>
                 </div>
@@ -173,7 +187,7 @@ export default function DriverProfilePage() {
                 </div>
 
                 <div className="space-y-4">
-                    {currentDocs.map((doc: any, i) => (
+                    {currentDocs.map((doc: any) => (
                         <div
                             key={doc.id}
                             onClick={() => handleUploadClick(doc)}
@@ -225,7 +239,10 @@ export default function DriverProfilePage() {
             {/* Logout Footer Section */}
             <div className="pt-10 flex flex-col items-center gap-6">
                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">QQX Driver Version 1.0.4 - Build 2802</p>
-                <button className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-100 rounded-[2rem] text-slate-500 font-bold hover:bg-red-50 hover:text-red-500 transition duration-300 shadow-sm active:scale-95">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-100 rounded-[2rem] text-slate-500 font-bold hover:bg-red-50 hover:text-red-500 transition duration-300 shadow-sm active:scale-95"
+                >
                     <LogOut size={20} />
                     Abmelden
                 </button>
