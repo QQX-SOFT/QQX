@@ -19,10 +19,6 @@ export default function GoogleMapsProvider({ children }: { children: React.React
         libraries,
     });
 
-    if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-        console.warn("GoogleMapsProvider: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing, using fallback.");
-    }
-
     return (
         <GoogleMapsContext.Provider value={{ isLoaded }}>
             {children}

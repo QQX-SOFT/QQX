@@ -18,8 +18,8 @@ const tenantSchema = z.object({
     commercialCourt: z.string().optional(), // Gerichtsstand
 
     // Admin info
-    adminEmail: z.string().email().optional(),
-    adminPassword: z.string().min(6).optional(),
+    adminEmail: z.string().email().or(z.literal("")).optional(),
+    adminPassword: z.string().min(6).or(z.literal("")).optional(),
 });
 
 // GET global platform stats (SuperAdmin)

@@ -88,11 +88,19 @@ function TenantEditorForm() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
+
+        // Clean up: if editing, don't send admin fields in the main update
+        const payload: any = { ...formData };
+        if (id) {
+            delete payload.adminEmail;
+            delete payload.adminPassword;
+        }
+
         try {
             if (id) {
-                await api.patch(`/tenants/${id}`, formData);
+                await api.patch(`/tenants/${id}`, payload);
             } else {
-                await api.post("/tenants", formData);
+                await api.post("/tenants", payload);
             }
             router.push("/superadmin/tenants");
             router.refresh();
