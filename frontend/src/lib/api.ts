@@ -20,10 +20,11 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
         const parts = hostname.split(".");
 
         if (parts.length > 2) {
-            // Case: subdomain.domain.com
-            config.headers["x-tenant-subdomain"] = parts[0];
+            const potentialSubdomain = parts[0];
+            if (potentialSubdomain !== 'www' && !mainDomains.includes(hostname)) {
+                config.headers["x-tenant-subdomain"] = potentialSubdomain;
+            }
         } else if (parts.length === 2 && parts[1] === "localhost") {
-            // Case: tenant.localhost
             config.headers["x-tenant-subdomain"] = parts[0];
         }
     }

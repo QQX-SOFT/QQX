@@ -18,8 +18,8 @@ const tenantSchema = z.object({
     commercialCourt: z.string().optional(), // Gerichtsstand
 
     // Admin info
-    adminEmail: z.string().email().or(z.literal("")).optional(),
-    adminPassword: z.string().min(6).or(z.literal("")).optional(),
+    adminEmail: z.string().email().optional(),
+    adminPassword: z.string().min(6).optional(),
 });
 
 // GET global platform stats (SuperAdmin)
@@ -113,24 +113,25 @@ router.get('/:id', async (req: express.Request, res: Response) => {
     try {
         const id = req.params.id as string;
 
-        if (!id || id === "undefined" || id === "null") {
-            return res.status(400).json({ error: 'Valid Tenant ID is required' });
+        if (!id || id === "undefined" || id === "null" || id === "[object Object]") {
+            console.warn(`[GET] Received invalid Tenant ID: "${id}"`);
+            return res.status(400).json({ error: `Valid Tenant ID is required, received: ${id}` });
         }
 
-        console.log(`[GET] Fetching tenant: ${id}`);
+        console.log(`[GET] Fetching tenant info for ID: ${id}`);
         const tenant = await prisma.tenant.findUnique({
             where: { id }
         });
 
         if (!tenant) {
-            console.warn(`[GET] Tenant not found: ${id}`);
+            console.warn(`[GET] Tenant not found in database: ${id}`);
             return res.status(404).json({ error: 'Tenant not found' });
         }
 
         res.json(tenant);
     } catch (error: any) {
-        console.error(`[GET] Fetch tenant error [${req.params.id}]:`, error.message);
-        res.status(500).json({ error: 'Failed to fetch tenant', details: error.message });
+        console.error(`[GET] Critical error fetching tenant [${req.params.id}]:`, error.message);
+        res.status(500).json({ error: 'Internal server error while fetching tenant', details: error.message });
     }
 });
 
@@ -152,7 +153,11 @@ router.patch('/:id', async (req: express.Request, res: Response) => {
     } catch (error) {
         console.error("Update tenant error:", error);
         if (error instanceof z.ZodError) {
-            return res.status(400).json({ errors: error.errors });
+            console.warn("Validation failed for tenant update:", error.errors);
+            return res.status(400).json({
+                error: 'Validation failed',
+                details: error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ')
+            });
         }
         res.status(500).json({ error: 'Failed to update tenant' });
     }

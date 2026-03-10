@@ -16,9 +16,12 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
 
     console.log(`[TenantMiddleware] Path: ${path}, Subdomain: ${subdomain}`);
 
-    // Skip tenant check for tenant creation/listing or health checks
-    if (path.includes('/tenants') || path.includes('/health') || path.includes('/auth') || !subdomain) {
-        console.log(`[TenantMiddleware] Bypassing check for ${path}`);
+    // Skip tenant check for tenant creation/listing, health checks, or explicit bypass
+    const isTenantAPI = path.includes('/api/tenants') || path.includes('/api/superadmin');
+    const isHealthOrAuth = path.includes('/health') || path.includes('/auth');
+
+    if (isTenantAPI || isHealthOrAuth || !subdomain) {
+        console.log(`[TenantMiddleware] Bypassing check for ${path}. Subdomain: ${subdomain || 'none'}`);
         return next();
     }
 

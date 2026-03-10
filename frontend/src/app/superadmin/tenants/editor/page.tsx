@@ -88,19 +88,11 @@ function TenantEditorForm() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
-
-        // Clean up: if editing, don't send admin fields in the main update
-        const payload: any = { ...formData };
-        if (id) {
-            delete payload.adminEmail;
-            delete payload.adminPassword;
-        }
-
         try {
             if (id) {
-                await api.patch(`/tenants/${id}`, payload);
+                await api.patch(`/tenants/${id}`, formData);
             } else {
-                await api.post("/tenants", payload);
+                await api.post("/tenants", formData);
             }
             router.push("/superadmin/tenants");
             router.refresh();
@@ -198,6 +190,7 @@ function TenantEditorForm() {
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Straße & Hausnummer (Suchen)</label>
                         <AddressPicker
                             className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            defaultValue={formData.address}
                             onAddressSelect={(addr) => {
                                 setFormData({
                                     ...formData,

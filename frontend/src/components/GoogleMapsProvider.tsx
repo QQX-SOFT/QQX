@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { useJsApiLoader, Libraries } from "@react-google-maps/api";
 
 const libraries: Libraries = ["places"];
@@ -18,6 +18,12 @@ export default function GoogleMapsProvider({ children }: { children: React.React
         googleMapsApiKey: apiKey,
         libraries,
     });
+
+    useEffect(() => {
+        if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+            console.warn("GoogleMapsProvider: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is missing, using fallback.");
+        }
+    }, []);
 
     return (
         <GoogleMapsContext.Provider value={{ isLoaded }}>
