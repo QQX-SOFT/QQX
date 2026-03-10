@@ -14,10 +14,22 @@ if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL && window.
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     if (typeof window !== "undefined") {
         const hostname = window.location.hostname;
+        const mainDomains = ['localhost', 'qqx-eight.vercel.app', 'qqx.de', 'qqxsoft.com', 'www.qqxsoft.com'];
+
         // Simple logic: if subdomain exists (e.g. tenant1.localhost or tenant1.qqx-app.de)
         const parts = hostname.split(".");
-        if (parts.length > 2 || (parts.length === 2 && parts[1] === "localhost")) {
+
+        if (parts.length > 2) {
+            // Case: subdomain.domain.com
             config.headers["x-tenant-subdomain"] = parts[0];
+        } else if (parts.length === 2 && parts[1] === "localhost") {
+            // Case: tenant.localhost
+            config.headers["x-tenant-subdomain"] = parts[0];
+        } else if (mainDomains.includes(hostname) || hostname === "localhost") {
+            // Case: main domain - use a fallback for now or handle via session
+            // For testing/demo purposes, we can default to 'demo' if we are on the admin path
+            // This allows browsing the panel directly on the main domain
+            config.headers["x-tenant-subdomain"] = "demo";
         }
     }
     return config;
