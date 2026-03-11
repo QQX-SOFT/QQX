@@ -32,6 +32,10 @@ router.get('/', async (req: TenantRequest, res: Response) => {
             companyRegister: tenant.companyRegister,
             legalForm: tenant.legalForm,
             commercialCourt: tenant.commercialCourt,
+            notificationsEnabled: tenant.notificationsEnabled,
+            autoAssignDrivers: tenant.autoAssignDrivers,
+            pushNotificationsEnabled: tenant.pushNotificationsEnabled,
+            orderAlarmsEnabled: tenant.orderAlarmsEnabled,
         });
     } catch (error) {
         res.status(500).json({ error: 'Einstellungen konnten nicht geladen werden' });
@@ -49,7 +53,11 @@ router.patch('/', async (req: TenantRequest, res: Response) => {
         uidNumber,
         companyRegister,
         legalForm,
-        commercialCourt
+        commercialCourt,
+        notificationsEnabled,
+        autoAssignDrivers,
+        pushNotificationsEnabled,
+        orderAlarmsEnabled
     } = req.body;
 
     try {
@@ -64,6 +72,10 @@ router.patch('/', async (req: TenantRequest, res: Response) => {
                 companyRegister: companyRegister !== undefined ? companyRegister : undefined,
                 legalForm: legalForm !== undefined ? legalForm : undefined,
                 commercialCourt: commercialCourt !== undefined ? commercialCourt : undefined,
+                notificationsEnabled: notificationsEnabled !== undefined ? notificationsEnabled : undefined,
+                autoAssignDrivers: autoAssignDrivers !== undefined ? autoAssignDrivers : undefined,
+                pushNotificationsEnabled: pushNotificationsEnabled !== undefined ? pushNotificationsEnabled : undefined,
+                orderAlarmsEnabled: orderAlarmsEnabled !== undefined ? orderAlarmsEnabled : undefined,
             }
         });
         res.json(tenant);

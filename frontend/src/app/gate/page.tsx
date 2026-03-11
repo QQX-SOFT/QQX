@@ -131,7 +131,7 @@ export default function NavigationGate() {
                     transition={{ delay: 0.6 }}
                     className="mt-16 text-center text-slate-400 text-xs font-bold uppercase tracking-widest"
                 >
-                    &copy; 2026 QQX Control System • Temporäres Gate
+                    QQX Panel Navigator • System Gate
                 </motion.div>
             </div>
         </div>

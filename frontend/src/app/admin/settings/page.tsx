@@ -16,7 +16,9 @@ import {
     Eye,
     EyeOff,
     LogOut,
-    KeyRound
+    KeyRound,
+    ShieldCheck,
+    Clock
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -26,10 +28,9 @@ type TenantSettings = {
     name: string;
     subdomain: string;
     createdAt: string;
-    notificationsEnabled: boolean;
     autoAssignDrivers: boolean;
-    currency: string;
-    timezone: string;
+    pushNotificationsEnabled: boolean;
+    orderAlarmsEnabled: boolean;
 };
 
 type ActiveTab = "PROFILE" | "SECURITY" | "NOTIFICATIONS";
@@ -44,7 +45,9 @@ export default function SettingsPage() {
     const [formData, setFormData] = useState({
         name: "",
         notificationsEnabled: false,
-        autoAssignDrivers: false
+        autoAssignDrivers: false,
+        pushNotificationsEnabled: false,
+        orderAlarmsEnabled: false
     });
 
     // Security tab state
@@ -66,7 +69,9 @@ export default function SettingsPage() {
                 setFormData({
                     name: data.name,
                     notificationsEnabled: data.notificationsEnabled,
-                    autoAssignDrivers: data.autoAssignDrivers
+                    autoAssignDrivers: data.autoAssignDrivers,
+                    pushNotificationsEnabled: data.pushNotificationsEnabled,
+                    orderAlarmsEnabled: data.orderAlarmsEnabled
                 });
             } catch (error) {
                 console.error("Failed to load settings", error);
@@ -103,7 +108,7 @@ export default function SettingsPage() {
     };
 
     // Auto-save toggle helper
-    const handleToggle = async (key: 'notificationsEnabled' | 'autoAssignDrivers') => {
+    const handleToggle = async (key: 'notificationsEnabled' | 'autoAssignDrivers' | 'pushNotificationsEnabled' | 'orderAlarmsEnabled') => {
         const newValue = !formData[key];
         const newFormData = { ...formData, [key]: newValue };
         setFormData(newFormData);
@@ -322,7 +327,61 @@ export default function SettingsPage() {
                                         <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
                                             <User size={20} />
                                         </div>
-                                        Konto-Informationen
+                                        Sicherheit & Login
+                                    </h3>
+                                    <div className="space-y-4">
+                                        {/* 2FA Placeholder */}
+                                        <button
+                                            type="button"
+                                            className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 opacity-60 cursor-not-allowed text-left bg-slate-50/50"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-400 shadow-sm">
+                                                    <ShieldCheck size={24} />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-black text-slate-900 mb-1 flex items-center gap-2">
+                                                        Zwei-Faktor-Authentisierung (2FA)
+                                                        <span className="text-[9px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full uppercase tracking-widest">Coming Soon</span>
+                                                    </h4>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Zusätzliche Sicherheitsebene für Ihren Account.</p>
+                                                </div>
+                                            </div>
+                                            <div className="w-14 h-8 rounded-full bg-slate-200 flex items-center p-1.5 justify-start">
+                                                <div className="w-5 h-5 rounded-full bg-white shadow-xl" />
+                                            </div>
+                                        </button>
+
+                                        {/* Session Timeout */}
+                                        <div className="p-6 rounded-[2rem] border-2 border-slate-50 bg-white">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 shadow-sm">
+                                                        <Clock size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-black text-slate-900 mb-1">Inaktivitäts-Timeout</h4>
+                                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Automatische Abmeldung nach Inaktivität.</p>
+                                                    </div>
+                                                </div>
+                                                <select className="bg-slate-50 border-none rounded-xl px-4 py-2 font-black text-xs uppercase tracking-widest outline-none focus:ring-0">
+                                                    <option>30 Minuten</option>
+                                                    <option>1 Stunde</option>
+                                                    <option>4 Stunden</option>
+                                                    <option selected>Nie</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Password Change */}
+                                <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+                                    <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                                            <Lock size={20} />
+                                        </div>
+                                        Passwort ändern
                                     </h3>
                                     <div className="space-y-6">
                                         <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50">
@@ -480,25 +539,37 @@ export default function SettingsPage() {
                                         </div>
                                     </button>
 
-                                    <div className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 text-left opacity-50">
+                                    <button
+                                        onClick={() => handleToggle('pushNotificationsEnabled')}
+                                        className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 hover:border-blue-100 hover:bg-blue-50/10 transition group text-left"
+                                    >
                                         <div>
                                             <h4 className="font-black text-slate-900 mb-1">Push-Benachrichtigungen</h4>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Echtzeit Push-Benachrichtigungen im Browser. (Bald verfügbar)</p>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Echtzeit Push-Benachrichtigungen im Browser.</p>
                                         </div>
-                                        <div className="w-14 h-8 rounded-full flex items-center p-1.5 bg-slate-200 justify-start">
+                                        <div className={cn(
+                                            "w-14 h-8 rounded-full flex items-center p-1.5 transition-all duration-300",
+                                            formData.pushNotificationsEnabled ? "bg-blue-600 justify-end shadow-lg shadow-blue-100" : "bg-slate-200 justify-start"
+                                        )}>
                                             <div className="w-5 h-5 rounded-full bg-white shadow-xl" />
                                         </div>
-                                    </div>
+                                    </button>
 
-                                    <div className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 text-left opacity-50">
+                                    <button
+                                        onClick={() => handleToggle('orderAlarmsEnabled')}
+                                        className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 hover:border-blue-100 hover:bg-blue-50/10 transition group text-left"
+                                    >
                                         <div>
                                             <h4 className="font-black text-slate-900 mb-1">Bestell-Alarme</h4>
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Benachrichtigung bei neuen oder problematischen Bestellungen. (Bald verfügbar)</p>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Benachrichtigung bei neuen oder problematischen Bestellungen.</p>
                                         </div>
-                                        <div className="w-14 h-8 rounded-full flex items-center p-1.5 bg-slate-200 justify-start">
+                                        <div className={cn(
+                                            "w-14 h-8 rounded-full flex items-center p-1.5 transition-all duration-300",
+                                            formData.orderAlarmsEnabled ? "bg-blue-600 justify-end shadow-lg shadow-blue-100" : "bg-slate-200 justify-start"
+                                        )}>
                                             <div className="w-5 h-5 rounded-full bg-white shadow-xl" />
                                         </div>
-                                    </div>
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>

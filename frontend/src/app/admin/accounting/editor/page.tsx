@@ -121,7 +121,7 @@ function InvoiceEditorForm() {
                             </label>
                             <input
                                 type="text" required
-                                placeholder="z.B. Feb 2026"
+                                placeholder="z.B. Feb 2025"
                                 className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
                                 value={formData.period}
                                 onChange={(e) => setFormData({ ...formData, period: e.target.value })}

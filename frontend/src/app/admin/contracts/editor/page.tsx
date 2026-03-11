@@ -157,7 +157,7 @@ function ContractEditorForm() {
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold"
-                            placeholder="z.B. Rahmenvertrag 2026"
+                            placeholder="z.B. Rahmenvertrag 2025"
                         />
                     </div>
 

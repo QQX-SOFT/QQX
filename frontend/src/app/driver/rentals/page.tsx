@@ -51,8 +51,8 @@ export default function DriverRentalsPage() {
     ]);
 
     const [myRequests, setMyRequests] = useState<UserRequest[]>([
-        { id: "REQ-001", carName: "Toyota Corolla", startDate: "2026-03-05", endDate: "2026-03-10", status: "PENDING", totalPrice: 225 },
-        { id: "REQ-002", carName: "VW Caddy", startDate: "2026-03-01", endDate: "2026-03-03", status: "APPROVED", totalPrice: 110 },
+        { id: "REQ-001", carName: "Toyota Corolla", startDate: "2025-03-05", endDate: "2025-03-10", status: "PENDING", totalPrice: 225 },
+        { id: "REQ-002", carName: "VW Caddy", startDate: "2025-03-01", endDate: "2025-03-03", status: "APPROVED", totalPrice: 110 },
     ]);
 
     const [showRequestModal, setShowRequestModal] = useState(false);

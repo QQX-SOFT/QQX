@@ -234,7 +234,7 @@ export default function CustomerDashboard() {
 
             {/* Version Footer */}
             <div className="text-center pt-8">
-                <p className="text-[10px] font-black text-slate-300 dark:text-slate-800 uppercase tracking-[0.4em]">QQX Customer Experience Core v1.2.0 • Build ID: 28022026</p>
+                <p className="text-[10px] font-black text-slate-300 dark:text-slate-800 uppercase tracking-[0.4em]">QQX Customer Experience Core</p>
             </div>
         </div>
     );

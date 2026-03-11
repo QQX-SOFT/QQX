@@ -27,6 +27,12 @@ model Tenant {
   legalForm            String?  // Rechtsform
   commercialCourt      String?  // Gerichtsstand
 
+  // Settings & Preferences
+  notificationsEnabled     Boolean  @default(true)
+  autoAssignDrivers        Boolean  @default(false)
+  pushNotificationsEnabled Boolean  @default(false)
+  orderAlarmsEnabled       Boolean  @default(false)
+
   users      User[]
   drivers    Driver[]
   vehicles   Vehicle[]
