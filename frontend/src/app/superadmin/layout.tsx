@@ -76,7 +76,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         // Clear local storage
         localStorage.clear();
         // Redirect to login
-        router.push("/login");
+        router.push("/superadmin/login");
     };
 
     useEffect(() => {

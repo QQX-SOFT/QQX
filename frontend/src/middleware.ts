@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/request';
+import type { NextRequest } from 'next/server';
 
 export function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     const hostname = req.headers.get('host') || '';
+    const pathname = url.pathname;
 
     // Define ignored hosts (main landing page)
     const mainDomains = ['localhost:3000', 'qqx-eight.vercel.app', 'qqx.de', 'qqxsoft.com', 'www.qqxsoft.com'];
     const isMainDomain = mainDomains.includes(hostname);
+
+    // Block /admin on main domain
+    if (isMainDomain && pathname.startsWith('/admin')) {
+        url.pathname = '/';
+        return NextResponse.redirect(url);
+    }
 
     // Extract subdomain
     const subdomain = hostname.split('.')[0];
@@ -15,7 +22,7 @@ export function middleware(req: NextRequest) {
     // If it's a subdomain and NOT the main domain
     if (!isMainDomain && subdomain && subdomain !== 'www') {
         const role = req.cookies.get('role')?.value;
-        const pathname = url.pathname;
+        const tenantSubdomain = req.cookies.get('tenant-subdomain')?.value;
 
         // If at the root of a subdomain, redirect based on login status and role
         if (pathname === '/') {
@@ -41,6 +48,17 @@ export function middleware(req: NextRequest) {
         const response = NextResponse.next();
         response.headers.set('x-tenant-subdomain', subdomain);
         return response;
+    }
+
+    // Special handling for superadmin on main domain
+    if (isMainDomain && pathname.startsWith('/superadmin')) {
+        const role = req.cookies.get('role')?.value;
+        if (!role || role !== 'SUPER_ADMIN') {
+            if (pathname !== '/superadmin/login') {
+                url.pathname = '/superadmin/login';
+                return NextResponse.redirect(url);
+            }
+        }
     }
 
     return NextResponse.next();
