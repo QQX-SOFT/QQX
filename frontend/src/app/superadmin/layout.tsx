@@ -83,6 +83,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
         setIsSidebarOpen(false);
     }, [pathname]);
 
+    if (pathname === '/superadmin/login') {
+        return <>{children}</>;
+    }
+
     return (
         <div className="flex min-h-screen bg-[#f8f9fc] dark:bg-[#07080d] text-slate-900 dark:text-slate-100 transition-colors duration-500 font-sans">
             {/* Mobile Overlay */}
