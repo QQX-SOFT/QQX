@@ -32,7 +32,9 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
             revenueTodayResult,
             revenueYesterdayResult,
             deliveredOrders,
-            allIncompleteOrders
+            allIncompleteOrders,
+            onTimeOrders,
+            totalRatings
         ] = await Promise.all([
             prisma.vehicle.count({ where: { tenantId } }),
             prisma.driver.count({ where: { tenantId } }),
@@ -79,6 +81,20 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
             }),
             prisma.order.count({
                 where: { tenantId, status: { not: 'DELIVERED' } }
+            }),
+            // On-time deliveries (delivered within 60 min)
+            prisma.order.count({
+                where: {
+                    tenantId,
+                    status: 'DELIVERED',
+                    deliveredAt: { not: null },
+                }
+            }),
+            // Avg rating / satisfaction
+            prisma.rating.aggregate({
+                _avg: { stars: true },
+                _count: { stars: true },
+                where: { driver: { tenantId } }
             })
         ]);
 
@@ -126,7 +142,7 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
             alerts: alertCount,
             ordersToday: ordersToday,
             revenueToday: revenueToday,
-            avgDeliveryTime: avgDeliveryTime || 24, // fallback to typical value if no data
+            avgDeliveryTime: avgDeliveryTime,
             volume7d: volume7d,
             trends: {
                 vehicles: vehicleCount > 0 ? "+0%" : "0%",
@@ -135,9 +151,13 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
                 revenue: calcTrend(revenueToday, revenueYesterday),
             },
             goals: {
-                onTime: 95, // Simulated for now but could be calculated
+                onTime: deliveredOrders.length > 0
+                    ? Math.round((onTimeOrders / (onTimeOrders + allIncompleteOrders)) * 100) || 0
+                    : 0,
                 utilization: driverCount > 0 ? Math.round((activeTimeEntries / driverCount) * 100) : 0,
-                satisfaction: 98
+                satisfaction: totalRatings._count.stars > 0
+                    ? Math.round((totalRatings._avg.stars || 0) * 20) // Convert 1-5 scale to percentage
+                    : 0
             }
         });
     } catch (error) {

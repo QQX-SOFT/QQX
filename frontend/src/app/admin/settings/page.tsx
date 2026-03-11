@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import {
     Settings,
     Bell,
-    Lock,
-    Globe,
     User,
     Building2,
     Save,
@@ -29,7 +27,7 @@ type TenantSettings = {
     timezone: string;
 };
 
-type ActiveTab = "PROFILE" | "SECURITY" | "NOTIFICATIONS" | "LOCALIZATION";
+type ActiveTab = "PROFILE" | "NOTIFICATIONS";
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState<TenantSettings | null>(null);
@@ -140,9 +138,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                     {[
                         { id: "PROFILE", name: "Unternehmensprofil", icon: Building2 },
-                        { id: "SECURITY", name: "Sicherheit & Login", icon: Lock },
                         { id: "NOTIFICATIONS", name: "Benachrichtigungen", icon: Bell },
-                        { id: "LOCALIZATION", name: "Lokalisierung", icon: Globe },
                     ].map((item) => (
                         <button
                             key={item.id}
@@ -250,19 +246,55 @@ export default function SettingsPage() {
                                 </div>
                             </div>
                         </motion.div>
-                    ) : (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="bg-white rounded-[3rem] p-20 border border-slate-100 border-dashed text-center flex flex-col items-center justify-center min-h-[400px]"
-                        >
-                            <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center text-slate-200 mb-6">
-                                <Settings size={40} className="animate-pulse" />
+                    ) : activeTab === "NOTIFICATIONS" ? (
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                            <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+                                <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-4">
+                                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                                        <Bell size={20} />
+                                    </div>
+                                    Benachrichtigungen
+                                </h3>
+                                <div className="space-y-4">
+                                    <button
+                                        onClick={() => handleToggle('notificationsEnabled')}
+                                        className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 hover:border-blue-100 hover:bg-blue-50/10 transition group text-left"
+                                    >
+                                        <div>
+                                            <h4 className="font-black text-slate-900 mb-1">E-Mail Benachrichtigungen</h4>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Wichtige Updates und Reports per E-Mail erhalten.</p>
+                                        </div>
+                                        <div className={cn(
+                                            "w-14 h-8 rounded-full flex items-center p-1.5 transition-all duration-300",
+                                            formData.notificationsEnabled ? "bg-blue-600 justify-end shadow-lg shadow-blue-100" : "bg-slate-200 justify-start"
+                                        )}>
+                                            <div className="w-5 h-5 rounded-full bg-white shadow-xl" />
+                                        </div>
+                                    </button>
+
+                                    <div className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 text-left opacity-50">
+                                        <div>
+                                            <h4 className="font-black text-slate-900 mb-1">Push-Benachrichtigungen</h4>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Echtzeit Push-Benachrichtigungen im Browser. (Bald verfügbar)</p>
+                                        </div>
+                                        <div className="w-14 h-8 rounded-full flex items-center p-1.5 bg-slate-200 justify-start">
+                                            <div className="w-5 h-5 rounded-full bg-white shadow-xl" />
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-slate-50 text-left opacity-50">
+                                        <div>
+                                            <h4 className="font-black text-slate-900 mb-1">Bestell-Alarme</h4>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Benachrichtigung bei neuen oder problematischen Bestellungen. (Bald verfügbar)</p>
+                                        </div>
+                                        <div className="w-14 h-8 rounded-full flex items-center p-1.5 bg-slate-200 justify-start">
+                                            <div className="w-5 h-5 rounded-full bg-white shadow-xl" />
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 className="text-xl font-black text-slate-900 mb-2">Modul bald verfügbar</h3>
-                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Wir arbeiten an erweiterten Einstellungen für diesen Bereich.</p>
                         </motion.div>
-                    )}
+                    ) : null}
                 </div>
             </div>
         </div>
