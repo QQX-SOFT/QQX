@@ -81,4 +81,76 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// GET current user info (for security settings)
+router.get('/me', async (req: TenantRequest, res: Response) => {
+    try {
+        const userId = req.headers['x-user-id'] as string;
+        if (!userId) {
+            return res.status(401).json({ error: 'Nicht authentifiziert' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true,
+            }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+        }
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ error: 'Fehler beim Laden der Benutzerdaten' });
+    }
+});
+
+// POST change password
+const changePasswordSchema = z.object({
+    currentPassword: z.string().min(1, 'Aktuelles Passwort ist erforderlich'),
+    newPassword: z.string().min(6, 'Neues Passwort muss mindestens 6 Zeichen lang sein'),
+});
+
+router.post('/change-password', async (req: TenantRequest, res: Response) => {
+    try {
+        const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+        const userId = req.headers['x-user-id'] as string;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Nicht authentifiziert' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+        }
+
+        // Verify current password
+        if (!user.password || user.password !== currentPassword) {
+            return res.status(401).json({ error: 'Aktuelles Passwort ist falsch.' });
+        }
+
+        // Update password
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: newPassword }
+        });
+
+        res.json({ message: 'Passwort erfolgreich geändert.' });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
+        res.status(500).json({ error: 'Fehler beim Ändern des Passworts' });
+    }
+});
+
 export default router;

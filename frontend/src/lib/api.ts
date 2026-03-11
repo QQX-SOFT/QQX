@@ -27,6 +27,17 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
         } else if (parts.length === 2 && parts[1] === "localhost") {
             config.headers["x-tenant-subdomain"] = parts[0];
         }
+
+        // Attach user ID for authenticated requests
+        try {
+            const userStr = localStorage.getItem("user");
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user?.id) {
+                    config.headers["x-user-id"] = user.id;
+                }
+            }
+        } catch (_) {}
     }
     return config;
 });

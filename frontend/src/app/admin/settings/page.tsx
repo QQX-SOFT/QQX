@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
     Settings,
     Bell,
+    Lock,
     User,
     Building2,
     Save,
@@ -11,7 +12,11 @@ import {
     Shield,
     CheckCircle2,
     ChevronRight,
-    AlertCircle
+    AlertCircle,
+    Eye,
+    EyeOff,
+    LogOut,
+    KeyRound
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -27,7 +32,7 @@ type TenantSettings = {
     timezone: string;
 };
 
-type ActiveTab = "PROFILE" | "NOTIFICATIONS";
+type ActiveTab = "PROFILE" | "SECURITY" | "NOTIFICATIONS";
 
 export default function SettingsPage() {
     const [settings, setSettings] = useState<TenantSettings | null>(null);
@@ -41,6 +46,17 @@ export default function SettingsPage() {
         notificationsEnabled: false,
         autoAssignDrivers: false
     });
+
+    // Security tab state
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [showCurrentPw, setShowCurrentPw] = useState(false);
+    const [showNewPw, setShowNewPw] = useState(false);
+    const [pwChanging, setPwChanging] = useState(false);
+    const [pwError, setPwError] = useState("");
+    const [pwSuccess, setPwSuccess] = useState("");
+    const [adminUser, setAdminUser] = useState<any>(null);
 
     useEffect(() => {
         const fetchSettings = async () => {
@@ -60,6 +76,14 @@ export default function SettingsPage() {
         };
 
         fetchSettings();
+
+        // Load admin user from localStorage
+        try {
+            const userStr = localStorage.getItem("user");
+            if (userStr) {
+                setAdminUser(JSON.parse(userStr));
+            }
+        } catch (_) {}
     }, []);
 
     const handleSave = async (explicitData?: any) => {
@@ -85,6 +109,48 @@ export default function SettingsPage() {
         setFormData(newFormData);
         // We auto-save for UX
         await handleSave(newFormData);
+    };
+
+    const handlePasswordChange = async () => {
+        setPwError("");
+        setPwSuccess("");
+
+        if (!currentPassword) {
+            setPwError("Bitte geben Sie Ihr aktuelles Passwort ein.");
+            return;
+        }
+        if (newPassword.length < 6) {
+            setPwError("Neues Passwort muss mindestens 6 Zeichen lang sein.");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPwError("Die Passwörter stimmen nicht überein.");
+            return;
+        }
+
+        setPwChanging(true);
+        try {
+            await api.post("/auth/change-password", {
+                currentPassword,
+                newPassword
+            });
+            setPwSuccess("Passwort erfolgreich geändert!");
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setTimeout(() => setPwSuccess(""), 5000);
+        } catch (err: any) {
+            setPwError(err.response?.data?.error || "Fehler beim Ändern des Passworts.");
+        } finally {
+            setPwChanging(false);
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        document.cookie = "role=; path=/; max-age=0";
+        window.location.href = "/admin/login";
     };
 
     if (loading) {
@@ -138,6 +204,7 @@ export default function SettingsPage() {
                 <div className="space-y-2">
                     {[
                         { id: "PROFILE", name: "Unternehmensprofil", icon: Building2 },
+                        { id: "SECURITY", name: "Sicherheit & Login", icon: Lock },
                         { id: "NOTIFICATIONS", name: "Benachrichtigungen", icon: Bell },
                     ].map((item) => (
                         <button
@@ -243,6 +310,147 @@ export default function SettingsPage() {
                                             </div>
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ) : activeTab === "SECURITY" ? (
+                        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+                            <div className="space-y-8">
+                                {/* Account Info */}
+                                <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+                                    <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500">
+                                            <User size={20} />
+                                        </div>
+                                        Konto-Informationen
+                                    </h3>
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">E-Mail Adresse</p>
+                                                <p className="font-bold text-slate-900">{adminUser?.email || "—"}</p>
+                                            </div>
+                                            <Lock size={16} className="text-slate-300" />
+                                        </div>
+                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Rolle</p>
+                                                <p className="font-bold text-slate-900">
+                                                    {adminUser?.role === 'CUSTOMER_ADMIN' ? 'Administrator' : adminUser?.role === 'SUPER_ADMIN' ? 'Super Admin' : adminUser?.role || '—'}
+                                                </p>
+                                            </div>
+                                            <Shield size={16} className="text-slate-300" />
+                                        </div>
+                                        <div className="flex items-center justify-between p-5 rounded-2xl bg-slate-50">
+                                            <div>
+                                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Konto erstellt am</p>
+                                                <p className="font-bold text-slate-900">
+                                                    {adminUser?.createdAt ? new Date(adminUser.createdAt).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Password Change */}
+                                <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+                                    <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center text-red-500">
+                                            <KeyRound size={20} />
+                                        </div>
+                                        Passwort ändern
+                                    </h3>
+
+                                    {pwError && (
+                                        <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-bold mb-6">
+                                            <AlertCircle size={16} />
+                                            {pwError}
+                                        </div>
+                                    )}
+                                    {pwSuccess && (
+                                        <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 text-green-600 text-sm font-bold mb-6">
+                                            <CheckCircle2 size={16} />
+                                            {pwSuccess}
+                                        </div>
+                                    )}
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Aktuelles Passwort</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showCurrentPw ? "text" : "password"}
+                                                    className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 pr-14 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                    value={currentPassword}
+                                                    onChange={(e) => setCurrentPassword(e.target.value)}
+                                                    placeholder="••••••••"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCurrentPw(!showCurrentPw)}
+                                                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                                                >
+                                                    {showCurrentPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Neues Passwort</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showNewPw ? "text" : "password"}
+                                                    className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 pr-14 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
+                                                    placeholder="Min. 6 Zeichen"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowNewPw(!showNewPw)}
+                                                    className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+                                                >
+                                                    {showNewPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Passwort bestätigen</label>
+                                            <input
+                                                type="password"
+                                                className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder="Neues Passwort wiederholen"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handlePasswordChange}
+                                            disabled={pwChanging}
+                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition shadow-xl shadow-blue-600/20 flex items-center justify-center gap-2"
+                                        >
+                                            {pwChanging ? <Loader2 className="animate-spin" size={20} /> : <><KeyRound size={18} /> Passwort ändern</>}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Logout / Session */}
+                                <div className="bg-white rounded-[3rem] p-10 border border-slate-100 shadow-sm">
+                                    <h3 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-500">
+                                            <LogOut size={20} />
+                                        </div>
+                                        Sitzung
+                                    </h3>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="w-full flex items-center justify-between p-6 rounded-[2rem] border-2 border-red-100 hover:border-red-200 hover:bg-red-50/30 transition group text-left"
+                                    >
+                                        <div>
+                                            <h4 className="font-black text-red-600 mb-1">Abmelden</h4>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Aktuelle Sitzung beenden und zum Login zurückkehren.</p>
+                                        </div>
+                                        <LogOut size={20} className="text-red-400 group-hover:text-red-600 transition" />
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>
