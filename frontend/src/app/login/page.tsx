@@ -150,9 +150,6 @@ export default function UnifiedLoginPage() {
                     </form>
                 </div>
 
-                <div className="mt-12 text-center text-slate-400 dark:text-slate-600 font-bold text-[10px] uppercase tracking-[0.3em]">
-                    Sicherheitszertifiziert &bull; QQX Infrastructure 2026
-                </div>
             </motion.div>
         </div>
     );

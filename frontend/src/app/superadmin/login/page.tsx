@@ -139,11 +139,6 @@ export default function SuperAdminLoginPage() {
                     </form>
                 </div>
 
-                <div className="mt-8 text-center">
-                    <p className="text-slate-400 font-medium text-xs">
-                        Geschützter Bereich &copy; {new Date().getFullYear()} QQX Software
-                    </p>
-                </div>
             </motion.div>
         </div>
     );

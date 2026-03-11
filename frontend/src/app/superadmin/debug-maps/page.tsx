@@ -166,9 +166,7 @@ export default function GoogleMapsDebugPage() {
                         </div>
                     </div>
                 </div>
-                <div className="px-6 py-3 bg-slate-900 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl">
-                    QQX Infrastructure • V1.0.4
-                </div>
+
             </footer>
         </div>
     );
