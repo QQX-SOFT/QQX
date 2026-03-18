@@ -95,13 +95,6 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
             {/* Mobile-focused Header */}
             <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-blue-500/20">Q</div>
-                    <span className="font-black text-slate-900 tracking-tight text-sm">QQX DRIVER</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Link href="/driver/profile" className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
-                        <User size={18} />
-                    </Link>
                     <button 
                         onClick={() => setMenuOpen(!menuOpen)} 
                         className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-900/10 z-50 relative"
@@ -112,6 +105,13 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                             <span className={cn("block w-4 h-0.5 bg-white transition-all duration-300", menuOpen && "-rotate-45 -translate-y-1.5")} />
                         </div>
                     </button>
+                    <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg shadow-blue-500/20">Q</div>
+                    <span className="font-black text-slate-900 tracking-tight text-sm">QQX DRIVER</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Link href="/driver/profile" className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400">
+                        <User size={18} />
+                    </Link>
                 </div>
             </header>
 
@@ -130,11 +130,11 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                         
                         {/* Menu Drawer */}
                         <motion.div
-                            initial={{ x: "100%" }}
+                            initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
-                            exit={{ x: "100%" }}
+                            exit={{ x: "-100%" }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="absolute top-0 right-0 w-4/5 max-w-sm h-full bg-white shadow-2xl z-50 flex flex-col p-6 pt-24"
+                            className="absolute top-0 left-0 w-4/5 max-w-sm h-full bg-white shadow-2xl z-50 flex flex-col p-6 pt-24"
                         >
                             <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
                                 <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-lg">
