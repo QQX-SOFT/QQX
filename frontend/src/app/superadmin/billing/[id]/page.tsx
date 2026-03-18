@@ -3,18 +3,28 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "@/lib/api";
-import { CreditCard, CheckCircle2, Clock, Search, ArrowLeft, ShieldCheck, XCircle, Settings, FileText } from "lucide-react";
+import { CreditCard, ArrowLeft, Settings, FileText, PlusCircle, XCircle } from "lucide-react";
+
+interface SaaSInvoice {
+    id: string;
+    invoiceNumber: string;
+    amount: number;
+    status: string;
+    period?: string;
+    createdAt: string;
+}
 
 interface SubscriptionDetails {
     id: string;
     status: string;
     renewalDate: string;
     createdAt: string;
+    autoInvoice: boolean;
     tenant: {
         id: string;
         name: string;
         subdomain: string;
-        address?: string;
+        saasInvoices?: SaaSInvoice[];
     };
     plan?: {
         name: string;
@@ -27,28 +37,37 @@ export default function SubscriptionDetailsPage() {
     const router = useRouter();
     const [sub, setSub] = useState<SubscriptionDetails | null>(null);
     const [loading, setLoading] = useState(true);
-    const [autoInvoice, setAutoInvoice] = useState(false); // Mock or saved
+    const [autoInvoice, setAutoInvoice] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    // Create Invoice Form State
+    const [showModal, setShowModal] = useState(false);
+    const [amount, setAmount] = useState<number>(149.90);
+    const [month, setMonth] = useState<string>("März");
+    const [year, setYear] = useState<string>("2026");
+
+    const months = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
+
+    const fetchDetails = async () => {
+        try {
+            const { data } = await api.get(`/superadmin/subscriptions/${params.id}`);
+            setSub(data);
+            setAutoInvoice(data.autoInvoice || false);
+        } catch (error) {
+            console.error("Failed to fetch subscription details", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                const { data } = await api.get(`/superadmin/subscriptions/${params.id}`);
-                setSub(data);
-                if (data.autoInvoice !== undefined) setAutoInvoice(data.autoInvoice);
-            } catch (error) {
-                console.error("Failed to fetch subscription details", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         if (params.id) fetchDetails();
     }, [params.id]);
 
     const handleSaveSettings = async () => {
         setSaving(true);
         try {
-            // Placeholder: Backend updates
+            await api.put(`/superadmin/subscriptions/${params.id}/settings`, { autoInvoice });
             alert("Einstellungen gespeichert!");
         } catch (error) {
             alert("Fehler beim Speichern");
@@ -57,19 +76,53 @@ export default function SubscriptionDetailsPage() {
         }
     };
 
+    const handleCreateInvoice = async () => {
+        try {
+            await api.post(`/superadmin/subscriptions/${params.id}/invoices`, {
+                amount,
+                period: `${month} ${year}`
+            });
+            setShowModal(false);
+            fetchDetails(); // Reload data
+        } catch (error) {
+            alert("Fehler beim Erstellen der Rechnung");
+        }
+    };
+
+    const handleMarkPaid = async (invoiceId: string) => {
+        try {
+            await api.patch(`/superadmin/invoices/${invoiceId}`, { status: 'PAID' });
+            fetchDetails(); // Reload data
+        } catch (error) {
+            alert("Fehler beim Aktualisieren");
+        }
+    };
+
     if (loading) return <div className="p-10 text-center font-bold text-slate-400">Lädt...</div>;
     if (!sub) return <div className="p-10 text-center font-bold text-red-500">Abonnement nicht gefunden</div>;
 
+    const invoices = sub.tenant.saasInvoices || [];
+
     return (
         <div className="space-y-10 animate-in fade-in duration-700">
-            <header className="flex items-center gap-4">
-                <button onClick={() => router.back()} className="p-3 bg-white dark:bg-[#0f111a] rounded-2xl border border-slate-200 dark:border-white/5 hover:bg-slate-50 transition">
-                    <ArrowLeft size={20} />
-                </button>
-                <div>
-                    <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{sub.tenant.name}</h1>
-                    <p className="text-sm font-bold text-indigo-500">{sub.tenant.subdomain}.qqxsoft.com</p>
+            <header className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <button onClick={() => router.back()} className="p-3 bg-white dark:bg-[#0f111a] rounded-2xl border border-slate-200 dark:border-white/5 hover:bg-slate-50 transition">
+                        <ArrowLeft size={20} />
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{sub.tenant.name}</h1>
+                        <p className="text-sm font-bold text-indigo-500">{sub.tenant.subdomain}.qqxsoft.com</p>
+                    </div>
                 </div>
+
+                <button 
+                    onClick={() => setShowModal(true)} 
+                    className="flex items-center gap-2 px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl font-bold text-sm transition shadow-lg shadow-indigo-500/20"
+                >
+                    <PlusCircle size={18} />
+                    Rechnung erstellen
+                </button>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -129,36 +182,88 @@ export default function SubscriptionDetailsPage() {
                 <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-2"><FileText size={20} className="text-indigo-500" /> Rechnungshistorie</h3>
                 
                 <div className="space-y-3">
-                    {/* Placeholder Invoices for demonstration */}
-                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl flex justify-between items-center border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition">
-                        <div>
-                            <p className="text-sm font-black text-slate-900 dark:text-white">RE-2026-03</p>
-                            <p className="text-xs text-slate-400">01.03.2026</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm font-black">149.90 €</span>
-                            <span className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Bezahlt</span>
-                            <button className="p-2 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 hover:text-indigo-500 transition">
-                                <FileText size={16} />
+                    {invoices.length === 0 ? (
+                        <p className="text-sm text-slate-400 font-bold uppercase tracking-widest text-center py-6">Keine Rechnungen gefunden</p>
+                    ) : (
+                        invoices.map((inv) => (
+                            <div key={inv.id} className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl flex justify-between items-center border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition">
+                                <div>
+                                    <p className="text-sm font-black text-slate-900 dark:text-white">{inv.invoiceNumber}</p>
+                                    <p className="text-xs text-slate-400">{inv.period || new Date(inv.createdAt).toLocaleDateString('de-DE')}</p>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <span className="text-sm font-black">{inv.amount.toFixed(2)} €</span>
+                                    {inv.status === 'PAID' ? (
+                                        <span className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Bezahlt</span>
+                                    ) : (
+                                        <>
+                                            <span className="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Offen</span>
+                                            <button 
+                                                onClick={() => handleMarkPaid(inv.id)}
+                                                className="px-3 py-1 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 text-[10px] font-bold hover:bg-emerald-500 hover:text-white hover:border-transparent transition"
+                                            >
+                                                Als bezahlt markieren
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* Modal: Rechnung erstellen */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white dark:bg-[#0f111a] rounded-[2.5rem] p-8 max-w-md w-full border border-slate-200 dark:border-white/5 shadow-2xl space-y-6 animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Rechnung erstellen</h3>
+                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
+                                <XCircle size={24} />
                             </button>
                         </div>
-                    </div>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Monat</label>
+                                <select 
+                                    value={month} 
+                                    onChange={(e) => setMonth(e.target.value)}
+                                    className="w-full mt-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-3 text-sm font-bold"
+                                >
+                                    {months.map(m => <option key={m} value={m}>{m}</option>)}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jahr</label>
+                                <select 
+                                    value={year} 
+                                    onChange={(e) => setYear(e.target.value)}
+                                    className="w-full mt-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-3 text-sm font-bold"
+                                >
+                                    {["2025", "2026", "2027"].map(y => <option key={y} value={y}>{y}</option>)}
+                                </select>
+                            </div>
 
-                    <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl flex justify-between items-center border border-transparent hover:border-slate-200 dark:hover:border-white/10 transition">
-                        <div>
-                            <p className="text-sm font-black text-slate-900 dark:text-white">RE-2026-02</p>
-                            <p className="text-xs text-slate-400">01.02.2026</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <span className="text-sm font-black">149.90 €</span>
-                            <span className="bg-red-500/10 text-red-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Offen</span>
-                            <button className="px-3 py-1 bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 text-[10px] font-bold hover:bg-emerald-500 hover:text-white hover:border-transparent transition">
-                                Als bezahlt markieren
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Betrag (€)</label>
+                                <input 
+                                    type="number" 
+                                    value={amount} 
+                                    onChange={(e) => setAmount(parseFloat(e.target.value))}
+                                    className="w-full mt-1 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/5 rounded-xl p-3 text-sm font-bold"
+                                />
+                            </div>
+
+                            <button onClick={handleCreateInvoice} className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-bold text-sm transition mt-6">
+                                Erstellen
                             </button>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

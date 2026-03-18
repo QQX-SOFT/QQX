@@ -281,14 +281,18 @@ router.get('/subscriptions', async (req: Request, res: Response) => {
     }
 });
 
-// GET Single Subscription Details with Tenant & Plan
+// GET Single Subscription Details with Tenant, Invoices & Plan
 router.get('/subscriptions/:id', async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const subscription = await prisma.subscription.findUnique({
             where: { id },
             include: {
-                tenant: true,
+                tenant: {
+                    include: {
+                        saasInvoices: { orderBy: { createdAt: 'desc' } }
+                    }
+                },
             }
         });
 
@@ -309,6 +313,72 @@ router.get('/subscriptions/:id', async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch subscription details' });
+    }
+});
+
+// PUT Update Subscription Settings (e.g. autoInvoice)
+router.put('/subscriptions/:id/settings', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { autoInvoice } = req.body;
+
+        const subscription = await prisma.subscription.update({
+            where: { id },
+            data: { autoInvoice: autoInvoice !== undefined ? autoInvoice : undefined }
+        });
+
+        res.json(subscription);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update subscription settings' });
+    }
+});
+
+// POST Create Manual SaaS Invoice
+router.post('/subscriptions/:id/invoices', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { amount, period, dueDate } = req.body;
+
+        const subscription = await prisma.subscription.findUnique({
+            where: { id },
+            select: { tenantId: true }
+        });
+
+        if (!subscription) {
+            return res.status(404).json({ error: 'Subscription not found' });
+        }
+
+        const invoice = await prisma.saaSInvoice.create({
+            data: {
+                tenantId: subscription.tenantId,
+                invoiceNumber: `RE-${Date.now()}`,
+                amount: parseFloat(amount),
+                period: period || '',
+                dueDate: dueDate ? new Date(dueDate) : null,
+                status: 'UNPAID'
+            }
+        });
+
+        res.json(invoice);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to create invoice' });
+    }
+});
+
+// PATCH Update SaaS Invoice Status (e.g. PAID)
+router.patch('/invoices/:invoiceId', async (req: Request, res: Response) => {
+    try {
+        const { invoiceId } = req.params;
+        const { status } = req.body;
+
+        const invoice = await prisma.saaSInvoice.update({
+            where: { id: invoiceId },
+            data: { status }
+        });
+
+        res.json(invoice);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update invoice status' });
     }
 });
 
