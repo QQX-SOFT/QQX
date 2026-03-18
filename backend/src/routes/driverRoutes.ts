@@ -19,6 +19,7 @@ const driverSchema = z.object({
     taxId: z.string().optional().nullable(),
     iban: z.string().optional().nullable(),
     bic: z.string().optional().nullable(),
+    isKleinunternehmer: z.boolean().optional().nullable(),
     password: z.string().optional().nullable(),
 });
 
@@ -134,6 +135,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 taxId: validatedData.taxId,
                 iban: validatedData.iban,
                 bic: validatedData.bic,
+                isKleinunternehmer: validatedData.isKleinunternehmer || false,
                 tenantId: tenantId as string,
                 userId: user.id
             },
@@ -161,7 +163,7 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
 
     try {
         const validatedData = driverSchema.partial().parse(req.body);
-        const { password, ...driverData } = validatedData;
+        const { password, email, employmentType, ...driverData } = validatedData;
 
         const driver = await prisma.driver.findFirst({
             where: { id, tenantId: tenantId as string },
@@ -171,9 +173,9 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
 
         // Update Driver
         let prismaType = undefined;
-        if (driverData.employmentType === 'ECHTER_DIENSTNEHMER') prismaType = 'EMPLOYED';
-        if (driverData.employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';
-        if (driverData.employmentType === 'SELBSTSTANDIG') prismaType = 'COMMERCIAL';
+        if (employmentType === 'ECHTER_DIENSTNEHMER') prismaType = 'EMPLOYED';
+        if (employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';
+        if (employmentType === 'SELBSTSTANDIG') prismaType = 'COMMERCIAL';
 
         const updatedDriver = await prisma.driver.update({
             where: { id },
@@ -184,11 +186,14 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
             }
         });
 
-        // Update User password if provided
-        if (password) {
+        // Update User email / password if provided
+        if (email || password) {
             await prisma.user.update({
                 where: { id: driver.userId },
-                data: { password }
+                data: { 
+                    ...(email && { email }),
+                    ...(password && { password })
+                }
             });
         }
 

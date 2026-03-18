@@ -111,6 +111,7 @@ model Driver {
   bic           String?
 
   type          DriverType @default(EMPLOYED) // Angestellt / Selbstständig
+  isKleinunternehmer Boolean @default(false)
   status        DriverStatus @default(INACTIVE)
   
   walletBalance Float @default(0.0)
