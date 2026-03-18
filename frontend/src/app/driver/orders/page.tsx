@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import api from "@/lib/api";
+import { useSearchParams } from "next/navigation";
 
 type Order = {
     id: string;
@@ -34,15 +35,36 @@ type Order = {
 export default function DriverOrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
+    const [driverId, setDriverId] = useState<string | null>(null);
+    const searchParams = useSearchParams();
+    const filter = searchParams.get("filter"); // NULL, "accepted", "completed"
 
     useEffect(() => {
-        fetchAvailableOrders();
-    }, []);
+        fetchDashboardAndOrders();
+    }, [filter]);
 
-    const fetchAvailableOrders = async () => {
+    const fetchDashboardAndOrders = async () => {
+        setLoading(true);
         try {
-            const { data } = await api.get("/orders/available");
-            setOrders(data);
+            // 1. Fetch current driver ID
+            const meRes = await api.get("/drivers/me");
+            const meId = meRes.data.id;
+            setDriverId(meId);
+
+            // 2. Fetch Orders based on Filter Type
+            if (!filter) {
+                // Default: Market/Available orders
+                const { data } = await api.get("/orders/available");
+                setOrders(data);
+            } else {
+                // Fetch ALL Tenant Orders and apply JS filter
+                const { data } = await api.get("/orders");
+                if (filter === "accepted") {
+                    setOrders(data.filter((o: any) => o.driverId === meId && (o.status === "ACCEPTED" || o.status === "ON_THE_WAY")));
+                } else if (filter === "completed") {
+                    setOrders(data.filter((o: any) => o.driverId === meId && o.status === "DELIVERED"));
+                }
+            }
         } catch (e) {
             console.error("Failed to fetch available orders", e);
         } finally {
@@ -52,7 +74,7 @@ export default function DriverOrdersPage() {
 
     const handleAcceptOrder = async (id: string) => {
         try {
-            // Simulated accept
+            await api.patch(`/orders/${id}/assign`, { driverId });
             setOrders(prev => prev.filter(o => o.id !== id));
             alert("Auftrag erfolgreich angenommen! Er wird nun in deinem aktiven Bereich angezeigt.");
         } catch (e) {
@@ -68,10 +90,12 @@ export default function DriverOrdersPage() {
                     <ArrowLeft size={20} />
                 </Link>
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">Verfügbare Aufträge</h1>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
+                        {!filter ? "Verfügbare Aufträge" : filter === "accepted" ? "Angenommene Aufträge" : "Absolvierte Aufträge"}
+                    </h1>
                     <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
-                        Live Marktplatz
+                        {!filter ? "Live Marktplatz" : filter === "accepted" ? "Aktive Route" : "Historie"}
                     </p>
                 </div>
             </header>
