@@ -17,6 +17,8 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import api from "@/lib/api";
+import { useSearchParams } from "next/navigation";
 
 type Message = {
     id: string;
@@ -27,15 +29,44 @@ type Message = {
 };
 
 export default function DriverMessagesPage() {
-    const [messages, setMessages] = useState<Message[]>([
-        { id: "1", senderId: "admin", text: "Hallo Maximilian, alles klar bei dir?", timestamp: "09:00", isRead: true },
-        { id: "2", senderId: "driver", text: "Ja, danke! Bin gerade auf dem Weg zur nächsten Station.", timestamp: "09:05", isRead: true },
-        { id: "3", senderId: "admin", text: "Super, gib Bescheid wenn du fertig bist.", timestamp: "09:10", isRead: true },
-        { id: "4", senderId: "driver", text: "Bin in 5 Minuten am Depot.", timestamp: "10:45", isRead: false },
-    ]);
+    const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+    const [userId, setUserId] = useState("");
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const userStr = localStorage.getItem("user");
+        if (userStr) {
+            setUserId(JSON.parse(userStr).id);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (userId) {
+            fetchMessages();
+            const interval = setInterval(fetchMessages, 5000); // Poll for new messages
+            return () => clearInterval(interval);
+        }
+    }, [userId]);
+
+    const fetchMessages = async () => {
+        try {
+            const { data } = await api.get("/messages");
+            const mapped = data.map((m: any) => ({
+                id: m.id,
+                senderId: m.senderId === userId ? "driver" : "admin",
+                text: m.text,
+                timestamp: new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                isRead: m.isRead,
+                fileUrl: m.fileUrl
+            }));
+            setMessages(mapped);
+        } catch (e) {
+            console.error("Failed to fetch messages", e);
+        }
+    };
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,6 +75,7 @@ export default function DriverMessagesPage() {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            setSelectedImageFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 setSelectedImage(reader.result as string);
@@ -56,32 +88,42 @@ export default function DriverMessagesPage() {
         scrollToBottom();
     }, [messages]);
 
-    const handleSendMessage = (e: React.FormEvent) => {
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim()) return;
+        if (!newMessage.trim() && !selectedImageFile) return;
 
-        const msg: Message = {
-            id: Date.now().toString(),
-            senderId: "driver",
-            text: newMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            isRead: false
-        };
+        let fileUrl = null;
+        try {
+            if (selectedImageFile) {
+                const formData = new FormData();
+                formData.append("file", selectedImageFile);
+                const uploadRes = await api.post("/upload", formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                fileUrl = uploadRes.data.url;
+            }
 
-        setMessages([...messages, msg]);
-        setNewMessage("");
+            const { data } = await api.post("/messages", {
+                senderId: userId,
+                text: newMessage,
+                fileUrl: fileUrl
+            });
 
-        // Simulated reply
-        setTimeout(() => {
-            const reply: Message = {
-                id: (Date.now() + 1).toString(),
-                senderId: "admin",
-                text: "Danke für die Info!",
+            // Update local state without waiting for poll
+            const msg: Message = {
+                id: data.id,
+                senderId: "driver",
+                text: newMessage,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 isRead: false
             };
-            setMessages(prev => [...prev, reply]);
-        }, 3000);
+            setMessages([...messages, msg]);
+            setNewMessage("");
+            setSelectedImage(null);
+            setSelectedImageFile(null);
+        } catch (e) {
+            console.error("Failed to send message", e);
+        }
     };
 
     return (

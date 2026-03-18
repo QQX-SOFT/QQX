@@ -22,6 +22,7 @@ import contractTemplateRoutes from './routes/contractTemplateRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import authRoutes from './routes/authRoutes';
 import vatRoutes from './routes/vatRoutes';
+import messageRoutes from './routes/messageRoutes';
 
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 
@@ -56,6 +57,7 @@ app.use('/api/contract-templates', contractTemplateRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/vat', vatRoutes);
+app.use('/api/messages', messageRoutes);
 
 app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

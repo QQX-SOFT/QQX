@@ -130,7 +130,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                     )}>
                         <Clock size={20} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Shift</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Schicht</span>
                 </Link>
                 <Link href="/driver/messages" className={cn(
                     "flex flex-col items-center gap-1 transition",
@@ -142,7 +142,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                     )}>
                         <MessageSquare size={20} />
                     </div>
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Messages</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Nachrichten</span>
                 </Link>
                 <Link href="/driver/rentals" className={cn(
                     "flex flex-col items-center gap-1 transition",

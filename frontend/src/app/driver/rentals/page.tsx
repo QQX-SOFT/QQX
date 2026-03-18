@@ -44,21 +44,34 @@ type UserRequest = {
 };
 
 export default function DriverRentalsPage() {
-    const [availableCars, setAvailableCars] = useState<RentalCar[]>([
-        { id: "1", make: "Toyota", model: "Corolla", licensePlate: "W-12345-X", dailyPrice: 45, status: "AVAILABLE" },
-        { id: "3", make: "Volkswagen", model: "Caddy", licensePlate: "W-55443-B", dailyPrice: 55, status: "AVAILABLE" },
-        { id: "4", make: "Skoda", model: "Octavia", licensePlate: "W-11223-C", dailyPrice: 50, status: "AVAILABLE" },
-    ]);
-
-    const [myRequests, setMyRequests] = useState<UserRequest[]>([
-        { id: "REQ-001", carName: "Toyota Corolla", startDate: "2025-03-05", endDate: "2025-03-10", status: "PENDING", totalPrice: 225 },
-        { id: "REQ-002", carName: "VW Caddy", startDate: "2025-03-01", endDate: "2025-03-03", status: "APPROVED", totalPrice: 110 },
-    ]);
+    const [availableCars, setAvailableCars] = useState<RentalCar[]>([]);
+    const [myRequests, setMyRequests] = useState<UserRequest[]>([]);
 
     const [showRequestModal, setShowRequestModal] = useState(false);
     const [selectedCar, setSelectedCar] = useState<RentalCar | null>(null);
     const [requestDates, setRequestDates] = useState({ start: "", end: "" });
     const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        fetchVehicles();
+    }, []);
+
+    const fetchVehicles = async () => {
+        try {
+            const { data } = await api.get("/vehicles");
+            const mapped = data.map((v: any, index: number) => ({
+                id: v.id,
+                make: v.make,
+                model: v.model,
+                licensePlate: v.licensePlate,
+                dailyPrice: 45 + (index % 3) * 5, // Generate variety in daily price fallback
+                status: v.status || "AVAILABLE"
+            }));
+            setAvailableCars(mapped);
+        } catch (e) {
+            console.error("Failed to fetch vehicles", e);
+        }
+    };
 
     const handleRequestSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

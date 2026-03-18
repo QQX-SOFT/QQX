@@ -42,6 +42,7 @@ model Tenant {
   complaints Complaint[]
   contracts  Contract[]
   contractTemplates ContractTemplate[]
+  messages   Message[]
   
   // New SaaS relations
   locations    Location[]
@@ -637,4 +638,22 @@ enum SaaSInvoiceStatus {
   PAID
   UNPAID
   OVERDUE
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  senderId   String   // userId or customerId
+  receiverId String?  // Optional, if null it goes to admin panel general
+  
+  text       String?
+  fileUrl    String?  // For Photo sending
+  
+  isRead     Boolean  @default(false)
+  
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId])
 }

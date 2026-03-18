@@ -106,6 +106,18 @@ export default function OrdersPage() {
         }
     };
 
+    const handleDeleteOrder = async (id: string) => {
+        if (!window.confirm("Auftrag wirklich löschen?")) return;
+        try {
+            await api.delete(`/orders/${id}`);
+            fetchOrders();
+        } catch (e) {
+            console.error("Failed to delete order", e);
+        }
+    };
+
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
     // Create logic moved to editor branch
 
     const deg2rad = (deg: number) => deg * (Math.PI / 180);
@@ -272,80 +284,119 @@ export default function OrdersPage() {
                             ) : orders.map((order, i) => {
                                 const status = statusIcons[order.status] || statusIcons.PENDING;
                                 const StatusIcon = status.icon;
+                                const isExpanded = expandedRows[order.id];
 
                                 return (
-                                    <motion.tr
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        key={order.id}
-                                        className="hover:bg-slate-50/50 transition group"
-                                    >
-                                        <td className="px-8 py-6">
-                                            <div className="flex flex-col">
-                                                <span className={cn(
-                                                    "text-[9px] font-black uppercase tracking-wider mb-1 px-2 py-0.5 rounded-full w-fit",
-                                                    order.source === "CUSTOMER_PORTAL" ? "bg-purple-50 text-purple-600" : "bg-blue-50 text-blue-600"
-                                                )}>
-                                                    {order.source === "CUSTOMER_PORTAL" ? "Portal" : "Direkt"}
-                                                </span>
-                                                <span className="font-black text-slate-400 leading-none">#{order.id.slice(0, 8)}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className="flex flex-col">
-                                                <span className="font-black text-slate-900 leading-none mb-1">{order.customerName}</span>
-                                                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate max-w-[200px]">{order.address}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            {order.driver ? (
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-[10px] font-black uppercase">
-                                                        {order.driver.firstName[0]}{order.driver.lastName[0]}
-                                                    </div>
-                                                    <span className="text-xs font-bold text-slate-600">{order.driver.firstName} {order.driver.lastName.slice(0, 1)}.</span>
+                                    <div key={order.id} className="contents">
+                                        <motion.tr
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.05 }}
+                                            className={cn("hover:bg-slate-50/50 transition group cursor-pointer", isExpanded && "bg-blue-50/30")}
+                                        >
+                                            <td className="px-8 py-6" onClick={() => setExpandedRows({ ...expandedRows, [order.id]: !isExpanded })}>
+                                                <div className="flex flex-col">
+                                                    <span className={cn(
+                                                        "text-[9px] font-black uppercase tracking-wider mb-1 px-2 py-0.5 rounded-full w-fit",
+                                                        order.source === "CUSTOMER_PORTAL" ? "bg-purple-50 text-purple-600" : "bg-blue-50 text-blue-600"
+                                                    )}>
+                                                        {order.source === "CUSTOMER_PORTAL" ? "Portal" : "Direkt"}
+                                                    </span>
+                                                    <span className="font-black text-slate-400 leading-none">#{order.id.slice(0, 8)}</span>
                                                 </div>
-                                            ) : order.status === "WAITING_APPROVAL" ? (
-                                                <span className="text-[10px] font-black text-slate-300 uppercase italic">Wartet auf Freigabe</span>
-                                            ) : (
-                                                <button
-                                                    onClick={() => handleAssignClick(order)}
-                                                    className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline bg-blue-50 px-2 py-1 rounded-md"
-                                                >
-                                                    Zuweisen
-                                                </button>
-                                            )}
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="font-black text-slate-900">€{order.amount.toFixed(2)}</span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className={cn(
-                                                "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest",
-                                                status.bg,
-                                                status.color
-                                            )}>
-                                                <StatusIcon size={12} />
-                                                {status.label}
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {order.status === "WAITING_APPROVAL" && (
+                                            </td>
+                                            <td className="px-8 py-6" onClick={() => setExpandedRows({ ...expandedRows, [order.id]: !isExpanded })}>
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-slate-900 leading-none mb-1">{order.customerName}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest truncate max-w-[200px]">{order.address}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                {order.driver ? (
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 text-[10px] font-black uppercase">
+                                                            {order.driver.firstName[0]}{order.driver.lastName[0]}
+                                                        </div>
+                                                        <span className="text-xs font-bold text-slate-600">{order.driver.firstName} {order.driver.lastName.slice(0, 1)}.</span>
+                                                    </div>
+                                                ) : order.status === "WAITING_APPROVAL" ? (
+                                                    <span className="text-[10px] font-black text-slate-300 uppercase italic">Wartet auf Freigabe</span>
+                                                ) : (
                                                     <button
-                                                        onClick={() => handleApproveOrder(order.id)}
-                                                        className="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center gap-1.5"
+                                                        onClick={() => handleAssignClick(order)}
+                                                        className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline bg-blue-50 px-2 py-1 rounded-md"
                                                     >
-                                                        <Check size={14} /> Freigeben
+                                                        Zuweisen
                                                     </button>
                                                 )}
-                                                <Link href={`/admin/orders/editor?id=${order.id}`} className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-blue-600 shadow-sm opacity-0 group-hover:opacity-100 flex items-center justify-center">
-                                                    <MoreVertical size={18} />
-                                                </Link>
-                                            </div>
-                                        </td>
-                                    </motion.tr>
+                                            </td>
+                                            <td className="px-8 py-6" onClick={() => setExpandedRows({ ...expandedRows, [order.id]: !isExpanded })}>
+                                                <span className="font-black text-slate-900">€{order.amount.toFixed(2)}</span>
+                                            </td>
+                                            <td className="px-8 py-6" onClick={() => setExpandedRows({ ...expandedRows, [order.id]: !isExpanded })}>
+                                                <div className={cn(
+                                                    "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest",
+                                                    status.bg,
+                                                    status.color
+                                                )}>
+                                                    <StatusIcon size={12} />
+                                                    {status.label}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {order.status === "WAITING_APPROVAL" && (
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleApproveOrder(order.id); }}
+                                                            className="px-4 py-2 bg-green-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center gap-1.5"
+                                                        >
+                                                            <Check size={14} /> Freigeben
+                                                        </button>
+                                                    )}
+                                                    <Link href={`/admin/orders/editor?id=${order.id}`} onClick={e => e.stopPropagation()} className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-blue-600 shadow-sm opacity-0 group-hover:opacity-100 flex items-center justify-center">
+                                                        <MoreVertical size={18} />
+                                                    </Link>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order.id); }}
+                                                        className="p-2 hover:bg-white rounded-lg transition text-slate-400 hover:text-rose-600 shadow-sm opacity-0 group-hover:opacity-100 flex items-center justify-center"
+                                                        title="Löschen"
+                                                    >
+                                                        <X size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                        <AnimatePresence>
+                                            {isExpanded && (
+                                                <motion.tr
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: "auto" }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="bg-slate-50/80 border-l-4 border-blue-500"
+                                                >
+                                                    <td colSpan={6} className="px-12 py-6">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-sm font-sans">
+                                                            <div className="space-y-2">
+                                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Absender & Details</h4>
+                                                                <div className="p-4 bg-white rounded-2xl border border-slate-100 space-y-1">
+                                                                    <p className="font-black text-slate-900">{order.senderName || "Standard Absender"}</p>
+                                                                    <p className="text-xs text-slate-500 font-medium">{order.senderAddress || "N/A"}</p>
+                                                                </div>
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Paket & Info</h4>
+                                                                <div className="p-4 bg-white rounded-2xl border border-slate-100 space-y-1">
+                                                                    <p className="font-bold text-slate-600 text-xs">Paket: <span className="font-black text-slate-900">{order.packageInfo || "N/A"}</span></p>
+                                                                    <p className="font-bold text-slate-600 text-xs">Service: <span className="font-black text-blue-600 uppercase text-[9px]">{order.serviceType || "Standard"}</span></p>
+                                                                    <p className="font-bold text-slate-600 text-xs">Priorität: <span className="font-black text-amber-600 uppercase text-[9px]">{order.priority || "Normal"}</span></p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
                                 );
                             })}
                         </tbody>

@@ -51,7 +51,7 @@ export default function SuperAdminDashboard() {
     const indicators = [
         { label: "Tenants (Aktiv / Inaktiv)", value: `${stats?.totalTenants || 0} / ${stats?.inactiveTenants || 0}`, trend: "Global", icon: Globe, color: "indigo" },
         { label: "Fahrzeuge & Benutzer", value: `${stats?.totalVehicles || 0} / ${stats?.totalUsers || 0}`, trend: "System", icon: Users, color: "blue" },
-        { label: "MRR / ARR", value: `€${stats?.mrr || "0K"} / €${stats?.arr || "0K"}`, trend: "+12%", icon: TrendingUp, color: "purple" },
+        { label: "MRR / ARR", value: `${stats?.mrr || "0€"} / ${stats?.arr || "0€"}`, trend: "Global", icon: TrendingUp, color: "purple" },
         { label: "Dienste-Status", value: stats?.uptime || "Optimal", trend: "Live", icon: ShieldCheck, color: "green" },
     ];
 
@@ -125,7 +125,7 @@ export default function SuperAdminDashboard() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Wachstum</p>
-                                    <h4 className="text-2xl font-black text-emerald-500">+12.4%</h4>
+                                    <h4 className="text-2xl font-black text-slate-400">+0.0%</h4>
                                 </div>
                             </div>
                         </div>

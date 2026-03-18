@@ -51,8 +51,6 @@ const navigationLinks = [
     {
         group: "Infrastruktur",
         links: [
-            { name: "Maps Diagnose", icon: MapPin, href: "/superadmin/debug-maps" },
-            { name: "System-Logs", icon: Terminal, href: "/superadmin/logs" },
             { name: "Einstellungen", icon: Settings, href: "/superadmin/settings" },
         ]
     },
@@ -73,10 +71,10 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     const handleLogout = () => {
         // Clear cookie
         document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
-        // Clear local storage
+        // Clear all storage
         localStorage.clear();
-        // Redirect to login
-        router.push("/superadmin/login");
+        // Force full reload
+        window.location.href = "/superadmin/login";
     };
 
     useEffect(() => {

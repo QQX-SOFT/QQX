@@ -152,10 +152,9 @@ export default function SettingsPage() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem("user");
-        localStorage.removeItem("role");
-        document.cookie = "role=; path=/; max-age=0";
-        window.location.href = "/admin/login";
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
+        localStorage.clear();
+        window.location.href = "/login";
     };
 
     if (loading) {

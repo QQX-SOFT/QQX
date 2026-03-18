@@ -100,11 +100,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const handleLogout = () => {
         // Clear cookie
         document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
-        // Clear local storage
-        localStorage.removeItem("role");
-        localStorage.removeItem("driverId");
-        // Redirect to login
-        router.push("/login");
+        // Clear all storage
+        localStorage.clear();
+        // Force full reload to reset all states
+        window.location.href = "/login";
     };
 
     // Close sidebar when route changes

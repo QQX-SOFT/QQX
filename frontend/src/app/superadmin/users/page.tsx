@@ -79,7 +79,7 @@ export default function SuperAdminUsersPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold text-slate-900 dark:text-white">{user.name || "Unbenannt"}</p>
-                                                    <p className="text-xs text-slate-500 font-medium">{user.email}</p>
+                                                    <p className="text-xs text-slate-500 font-medium">{user.email}{user.tenant?.name && ` • ${user.tenant.name}`}</p>
                                                 </div>
                                             </div>
                                         </td>

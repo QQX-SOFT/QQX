@@ -45,6 +45,45 @@ router.get('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// GET current driver dashboard info
+router.get('/me', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const userId = req.headers['x-user-id'] as string;
+
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+    }
+    if (!userId) {
+        return res.status(401).json({ error: 'Nicht authentifiziert' });
+    }
+
+    try {
+        const driver = await prisma.driver.findFirst({
+            where: { userId, tenantId: tenantId as string },
+            include: {
+                user: {
+                    select: {
+                        email: true,
+                        role: true
+                    }
+                },
+                ratings: {
+                    take: 5,
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
+        });
+
+        if (!driver) {
+            return res.status(404).json({ error: 'Fahrerprofil nicht gefunden' });
+        }
+
+        res.json(driver);
+    } catch (error) {
+        res.status(500).json({ error: 'Fahrerprofil konnte nicht geladen werden' });
+    }
+});
+
 // GET single driver
 router.get('/:id', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
