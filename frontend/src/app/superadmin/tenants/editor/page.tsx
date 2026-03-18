@@ -20,6 +20,7 @@ import Link from "next/link";
 import AddressPicker from "@/components/AddressPicker";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
 
 const INITIAL_FORM = {
     name: "",
@@ -448,9 +449,11 @@ export default function TenantEditorPage() {
                 </div>
             </header>
 
-            <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-indigo-500" size={48} /></div>}>
-                <TenantEditorForm />
-            </Suspense>
+            <GoogleMapsProvider>
+                <Suspense fallback={<div className="flex justify-center p-20"><Loader2 className="animate-spin text-indigo-500" size={48} /></div>}>
+                    <TenantEditorForm />
+                </Suspense>
+            </GoogleMapsProvider>
         </div>
     );
 }

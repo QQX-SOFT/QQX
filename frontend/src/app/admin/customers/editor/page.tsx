@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
+import { Autocomplete } from "@react-google-maps/api";
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
 
 function CustomerEditorForm() {
     const router = useRouter();
@@ -28,6 +30,15 @@ function CustomerEditorForm() {
         address: "",
         password: ""
     });
+
+    const [autocomplete, setAutocomplete] = useState<any>(null);
+
+    const onPlaceChanged = () => {
+        if (autocomplete) {
+            const place = autocomplete.getPlace();
+            setFormData(prev => ({ ...prev, address: place.formatted_address || "" }));
+        }
+    };
 
     useEffect(() => {
         if (id) {
@@ -132,13 +143,18 @@ function CustomerEditorForm() {
                         </div>
                         <div>
                             <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Anschrift</label>
-                            <input
-                                type="text"
-                                placeholder="Straße, PLZ, Stadt"
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
-                                value={formData.address}
-                                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                            />
+                            <Autocomplete
+                                onLoad={setAutocomplete}
+                                onPlaceChanged={onPlaceChanged}
+                            >
+                                <input
+                                    type="text"
+                                    placeholder="Straße, PLZ, Stadt"
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold transition-all shadow-sm"
+                                    value={formData.address}
+                                    onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                />
+                            </Autocomplete>
                         </div>
                     </div>
                     <div>
@@ -195,9 +211,11 @@ export default function CustomerEditorPage() {
                 </div>
             </header>
 
-            <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
-                <CustomerEditorForm />
-            </Suspense>
+            <GoogleMapsProvider>
+                <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
+                    <CustomerEditorForm />
+                </Suspense>
+            </GoogleMapsProvider>
         </div>
     );
 }

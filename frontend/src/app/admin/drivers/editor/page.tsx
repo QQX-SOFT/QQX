@@ -7,10 +7,16 @@ import {
     Save,
     ArrowLeft,
     Users,
+    Upload,
+    CheckCircle,
+    Calendar,
+    Briefcase,
     ShieldCheck
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
+import { Autocomplete } from "@react-google-maps/api";
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
 import { cn } from "@/lib/utils";
 
 function DriverEditorForm() {
@@ -89,6 +95,37 @@ function DriverEditorForm() {
             "UID / Steuer-ID",
             "Gewerbeschein"
         ]
+    };
+
+    const [autocomplete, setAutocomplete] = useState<any>(null);
+
+    const onPlaceChanged = () => {
+        if (autocomplete) {
+            const place = autocomplete.getPlace();
+            let route = "";
+            let streetNumber = "";
+            let postalCode = "";
+            let locality = "";
+
+            place.address_components?.forEach((c: any) => {
+                const types = c.types;
+                if (types.includes("route")) route = c.long_name;
+                if (types.includes("street_number")) streetNumber = c.long_name;
+                if (types.includes("postal_code")) postalCode = c.long_name;
+                if (types.includes("locality")) {
+                    locality = c.long_name;
+                } else if (!locality && types.includes("administrative_area_level_2")) {
+                    locality = c.long_name;
+                }
+            });
+
+            setFormData(prev => ({
+                ...prev,
+                street: route ? `${route} ${streetNumber}` : `${place.name || ""}`,
+                zip: postalCode,
+                city: locality
+            }));
+        }
     };
 
     useEffect(() => {
@@ -251,7 +288,12 @@ function DriverEditorForm() {
                         <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Anschrift</h3>
                         <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Straße / Hausnummer</label>
-                            <input type="text" placeholder="Musterstraße 1" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })} />
+                            <Autocomplete
+                                onLoad={setAutocomplete}
+                                onPlaceChanged={onPlaceChanged}
+                            >
+                                <input type="text" placeholder="Musterstraße 1" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })} />
+                            </Autocomplete>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -394,9 +436,11 @@ export default function DriverEditorPage() {
                 </div>
             </header>
 
-            <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
-                <DriverEditorForm />
-            </Suspense>
+            <GoogleMapsProvider>
+                <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
+                    <DriverEditorForm />
+                </Suspense>
+            </GoogleMapsProvider>
         </div>
     );
 }

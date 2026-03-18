@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
+import AddressPicker from "@/components/AddressPicker";
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
 
 function LocationEditorForm() {
     const router = useRouter();
@@ -88,6 +90,16 @@ function LocationEditorForm() {
                     </div>
 
                     <div>
+                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Adresse (Suchen)</label>
+                        <AddressPicker
+                            className="w-full bg-slate-50 dark:bg-white/5 border-none rounded-2xl py-4 px-6 font-bold outline-none"
+                            defaultValue={formData.address}
+                            onAddressSelect={(addr) => setFormData({ ...formData, address: addr.fullAddress })}
+                            placeholder="Musterstraße 12, Wien"
+                        />
+                    </div>
+
+                    <div>
                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Tenant ID (Optional)</label>
                         <input
                             value={formData.tenantId}
@@ -137,9 +149,11 @@ export default function LocationEditorPage() {
                 </div>
             </header>
 
-            <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={48} /></div>}>
-                <LocationEditorForm />
-            </Suspense>
+            <GoogleMapsProvider>
+                <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-indigo-500" size={48} /></div>}>
+                    <LocationEditorForm />
+                </Suspense>
+            </GoogleMapsProvider>
         </div>
     );
 }

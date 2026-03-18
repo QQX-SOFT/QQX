@@ -16,6 +16,8 @@ import {
 import api from "@/lib/api";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Autocomplete } from "@react-google-maps/api";
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
 
 function OrderEditorForm() {
     const router = useRouter();
@@ -41,6 +43,23 @@ function OrderEditorForm() {
         driverId: "",
         notes: ""
     });
+
+    const [senderAutocomplete, setSenderAutocomplete] = useState<any>(null);
+    const [recipientAutocomplete, setRecipientAutocomplete] = useState<any>(null);
+
+    const onSenderPlaceChanged = () => {
+        if (senderAutocomplete) {
+            const place = senderAutocomplete.getPlace();
+            setFormData(prev => ({ ...prev, senderAddress: place.formatted_address || "" }));
+        }
+    };
+
+    const onRecipientPlaceChanged = () => {
+        if (recipientAutocomplete) {
+            const place = recipientAutocomplete.getPlace();
+            setFormData(prev => ({ ...prev, recipientAddress: place.formatted_address || "" }));
+        }
+    };
 
     useEffect(() => {
         fetchDrivers();
@@ -141,15 +160,17 @@ function OrderEditorForm() {
                             required
                             className="w-full bg-white border border-blue-100 rounded-3xl px-8 py-5 focus:border-blue-500 outline-none font-black text-slate-900 transition-all shadow-sm appearance-none cursor-pointer"
                             value={formData.customerId}
-                            onChange={e => {
-                                const cust = customers.find(c => c.id === e.target.value);
-                                setFormData({
-                                    ...formData,
-                                    customerId: e.target.value,
-                                    recipientName: cust?.contactPerson || cust?.name || formData.recipientName,
-                                    recipientAddress: cust?.address || formData.recipientAddress
-                                });
-                            }}
+                                onChange={e => {
+                                    const cust = customers.find(c => c.id === e.target.value);
+                                    setFormData({
+                                        ...formData,
+                                        customerId: e.target.value,
+                                        senderName: cust?.name || formData.senderName,
+                                        senderAddress: cust?.address || formData.senderAddress,
+                                        recipientName: "",
+                                        recipientAddress: ""
+                                    });
+                                }}
                         >
                             <option value="">Bitte Kunden wählen...</option>
                             {customers.map(c => (
@@ -183,13 +204,18 @@ function OrderEditorForm() {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Adresse</label>
-                                    <input
-                                        type="text"
-                                        placeholder="Straße, Hausnummer..."
-                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                        value={formData.senderAddress}
-                                        onChange={e => setFormData({ ...formData, senderAddress: e.target.value })}
-                                    />
+                                    <Autocomplete
+                                        onLoad={setSenderAutocomplete}
+                                        onPlaceChanged={onSenderPlaceChanged}
+                                    >
+                                        <input
+                                            type="text"
+                                            placeholder="Straße, Hausnummer..."
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
+                                            value={formData.senderAddress}
+                                            onChange={e => setFormData({ ...formData, senderAddress: e.target.value })}
+                                        />
+                                    </Autocomplete>
                                 </div>
                             </div>
                         </div>
@@ -215,14 +241,19 @@ function OrderEditorForm() {
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Adresse *</label>
-                                    <input
-                                        required
-                                        type="text"
-                                        placeholder="Straße, Hausnummer..."
-                                        className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
-                                        value={formData.recipientAddress}
-                                        onChange={e => setFormData({ ...formData, recipientAddress: e.target.value })}
-                                    />
+                                    <Autocomplete
+                                        onLoad={setRecipientAutocomplete}
+                                        onPlaceChanged={onRecipientPlaceChanged}
+                                    >
+                                        <input
+                                            required
+                                            type="text"
+                                            placeholder="Straße, Hausnummer..."
+                                            className="w-full bg-white border border-slate-200 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold transition shadow-sm"
+                                            value={formData.recipientAddress}
+                                            onChange={e => setFormData({ ...formData, recipientAddress: e.target.value })}
+                                        />
+                                    </Autocomplete>
                                 </div>
                             </div>
                         </div>
@@ -347,9 +378,11 @@ export default function OrderEditorPage() {
                 </div>
             </header>
 
-            <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
-                <OrderEditorForm />
-            </Suspense>
+            <GoogleMapsProvider>
+                <Suspense fallback={<div className="flex h-[30vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
+                    <OrderEditorForm />
+                </Suspense>
+            </GoogleMapsProvider>
         </div>
     );
 }
