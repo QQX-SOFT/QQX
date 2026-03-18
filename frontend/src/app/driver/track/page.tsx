@@ -221,29 +221,28 @@ export default function TrackingPage() {
                             <span className="text-2xl font-black uppercase tracking-[0.2em]">Starten</span>
                         </motion.button>
                     ) : (
-                        <div className="flex flex-col gap-6">
+                        <div className="grid grid-cols-2 gap-4">
+                            <motion.button
+                                key="pause"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="w-full bg-amber-500 text-white border border-amber-400 rounded-[2.5rem] py-10 flex flex-col items-center justify-center gap-4 shadow-xl hover:bg-amber-600 transition-all duration-300 active:scale-95"
+                            >
+                                <Pause size={28} className="fill-white" />
+                                <span className="text-sm font-black uppercase tracking-widest">Pause</span>
+                            </motion.button>
+
                             <motion.button
                                 key="stop"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 onClick={handleStop}
                                 disabled={loading}
-                                className="w-full bg-slate-950 text-white rounded-[2.5rem] py-10 flex items-center justify-center gap-4 shadow-xl hover:bg-black transition-all duration-300 active:scale-95 border-b-4 border-slate-800"
+                                className="w-full bg-rose-600 text-white rounded-[2.5rem] py-10 flex flex-col items-center justify-center gap-4 shadow-xl hover:bg-rose-700 transition-all duration-300 active:scale-95 border border-rose-500"
                             >
                                 <Square size={28} className="fill-white" />
-                                <span className="text-xl font-black uppercase tracking-widest">Beenden</span>
+                                <span className="text-sm font-black uppercase tracking-widest">Beenden</span>
                             </motion.button>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <button className="bg-white border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-3 text-slate-600 hover:bg-yellow-50 hover:border-yellow-200 hover:text-yellow-600 transition-all duration-300 shadow-sm active:scale-95">
-                                    <Pause size={24} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Pause</span>
-                                </button>
-                                <button className="bg-white border border-slate-200 p-8 rounded-[2rem] flex flex-col items-center gap-3 text-slate-600 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-300 shadow-sm active:scale-95">
-                                    <Navigation size={24} />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">GPS Fix</span>
-                                </button>
-                            </div>
                         </div>
                     )}
                 </AnimatePresence>

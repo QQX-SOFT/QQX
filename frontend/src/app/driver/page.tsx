@@ -94,34 +94,46 @@ export default function DriverDashboard() {
             </div>
 
             {/* Active Task / Go Online Call to Action */}
-            <Link href="/driver/track">
-                <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    className={cn(
-                        "p-4 rounded-xl shadow-xl flex items-center justify-between transition",
-                        activeShift ? "bg-green-600 shadow-green-500/10 text-white" : "bg-blue-600 shadow-blue-500/10 text-white"
-                    )}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800">
-                            {activeShift ? <Clock size={20} className="text-green-600" /> : <Play size={20} className="text-blue-600 fill-blue-600" />}
+            {!activeShift ? (
+                <Link href="/driver/track">
+                    <motion.div
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="bg-blue-600 p-4 rounded-xl shadow-xl shadow-blue-500/10 text-white flex items-center justify-between transition"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800">
+                                <Play size={20} className="text-blue-600 fill-blue-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-base font-black leading-tight">Jetzt Schicht starten</h2>
+                                <p className="text-blue-100/80 text-xs font-medium">Tracking aktivieren</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-base font-black leading-tight">
-                                {activeShift ? (activeShift.status === 'PAUSED' ? "Schicht pausiert" : "Schicht läuft") : "Jetzt Schicht starten"}
+                        <div className="flex items-center gap-1 text-slate-200">
+                            <span className="w-2 h-2 rounded-full animate-pulse bg-green-400" />
+                            <span className="text-[10px] font-bold uppercase">Bereit</span>
+                        </div>
+                    </motion.div>
+                </Link>
+            ) : (
+                <div className="grid grid-cols-2 gap-3">
+                    <Link href="/driver/track" className="block h-full">
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-amber-500 p-4 rounded-xl shadow-xl shadow-amber-500/10 text-white flex flex-col items-center justify-center h-full text-center gap-2">
+                            <Clock size={24} />
+                            <h2 className="text-sm font-black leading-tight">
+                                {activeShift.status === 'PAUSED' ? "Schicht fortsetzen" : "Schicht pausieren"}
                             </h2>
-                            <p className="text-blue-100/80 text-xs font-medium">
-                                {activeShift ? "Status anpassen / beenden" : "Tracking aktivieren"}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-slate-200">
-                        <span className={cn("w-2 h-2 rounded-full animate-pulse", activeShift ? "bg-white" : "bg-green-400")} />
-                        <span className="text-[10px] font-bold uppercase">{activeShift ? activeShift.status : "Bereit"}</span>
-                    </div>
-                </motion.div>
-            </Link>
+                        </motion.div>
+                    </Link>
+                    <Link href="/driver/track" className="block h-full">
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-rose-500 p-4 rounded-xl shadow-xl shadow-rose-500/10 text-white flex flex-col items-center justify-center h-full text-center gap-2">
+                            <AlertCircle size={24} />
+                            <h2 className="text-sm font-black leading-tight">Schicht beenden</h2>
+                        </motion.div>
+                    </Link>
+                </div>
+            )}
 
             {/* Available Orders Section */}
             <div className="space-y-4">
