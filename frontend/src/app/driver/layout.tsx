@@ -10,6 +10,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
     const pathname = usePathname();
     const router = useRouter();
     const [authLoading, setAuthLoading] = useState(true);
+    const [locationAllowed, setLocationAllowed] = useState<boolean | 'loading'>('loading');
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -22,10 +23,57 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         }
     }, [pathname, router]);
 
+    const checkLocation = () => {
+        if (!navigator.geolocation) {
+            setLocationAllowed(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setLocationAllowed(true);
+                // Potential API call to update driver live position
+            },
+            (error) => {
+                setLocationAllowed(false);
+            }
+        );
+    };
+
+    useEffect(() => {
+        if (!authLoading) {
+            checkLocation();
+        }
+    }, [authLoading]);
+
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
+
+    if (locationAllowed === 'loading') {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4" />
+                <p className="text-sm font-bold text-slate-500">Konum izinleri kontrol ediliyor...</p>
+            </div>
+        );
+    }
+
+    if (locationAllowed === false) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+                <div className="p-4 bg-red-50 text-red-600 rounded-full mb-4">
+                    <MapPin size={32} className="animate-bounce" />
+                </div>
+                <h2 className="text-xl font-black text-slate-900 mb-2">Konum İzni Gerekli</h2>
+                <p className="text-sm text-slate-500 mb-6">Patron takibi için konum servisleri zorunludur. Lütfen tarayıcı izinlerinden onay verin.</p>
+                <button onClick={checkLocation} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 transition-all">
+                    Tekrar Dene
+                </button>
             </div>
         );
     }
