@@ -102,9 +102,14 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     try {
         const validatedData = orderSchema.parse(req.body);
 
+        // Convert empty strings to null for optional relations to avoid foreign key errors
+        const data: any = { ...validatedData };
+        if (data.driverId === "") data.driverId = null;
+        if (data.customerId === "") data.customerId = null;
+
         const order = await prisma.order.create({
             data: {
-                ...validatedData,
+                ...data,
                 tenantId: tenantId!,
                 amount: validatedData.amount || 0 // Ensure it's not undefined
             }
@@ -126,9 +131,14 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
     try {
         const validatedData = orderSchema.partial().parse(req.body);
 
+        // Convert empty strings to null for optional relations to avoid foreign key errors
+        const data: any = { ...validatedData };
+        if (data.driverId === "") data.driverId = null;
+        if (data.customerId === "") data.customerId = null;
+
         const order = await prisma.order.update({
             where: { id, tenantId: tenantId as string },
-            data: validatedData
+            data: data
         });
         res.json(order);
     } catch (error) {
