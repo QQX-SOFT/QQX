@@ -27,6 +27,10 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import api from "@/lib/api";
 
+const formatIBAN = (iban: string) => {
+    return iban.replace(/\s+/g, '').toUpperCase().replace(/(.{4})/g, '$1 ').trim();
+};
+
 export default function DriverProfilePage() {
     const router = useRouter();
     const [driverInfo, setDriverInfo] = useState({
@@ -67,7 +71,7 @@ export default function DriverProfilePage() {
                 employmentType: data.type || "ECHTER_DIENSTNEHMER",
                 joinedDate: new Date(data.createdAt).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }),
                 profilePic: data.profilePic,
-                iban: data.iban || ""
+                iban: data.iban ? formatIBAN(data.iban) : ""
             });
         } catch (e) {
             console.error("Failed to load profile", e);

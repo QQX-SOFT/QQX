@@ -33,6 +33,10 @@ import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
+const formatIBAN = (iban: string) => {
+    return iban.replace(/\s+/g, '').toUpperCase().replace(/(.{4})/g, '$1 ').trim();
+};
+
 interface DriverDetails {
     id: string;
     firstName: string;
@@ -246,7 +250,7 @@ export default function DriverProfilePage() {
                             <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
                                 <Banknote size={14} /> Bankverbindung
                             </h4>
-                            <p className="font-mono text-xs font-bold text-slate-900 truncate">IBAN: {driver.iban || "-"}</p>
+                            <p className="font-mono text-xs font-bold text-slate-900 truncate">IBAN: {driver.iban ? formatIBAN(driver.iban) : "-"}</p>
                             <p className="font-mono text-xs font-bold text-slate-900 mt-1">BIC: {driver.bic || "-"}</p>
                         </div>
                     </div>
