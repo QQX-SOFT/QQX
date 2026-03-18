@@ -72,6 +72,25 @@ router.get('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// GET order by ID
+router.get('/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+
+    try {
+        const order = await prisma.order.findUnique({
+            where: { id, tenantId: tenantId as string },
+            include: { driver: true }
+        });
+        if (!order) {
+            return res.status(404).json({ error: 'Auftrag nicht gefunden' });
+        }
+        res.json(order);
+    } catch (error) {
+        res.status(500).json({ error: 'Auftrag konnte nicht geladen werden' });
+    }
+});
+
 // POST create order
 router.post('/', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
@@ -99,14 +118,35 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     }
 });
 
-// PATCH update order (e.g. assign driver)
+// PATCH update order (e.g. from editor)
 router.patch('/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+
+    try {
+        const validatedData = orderSchema.partial().parse(req.body);
+
+        const order = await prisma.order.update({
+            where: { id, tenantId: tenantId as string },
+            data: validatedData
+        });
+        res.json(order);
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return res.status(400).json({ errors: error.errors });
+        }
+        res.status(500).json({ error: 'Bestellung konnte nicht aktualisiert werden' });
+    }
+});
+
+// PATCH assign driver specifically
+router.patch('/:id/assign', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
     const { driverId } = req.body;
 
     try {
         const order = await prisma.order.update({
-            where: { id: req.params.id, tenantId },
+            where: { id: req.params.id, tenantId: tenantId as string },
             data: {
                 driverId,
                 status: 'ACCEPTED',
@@ -126,7 +166,7 @@ router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
 
     try {
         const order = await prisma.order.update({
-            where: { id: req.params.id, tenantId },
+            where: { id: req.params.id, tenantId: tenantId as string },
             data: {
                 status: status,
                 deliveryPhoto,
@@ -138,6 +178,21 @@ router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
         res.json(order);
     } catch (error) {
         res.status(500).json({ error: 'Status konnte nicht aktualisiert werden' });
+    }
+});
+
+// DELETE order
+router.delete('/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    const { id } = req.params;
+
+    try {
+        await prisma.order.delete({
+            where: { id, tenantId: tenantId as string }
+        });
+        res.json({ message: 'Bestellung gelöscht' });
+    } catch (error) {
+        res.status(500).json({ error: 'Bestellung konnte nicht gelöscht werden' });
     }
 });
 
