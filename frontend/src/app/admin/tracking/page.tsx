@@ -202,7 +202,7 @@ export default function TrackingPage() {
                                     <div className="flex items-center justify-between mt-4 p-3 bg-white rounded-xl border border-slate-100">
                                         <div className="flex items-center gap-2 text-xs font-medium text-slate-500 font-mono">
                                             <Clock size={12} className="text-slate-400" />
-                                            {new Date(loc.lastUpdate).toLocaleTimeString('de-DE')}
+                                            {loc.lastUpdate}
                                         </div>
                                     </div>
                                 </div>
