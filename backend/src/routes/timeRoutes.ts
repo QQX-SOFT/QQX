@@ -112,6 +112,40 @@ router.patch('/stop/:id', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// PATCH pause time
+router.patch('/pause/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    try {
+        const existing = await prisma.timeEntry.findFirst({ where: { id: req.params.id, driver: { tenantId } } });
+        if (!existing) return res.status(404).json({ error: 'Nicht gefunden' });
+
+        const entry = await prisma.timeEntry.update({
+            where: { id: req.params.id },
+            data: { status: 'PAUSED' }
+        });
+        res.json(entry);
+    } catch (error) {
+        res.status(500).json({ error: 'Fehler beim Pausieren' });
+    }
+});
+
+// PATCH resume time
+router.patch('/resume/:id', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    try {
+        const existing = await prisma.timeEntry.findFirst({ where: { id: req.params.id, driver: { tenantId } } });
+        if (!existing) return res.status(404).json({ error: 'Nicht gefunden' });
+
+        const entry = await prisma.timeEntry.update({
+            where: { id: req.params.id },
+            data: { status: 'RUNNING' }
+        });
+        res.json(entry);
+    } catch (error) {
+        res.status(500).json({ error: 'Fehler beim Fortsetzen' });
+    }
+});
+
 // PATCH current location
 router.patch('/location/:id', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;

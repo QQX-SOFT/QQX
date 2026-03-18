@@ -76,6 +76,48 @@ export default function DriverDashboard() {
         }
     };
 
+    const handlePause = async () => {
+        if (!activeShift) return;
+        setLoading(true);
+        try {
+            if (activeShift.status === 'PAUSED') {
+                await api.patch(`/time-entries/resume/${activeShift.id}`, {});
+            } else {
+                await api.patch(`/time-entries/pause/${activeShift.id}`, {});
+            }
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Update failed", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStop = async () => {
+        if (!activeShift) return;
+        setLoading(true);
+        try {
+            await api.patch(`/time-entries/stop/${activeShift.id}`, {
+                lat: driverLocation?.lat || 0,
+                lng: driverLocation?.lng || 0
+            });
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Stop failed", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-slate-600 text-lg font-medium">Laden des Dashboards...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Greeting */}
@@ -135,20 +177,20 @@ export default function DriverDashboard() {
                 </Link>
             ) : (
                 <div className="grid grid-cols-2 gap-3">
-                    <Link href="/driver/track" className="block h-full">
-                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-amber-500 p-4 rounded-xl shadow-xl shadow-amber-500/10 text-white flex flex-col items-center justify-center h-full text-center gap-2">
+                    <button onClick={handlePause} disabled={loading} className="block w-full h-full">
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className={`${activeShift.status === 'PAUSED' ? 'bg-indigo-500 shadow-indigo-500/10' : 'bg-amber-500 shadow-amber-500/10'} p-4 rounded-xl shadow-xl text-white flex flex-col items-center justify-center h-full text-center gap-2`}>
                             <Clock size={24} />
                             <h2 className="text-sm font-black leading-tight">
                                 {activeShift.status === 'PAUSED' ? "Schicht fortsetzen" : "Schicht pausieren"}
                             </h2>
                         </motion.div>
-                    </Link>
-                    <Link href="/driver/track" className="block h-full">
+                    </button>
+                    <button onClick={handleStop} disabled={loading} className="block w-full h-full">
                         <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="bg-rose-500 p-4 rounded-xl shadow-xl shadow-rose-500/10 text-white flex flex-col items-center justify-center h-full text-center gap-2">
                             <AlertCircle size={24} />
                             <h2 className="text-sm font-black leading-tight">Schicht beenden</h2>
                         </motion.div>
-                    </Link>
+                    </button>
                 </div>
             )}
 
