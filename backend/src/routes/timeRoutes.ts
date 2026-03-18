@@ -168,7 +168,9 @@ router.get('/locations', async (req: TenantRequest, res: Response) => {
             driverName: `${entry.driver.firstName} ${entry.driver.lastName}`,
             lat: entry.currentLat || entry.startLat,
             lng: entry.currentLng || entry.startLng,
-            startTime: entry.startTime
+            startTime: entry.startTime,
+            phone: entry.driver.phone,
+            status: entry.status
         }));
 
         res.json(locations);

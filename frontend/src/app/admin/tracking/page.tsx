@@ -53,23 +53,19 @@ export default function TrackingPage() {
 
     const fetchLocations = async () => {
         try {
-            const { data } = await api.get("/time-entries");
-            // Filter only running entries with location
-            const activeEntries = data.filter((entry: any) =>
-                entry.status === 'RUNNING' && entry.currentLat && entry.currentLng
-            );
-
-            setLocations(activeEntries.map((entry: any) => ({
+            const { data } = await api.get("/time-entries/locations");
+            
+            setLocations(data.map((entry: any) => ({
                 id: entry.id,
-                driverId: entry.driver.id,
-                driverName: `${entry.driver.firstName} ${entry.driver.lastName}`,
-                lat: entry.currentLat,
-                lng: entry.currentLng,
-                lastUpdate: new Date(entry.updatedAt).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+                driverId: entry.driverId,
+                driverName: entry.driverName,
+                lat: entry.lat,
+                lng: entry.lng,
+                lastUpdate: new Date(entry.startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
                 status: 'ACTIVE',
-                phone: entry.driver.phone,
-                speed: undefined, // calculated on device if needed later
-                vehicle: entry.vehicle?.licensePlate || undefined,
+                phone: entry.phone,
+                speed: undefined,
+                vehicle: undefined,
             })));
         } catch (error) {
             console.error("Failed to load locations", error);
