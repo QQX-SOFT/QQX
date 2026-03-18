@@ -29,6 +29,7 @@ export default function DriverDashboard() {
         rating: 5.0
     });
     const [loading, setLoading] = useState(true);
+    const [activeShift, setActiveShift] = useState<any>(null);
 
     useEffect(() => {
         fetchDashboardData();
@@ -44,6 +45,9 @@ export default function DriverDashboard() {
                 onlineHours: data.stats?.onlineHours || "0",
                 rating: data.rating || 5.0
             });
+
+            const activeRes = await api.get(`/time-entries/active/${data.id}`);
+            setActiveShift(activeRes.data);
 
             // Fetch available orders
             const { data: availOrders } = await api.get("/orders/available");
@@ -94,20 +98,27 @@ export default function DriverDashboard() {
                 <motion.div
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
-                    className="bg-blue-600 p-4 rounded-xl shadow-xl shadow-blue-500/10 text-white flex items-center justify-between"
+                    className={cn(
+                        "p-4 rounded-xl shadow-xl flex items-center justify-between transition",
+                        activeShift ? "bg-green-600 shadow-green-500/10 text-white" : "bg-blue-600 shadow-blue-500/10 text-white"
+                    )}
                 >
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-blue-600">
-                            <Play size={20} className="fill-blue-600" />
+                        <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-slate-800">
+                            {activeShift ? <Clock size={20} className="text-green-600" /> : <Play size={20} className="text-blue-600 fill-blue-600" />}
                         </div>
                         <div>
-                            <h2 className="text-base font-black leading-tight">Jetzt Schicht starten</h2>
-                            <p className="text-blue-100/80 text-xs font-medium">Tracking aktivieren</p>
+                            <h2 className="text-base font-black leading-tight">
+                                {activeShift ? (activeShift.status === 'PAUSED' ? "Schicht pausiert" : "Schicht läuft") : "Jetzt Schicht starten"}
+                            </h2>
+                            <p className="text-blue-100/80 text-xs font-medium">
+                                {activeShift ? "Status anpassen / beenden" : "Tracking aktivieren"}
+                            </p>
                         </div>
                     </div>
                     <div className="flex items-center gap-1 text-slate-200">
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        <span className="text-[10px] font-bold uppercase">Bereit</span>
+                        <span className={cn("w-2 h-2 rounded-full animate-pulse", activeShift ? "bg-white" : "bg-green-400")} />
+                        <span className="text-[10px] font-bold uppercase">{activeShift ? activeShift.status : "Bereit"}</span>
                     </div>
                 </motion.div>
             </Link>

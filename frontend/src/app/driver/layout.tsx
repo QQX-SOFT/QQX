@@ -45,6 +45,8 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLocationAllowed(true);
+                localStorage.setItem("driver_lat", position.coords.latitude.toString());
+                localStorage.setItem("driver_lng", position.coords.longitude.toString());
             },
             (error) => {
                 setLocationAllowed(false);
