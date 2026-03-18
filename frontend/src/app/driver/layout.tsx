@@ -24,6 +24,15 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
     }, [pathname, router]);
 
     const checkLocation = () => {
+        if (typeof window === 'undefined') return;
+        
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (!isMobile) {
+            setLocationAllowed(true);
+            return;
+        }
+
         if (!navigator.geolocation) {
             setLocationAllowed(false);
             return;
@@ -32,7 +41,6 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLocationAllowed(true);
-                // Potential API call to update driver live position
             },
             (error) => {
                 setLocationAllowed(false);
@@ -58,7 +66,7 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
                 <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4" />
-                <p className="text-sm font-bold text-slate-500">Konum izinleri kontrol ediliyor...</p>
+                <p className="text-sm font-bold text-slate-500">Standortzugriff wird geprüft...</p>
             </div>
         );
     }
@@ -69,10 +77,10 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                 <div className="p-4 bg-red-50 text-red-600 rounded-full mb-4">
                     <MapPin size={32} className="animate-bounce" />
                 </div>
-                <h2 className="text-xl font-black text-slate-900 mb-2">Konum İzni Gerekli</h2>
-                <p className="text-sm text-slate-500 mb-6">Patron takibi için konum servisleri zorunludur. Lütfen tarayıcı izinlerinden onay verin.</p>
+                <h2 className="text-xl font-black text-slate-900 mb-2">Standortzugriff erforderlich</h2>
+                <p className="text-sm text-slate-500 mb-6">Für den Betrieb ist die Standortbestimmung zwingend erforderlich. Bitte erlauben Sie den Zugriff in den Standorteinstellungen Ihres Browsers.</p>
                 <button onClick={checkLocation} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-blue-500/20 transition-all">
-                    Tekrar Dene
+                    Erneut versuchen
                 </button>
             </div>
         );

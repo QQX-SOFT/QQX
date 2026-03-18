@@ -11,7 +11,8 @@ import {
     ArrowLeft,
     ShieldCheck,
     CheckCheck,
-    Loader2
+    Loader2,
+    X
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -33,10 +34,22 @@ export default function DriverMessagesPage() {
         { id: "4", senderId: "driver", text: "Bin in 5 Minuten am Depot.", timestamp: "10:45", isRead: false },
     ]);
     const [newMessage, setNewMessage] = useState("");
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setSelectedImage(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     useEffect(() => {
@@ -80,17 +93,17 @@ export default function DriverMessagesPage() {
                         <ArrowLeft size={20} />
                     </Link>
                     <div className="relative">
-                        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-500/20">
-                            AD
+                        <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-slate-900/10">
+                            ZA
                         </div>
-                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full transition-transform hover:scale-110" />
+                        <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" />
                     </div>
                     <div>
-                        <h2 className="font-black text-slate-900 tracking-tight leading-none mb-1">Support Team</h2>
+                        <h2 className="font-black text-slate-900 tracking-tight leading-none mb-1">Zentrale (Admin)</h2>
                         <div className="flex items-center gap-2">
-                            <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Global Master</span>
+                            <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Dispatcher</span>
                             <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                            <span className="text-[9px] font-bold text-slate-400">Jetzt Aktiv</span>
+                            <span className="text-[9px] font-bold text-slate-400">Online</span>
                         </div>
                     </div>
                 </div>
@@ -158,13 +171,23 @@ export default function DriverMessagesPage() {
 
             {/* Input Area */}
             <div className="p-6 shrink-0 bg-white border-t border-slate-100 z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
+                {selectedImage && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 relative w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden border border-slate-200">
+                        <img src={selectedImage} alt="Attachment" className="w-full h-full object-cover" />
+                        <button onClick={() => setSelectedImage(null)} className="absolute top-1 right-1 p-1 bg-black/50 hover:bg-black/70 rounded-full text-white">
+                            <X size={14} />
+                        </button>
+                    </motion.div>
+                )}
+                
                 <form
                     onSubmit={handleSendMessage}
                     className="bg-slate-50 p-2 rounded-[2rem] border border-slate-200 flex items-center gap-2 transition-all focus-within:ring-4 focus-within:ring-blue-500/5 group"
                 >
-                    <button type="button" className="p-3 text-slate-400 hover:text-blue-600 transition">
+                    <label className="p-3 text-slate-400 hover:text-blue-600 transition cursor-pointer">
                         <Paperclip size={20} />
-                    </button>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                    </label>
                     <input
                         type="text"
                         placeholder="Nachricht schreiben..."
@@ -174,10 +197,10 @@ export default function DriverMessagesPage() {
                     />
                     <button
                         type="submit"
-                        disabled={!newMessage.trim()}
+                        disabled={!newMessage.trim() && !selectedImage}
                         className={cn(
                             "w-12 h-12 rounded-[1.25rem] transition-all duration-300 flex items-center justify-center shadow-lg",
-                            newMessage.trim()
+                            newMessage.trim() || selectedImage
                                 ? "bg-blue-600 text-white shadow-blue-500/30 rotate-0 scale-100"
                                 : "bg-slate-200 text-slate-400 grayscale scale-95"
                         )}

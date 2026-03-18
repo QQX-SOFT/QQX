@@ -159,7 +159,7 @@ export default function DriverProfilePage() {
                     </div>
                     <div className="flex-1">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Bankverbindung</p>
-                        <h4 className="font-bold text-slate-700 leading-none">AT64 1234 **** ****</h4>
+                        <h4 className="font-bold text-slate-700 leading-none">{driverInfo.iban || "Nicht angegeben"}</h4>
                     </div>
                     <ChevronRight size={18} className="text-slate-200 group-hover:translate-x-1 transition duration-500 shrink-0" />
                 </div>

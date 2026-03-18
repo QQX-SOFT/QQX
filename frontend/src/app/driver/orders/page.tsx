@@ -152,19 +152,6 @@ export default function DriverOrdersPage() {
                 ))}
             </div>
 
-            {/* Info Section */}
-            <div className="bg-slate-900 p-8 rounded-[3rem] text-white relative overflow-hidden shadow-2xl shadow-slate-950/20">
-                <div className="relative z-10 flex items-center gap-6">
-                    <div className="w-16 h-16 bg-blue-600 rounded-[1.25rem] flex items-center justify-center shrink-0 shadow-lg">
-                        <Info size={32} />
-                    </div>
-                    <div>
-                        <h4 className="text-xl font-black uppercase tracking-tight leading-none mb-2">Automatisierung</h4>
-                        <p className="text-slate-400 text-[10px] font-medium leading-relaxed uppercase tracking-widest">Alle Aufträge in diesem Feed sind bereits vom Admin geprüft und zur direkten Abholung freigegeben.</p>
-                    </div>
-                </div>
-            </div>
-
             <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] py-4">Live Synchronisierung aktiv</p>
         </div>
     );
