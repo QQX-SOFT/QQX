@@ -30,12 +30,17 @@ export default function TrackingPage() {
     const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
 
     useEffect(() => {
-        const id = localStorage.getItem("driverId");
-        if (id) {
-            setDriverId(id);
-        } else {
-            setDriverId("demo-driver-1");
-        }
+        const fetchDriverId = async () => {
+            try {
+                const { data } = await api.get("/drivers/me");
+                setDriverId(data.id);
+            } catch (e) {
+                console.error("Failed to get driver id", e);
+                const id = localStorage.getItem("driverId");
+                setDriverId(id || "demo-driver-1");
+            }
+        };
+        fetchDriverId();
     }, []);
 
     useEffect(() => {

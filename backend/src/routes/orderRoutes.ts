@@ -52,6 +52,29 @@ router.get('/quote', async (req: TenantRequest, res: Response) => {
     }
 });
 
+// GET available orders for drivers (unassigned or pending)
+router.get('/available', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+
+    if (!tenantId) {
+        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+    }
+
+    try {
+        const orders = await prisma.order.findMany({
+            where: { 
+                tenantId: tenantId as string,
+                driverId: null,
+                status: 'PENDING'
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json(orders);
+    } catch (error) {
+        res.status(500).json({ error: 'Verfügbare Aufträge konnten nicht geladen werden' });
+    }
+});
+
 // GET all orders for a tenant
 router.get('/', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;

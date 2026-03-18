@@ -70,7 +70,8 @@ router.get('/me', async (req: TenantRequest, res: Response) => {
                 ratings: {
                     take: 5,
                     orderBy: { createdAt: 'desc' }
-                }
+                },
+                documents: true
             }
         });
 
