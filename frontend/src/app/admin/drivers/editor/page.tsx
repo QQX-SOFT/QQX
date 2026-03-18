@@ -56,6 +56,16 @@ function DriverEditorForm() {
             setCheckingVat(false);
         }
     };
+    const formatIban = (val: string) => {
+        const clean = val.replace(/\s/g, '').toUpperCase();
+        return clean.match(/.{1,4}/g)?.join(' ') || clean;
+    };
+
+    const handleIbanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const clean = e.target.value.replace(/\s/g, '').toUpperCase();
+        if (clean.length > 34) return; // Full IBAN with formats
+        setFormData({ ...formData, iban: formatIban(clean) });
+    };
 
     const docRequirements = {
         ECHTER_DIENSTNEHMER: [
@@ -112,6 +122,11 @@ function DriverEditorForm() {
                 isKleinunternehmer: data.isKleinunternehmer || false,
                 password: ""
             });
+
+            // Set formatted IBAN
+            if (data.iban) {
+                setFormData(prev => ({ ...prev, iban: formatIban(data.iban) }));
+            }
         } catch (error) {
             console.error("Failed to load driver", error);
         } finally {
@@ -122,14 +137,18 @@ function DriverEditorForm() {
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
         setSaving(true);
+        const payload = { 
+            ...formData,
+            iban: formData.iban.replace(/\s/g, '') // strip spaces for API
+        };
+
         try {
             if (id) {
-                const payload = { ...formData };
                 // Using patch to update driver. The API might have specific fields expected.
                 await api.patch(`/drivers/${id}`, payload);
                 router.push(`/admin/drivers/${id}`);
             } else {
-                await api.post("/drivers", formData);
+                await api.post("/drivers", payload);
                 router.push("/admin/drivers");
             }
             router.refresh();
@@ -308,7 +327,7 @@ function DriverEditorForm() {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">IBAN *</label>
-                                <input type="text" placeholder="AT..." required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.iban} onChange={e => setFormData({ ...formData, iban: e.target.value })} />
+                                <input type="text" placeholder="AT..." required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.iban} onChange={handleIbanChange} />
                             </div>
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">BIC</label>
