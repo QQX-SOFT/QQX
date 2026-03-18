@@ -43,6 +43,24 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     try {
         const validatedData = vehicleSchema.parse(req.body);
 
+        // Check Plan Limits
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId! },
+            include: { plan: true }
+        });
+
+        if (tenant?.plan) {
+            const vehicleCount = await prisma.vehicle.count({
+                where: { tenantId: tenantId! }
+            });
+
+            if (vehicleCount >= tenant.plan.maxVehicles) {
+                return res.status(403).json({ 
+                    error: `Tarif-Limit erreicht: Ihr Tarif erlaubt maximal ${tenant.plan.maxVehicles} Fahrzeuge.` 
+                });
+            }
+        }
+
         const vehicle = await prisma.vehicle.create({
             data: {
                 ...validatedData,

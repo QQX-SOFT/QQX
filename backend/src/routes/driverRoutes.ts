@@ -87,6 +87,24 @@ router.post('/', async (req: TenantRequest, res: Response) => {
     try {
         const validatedData = driverSchema.parse(req.body);
 
+        // Check Plan Limits (Users)
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId! as string },
+            include: { plan: true }
+        });
+
+        if (tenant?.plan) {
+            const userCount = await prisma.user.count({
+                where: { tenantId: tenantId! as string }
+            });
+
+            if (userCount >= tenant.plan.maxUsers) {
+                return res.status(403).json({ 
+                    error: `Tarif-Limit erreicht: Ihr Tarif erlaubt maximal ${tenant.plan.maxUsers} Benutzer.` 
+                });
+            }
+        }
+
         // Map frontend employmentType to Prisma DriverType
         let prismaType: 'EMPLOYED' | 'FREELANCE' | 'COMMERCIAL' = 'EMPLOYED';
         if (validatedData.employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';

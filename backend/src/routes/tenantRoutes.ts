@@ -186,6 +186,24 @@ router.post('/:id/admins', async (req: express.Request, res: Response) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
+        // Check Plan Limits (Users)
+        const tenant = await prisma.tenant.findUnique({
+            where: { id },
+            include: { plan: true }
+        });
+
+        if (tenant?.plan) {
+            const userCount = await prisma.user.count({
+                where: { tenantId: id }
+            });
+
+            if (userCount >= tenant.plan.maxUsers) {
+                return res.status(403).json({ 
+                    error: `Tarif-Limit erreicht: Ihr Tarif erlaubt maximal ${tenant.plan.maxUsers} Benutzer.` 
+                });
+            }
+        }
+
         const existing = await prisma.user.findFirst({ where: { email } });
         if (existing) {
             return res.status(400).json({ error: 'Email already in use' });
