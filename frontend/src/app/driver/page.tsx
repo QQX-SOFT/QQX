@@ -30,10 +30,27 @@ export default function DriverDashboard() {
     });
     const [loading, setLoading] = useState(true);
     const [activeShift, setActiveShift] = useState<any>(null);
+    const [driverLocation, setDriverLocation] = useState<{lat: number, lng: number} | null>(null);
 
     useEffect(() => {
+        const lat = localStorage.getItem("driver_lat");
+        const lng = localStorage.getItem("driver_lng");
+        if (lat && lng) {
+            setDriverLocation({ lat: parseFloat(lat), lng: parseFloat(lng) });
+        }
         fetchDashboardData();
     }, []);
+
+    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371; // km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    };
 
     const fetchDashboardData = async () => {
         try {
@@ -148,24 +165,38 @@ export default function DriverDashboard() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {orders.map((order: any) => (
-                            <Link href="/driver/orders" key={order.id} className="block bg-white p-4 rounded-xl border border-slate-100 hover:border-blue-100 transition">
-                                <div className="flex justify-between items-start">
-                                    <div className="flex gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400">
-                                            <MapPin size={16} />
+                        {orders.map((order: any) => {
+                            const sellerName = order.senderName || order.tenant?.name || "Lokal / Partner";
+                            const fee = order.amount ? order.amount.toFixed(2) : "0.00";
+                            
+                            let distanceStr = "- km";
+                            if (driverLocation && order.lat && order.lng) {
+                                distanceStr = `${getDistance(driverLocation.lat, driverLocation.lng, order.lat, order.lng).toFixed(1)} km`;
+                            }
+
+                            return (
+                                <Link href={`/driver/orders?select=${order.id}`} key={order.id} className="block bg-white p-4 rounded-xl border border-slate-100 hover:border-blue-100 transition shadow-sm">
+                                    <div className="flex justify-between items-center">
+                                        <div className="flex gap-4 items-center">
+                                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                                                <MapPin size={20} className="fill-blue-100" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-slate-800 truncate max-w-[160px] leading-tight">{sellerName}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md tracking-widest">{distanceStr}</span>
+                                                    <span className="text-[10px] font-medium text-slate-400 capitalize truncate max-w-[100px]">{order.address}</span>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-800 truncate max-w-[180px]">{order.address}</p>
-                                            <p className="text-[10px] font-bold text-slate-400">Netto Verdienst</p>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase mb-0.5">Umsatz</span>
+                                            <p className="font-black text-green-600 text-base">€{fee}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <p className="font-black text-green-600 text-sm">€{(order.amount * 0.4).toFixed(2)}</p>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
+                                </Link>
+                            );
+                        })}
                     </div>
                 )}
             </div>

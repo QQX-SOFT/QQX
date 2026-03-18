@@ -56,6 +56,17 @@ export default function DriverOrdersPage() {
         fetchDashboardAndOrders();
     }, [filter]);
 
+    useEffect(() => {
+        const selectId = searchParams.get("select");
+        if (selectId && orders.length > 0 && !selectedOrder) {
+            const found = orders.find(o => o.id === selectId);
+            if (found) {
+                setSelectedOrder(found);
+            }
+        }
+    }, [orders, searchParams]);
+
+
     const fetchDashboardAndOrders = async () => {
         setLoading(true);
         try {
