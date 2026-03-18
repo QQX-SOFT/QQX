@@ -238,7 +238,6 @@ export default function DriverProfilePage() {
 
             {/* Logout Footer Section */}
             <div className="pt-10 flex flex-col items-center gap-6">
-                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">QQX Driver Version 1.0.4 - Build 2802</p>
                 <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 px-8 py-4 bg-white border border-slate-100 rounded-[2rem] text-slate-500 font-bold hover:bg-red-50 hover:text-red-500 transition duration-300 shadow-sm active:scale-95"
