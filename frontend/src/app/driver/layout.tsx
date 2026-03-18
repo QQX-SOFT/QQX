@@ -4,7 +4,7 @@ import React from "react";
 
 import { MapPin, Clock, User, LogOut, LayoutDashboard, MessageSquare, Wallet, Package, Key, Menu, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,8 +12,6 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const filter = searchParams ? searchParams.get("filter") : null;
     const [authLoading, setAuthLoading] = useState(true);
     const [locationAllowed, setLocationAllowed] = useState<boolean | 'loading'>('loading');
     const [menuOpen, setMenuOpen] = useState(false);
@@ -150,16 +148,9 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                                 </div>
                             </div>
 
-                            <nav className="flex-1 space-y-2 overflow-y-auto pr-2">
-                                <MenuLink href="/driver" icon={<LayoutDashboard size={18} />} label="Dashboard" sublabel="Schicht & Aufträge" active={pathname === "/driver"} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/orders" icon={<Package size={18} />} label="Verfügbare Aufträge" active={pathname === "/driver/orders" && !filter} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/orders?filter=accepted" icon={<Package size={18} />} label="Angenommene Aufträge" active={pathname.includes("/orders") && filter === "accepted"} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/orders?filter=completed" icon={<CheckCircle2 size={18} />} label="Absolvierte Aufträge" active={pathname.includes("completed") || filter === "completed"} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/messages" icon={<MessageSquare size={18} />} label="Nachrichten" active={pathname === "/driver/messages"} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/rentals" icon={<Key size={18} />} label="Mieten" active={pathname === "/driver/rentals"} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/profile" icon={<User size={18} />} label="Profil" active={pathname === "/driver/profile"} onClick={() => setMenuOpen(false)} />
-                                <MenuLink href="/driver/notifications" icon={<Package size={18} />} label="Benachrichtigungen" active={pathname === "/driver/notifications"} onClick={() => setMenuOpen(false)} />
-                            </nav>
+                            <Suspense fallback={<nav className="flex-1 space-y-2 overflow-y-auto pr-2" />}>
+                                <NavigationLinks setMenuOpen={setMenuOpen} />
+                            </Suspense>
 
                             <button className="w-full mt-auto p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition duration-300">
                                 <LogOut size={16} /> Abmelden
@@ -197,3 +188,22 @@ const MenuLink = ({ href, icon, label, sublabel, active, onClick }: { href: stri
         </div>
     </Link>
 );
+
+function NavigationLinks({ setMenuOpen }: { setMenuOpen: (arg: boolean) => void }) {
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const filter = searchParams ? searchParams.get("filter") : null;
+
+    return (
+        <nav className="flex-1 space-y-2 overflow-y-auto pr-2">
+            <MenuLink href="/driver" icon={<LayoutDashboard size={18} />} label="Dashboard" sublabel="Schicht & Aufträge" active={pathname === "/driver"} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/orders" icon={<Package size={18} />} label="Verfügbare Aufträge" active={pathname === "/driver/orders" && !filter} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/orders?filter=accepted" icon={<Package size={18} />} label="Angenommene Aufträge" active={pathname.includes("/orders") && filter === "accepted"} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/orders?filter=completed" icon={<CheckCircle2 size={18} />} label="Absolvierte Aufträge" active={pathname.includes("completed") || filter === "completed"} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/messages" icon={<MessageSquare size={18} />} label="Nachrichten" active={pathname === "/driver/messages"} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/rentals" icon={<Key size={18} />} label="Mieten" active={pathname === "/driver/rentals"} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/profile" icon={<User size={18} />} label="Profil" active={pathname === "/driver/profile"} onClick={() => setMenuOpen(false)} />
+        </nav>
+    );
+}
+
