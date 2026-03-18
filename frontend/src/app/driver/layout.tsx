@@ -2,11 +2,33 @@
 
 import { MapPin, Clock, User, LogOut, LayoutDashboard, MessageSquare, Wallet, Package, Key } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const [authLoading, setAuthLoading] = useState(true);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        const role = localStorage.getItem("role") || document.cookie.split('; ').find(row => row.startsWith('role='))?.split('=')[1];
+        
+        if (!role || role !== 'DRIVER') {
+            router.push('/login');
+        } else {
+            setAuthLoading(false);
+        }
+    }, [pathname, router]);
+
+    if (authLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col">
