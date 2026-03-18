@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { CreditCard, CheckCircle2, Clock, Search, ExternalLink, ShieldCheck, XCircle } from "lucide-react";
 
@@ -13,8 +14,8 @@ interface Subscription {
 }
 
 export default function SuperAdminBilling() {
+    const router = useRouter();
     const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-    const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -110,7 +111,7 @@ export default function SuperAdminBilling() {
                                         </td>
                                         <td className="p-6">
                                             <button 
-                                                onClick={() => setSelectedSub(sub)}
+                                                onClick={() => router.push(`/superadmin/billing/${sub.id}`)}
                                                 className="p-2 bg-slate-100 dark:bg-white/5 rounded-xl text-slate-400 hover:text-indigo-500 transition"
                                             >
                                                 <ExternalLink size={18} />
@@ -124,72 +125,6 @@ export default function SuperAdminBilling() {
                 </div>
             </div>
 
-            {selectedSub && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-[#0f111a] rounded-[3rem] p-10 max-w-2xl w-full border border-slate-200 dark:border-white/5 shadow-2xl space-y-8 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Kunden Details</h3>
-                            <button onClick={() => setSelectedSub(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition">
-                                <XCircle size={24} />
-                            </button>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Mandant</label>
-                                <p className="text-lg font-black text-slate-900 dark:text-white">{selectedSub.tenant.name}</p>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Subdomain</label>
-                                <p className="text-sm font-bold text-indigo-500">{selectedSub.tenant.subdomain}.qqxsoft.com</p>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vertragsstart</label>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    {new Date(selectedSub.createdAt).toLocaleDateString('de-DE')}
-                                </p>
-                            </div>
-                            <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Abrechnung</label>
-                                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Monatlich (149.90 €)</p>
-                            </div>
-                        </div>
-
-                        {/* Simulated Invoice / Balance Data */}
-                        <div className="border-t border-slate-100 dark:border-white/5 pt-6">
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">Rechnungshistorie & Saldo</h4>
-                            <div className="space-y-3">
-                                <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl flex justify-between items-center">
-                                    <div>
-                                        <p className="text-sm font-bold">RE-2026-03</p>
-                                        <p className="text-xs text-slate-400">01.03.2026</p>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm font-black">149.90 €</span>
-                                        <span className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">Bezahlt</span>
-                                    </div>
-                                </div>
-                                <div className="bg-slate-50 dark:bg-white/5 p-4 rounded-xl flex justify-between items-center">
-                                    <div>
-                                        <p className="text-sm font-bold">RE-2026-02</p>
-                                        <p className="text-xs text-slate-400">01.02.2026</p>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                        <span className="text-sm font-black">149.90 €</span>
-                                        <span className="bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full text-[10px] font-black uppercase">Bezahlt</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="pt-4 flex justify-end">
-                            <button onClick={() => setSelectedSub(null)} className="px-6 py-3 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 rounded-2xl text-sm font-bold transition">
-                                Schließen
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

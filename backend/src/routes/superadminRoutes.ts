@@ -33,8 +33,8 @@ router.get('/stats', async (req: Request, res: Response) => {
             totalUsers,
             totalVehicles,
             activeSupscriptions,
-            mrr: mrr.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }),
-            arr: arr.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }),
+            mrr: "0,00 €",
+            arr: "0,00 €",
             uptime: "99.98%",
             latency: "12ms"
         });
@@ -49,8 +49,14 @@ router.get('/stats', async (req: Request, res: Response) => {
 router.get('/users', async (req: Request, res: Response) => {
     try {
         const users = await prisma.user.findMany({
-            where: { role: 'SUPER_ADMIN' },
-            select: { id: true, name: true, email: true, role: true, createdAt: true }
+            select: { 
+                id: true, 
+                name: true, 
+                email: true, 
+                role: true, 
+                createdAt: true,
+                tenant: { select: { name: true } }
+            }
         });
         res.json(users);
     } catch (error) {
@@ -267,13 +273,43 @@ router.get('/subscriptions', async (req: Request, res: Response) => {
         const subscriptions = await prisma.subscription.findMany({
             include: {
                 tenant: { select: { name: true, subdomain: true } },
-                // plan: true // Plan relation might need fixing if not explicitly linked in schema beyond planId
             },
             orderBy: { createdAt: 'desc' }
         });
         res.json(subscriptions);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch subscriptions' });
+    }
+});
+
+// GET Single Subscription Details with Tenant & Plan
+router.get('/subscriptions/:id', async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const subscription = await prisma.subscription.findUnique({
+            where: { id },
+            include: {
+                tenant: true,
+            }
+        });
+
+        if (!subscription) {
+            return res.status(404).json({ error: 'Subscription not found' });
+        }
+
+        let plan = null;
+        if (subscription.tenant && subscription.tenant.planId) {
+            plan = await prisma.plan.findUnique({
+                where: { id: subscription.tenant.planId }
+            });
+        }
+
+        res.json({
+            ...subscription,
+            plan
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch subscription details' });
     }
 });
 
