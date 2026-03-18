@@ -39,6 +39,24 @@ function DriverEditorForm() {
         password: ""
     });
 
+    const [checkingVat, setCheckingVat] = useState(false);
+    const [vatResult, setVatResult] = useState<{ valid: boolean; name?: string; address?: string } | null>(null);
+
+    const checkVat = async () => {
+        if (!formData.taxId) return alert("Bitte UID eingeben!");
+        setCheckingVat(true);
+        setVatResult(null);
+        try {
+            const { data } = await api.post("/vat/validate", { vatNumber: formData.taxId });
+            setVatResult(data);
+        } catch (error: any) {
+            console.error("Failed to check VAT", error);
+            setVatResult({ valid: false });
+        } finally {
+            setCheckingVat(false);
+        }
+    };
+
     const docRequirements = {
         ECHTER_DIENSTNEHMER: [
             "Lichtbildausweis/Reisepass",
@@ -144,7 +162,7 @@ function DriverEditorForm() {
                             formData.employmentType === "ECHTER_DIENSTNEHMER" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        Echter DN
+                        Dienstnehmer
                     </button>
                     <button
                         type="button"
@@ -154,7 +172,7 @@ function DriverEditorForm() {
                             formData.employmentType === "FREIER_DIENSTNEHMER" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        Freier DN
+                        Freie Dienstnehmer
                     </button>
                     <button
                         type="button"
@@ -164,7 +182,7 @@ function DriverEditorForm() {
                             formData.employmentType === "SELBSTSTANDIG" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
                         )}
                     >
-                        Selbstständig
+                        SFU = Selbstfahrende Unternehmer
                     </button>
                 </div>
 
@@ -241,7 +259,29 @@ function DriverEditorForm() {
                             {(formData.employmentType === "SELBSTSTANDIG" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
                                 <div>
                                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Steuer-ID / UID *</label>
-                                    <input type="text" placeholder="Steuernummer / UID" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.taxId} onChange={e => setFormData({ ...formData, taxId: e.target.value })} />
+                                    <div className="flex gap-2">
+                                        <input type="text" placeholder="Steuernummer / UID (z.B. ATU...)" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.taxId} onChange={e => setFormData({ ...formData, taxId: e.target.value })} />
+                                        {formData.employmentType === "SELBSTSTANDIG" && (
+                                            <button type="button" onClick={checkVat} disabled={checkingVat} className="bg-blue-600 text-white font-bold px-6 py-4 rounded-2xl hover:bg-blue-700 transition flex items-center gap-2">
+                                                {checkingVat ? <Loader2 className="animate-spin" size={16} /> : "Prüfen"}
+                                            </button>
+                                        )}
+                                    </div>
+                                    {vatResult && (
+                                        <div className={cn("mt-2 p-4 rounded-2xl border text-xs font-bold", vatResult.valid ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")}>
+                                            {vatResult.valid ? (
+                                                <div className="space-y-1">
+                                                    <p className="font-black text-sm">✓ UID Gültig</p>
+                                                    <p><span className="text-slate-500">Firma:</span> {vatResult.name}</p>
+                                                    <p><span className="text-slate-500">Adresse:</span> {vatResult.address}</p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-black text-sm">✗ Ungültige UID / Fehler bei VIES</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
