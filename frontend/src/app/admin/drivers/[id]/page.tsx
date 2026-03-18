@@ -139,7 +139,7 @@ export default function DriverProfilePage() {
     return (
         <div className="space-y-8">
             {/* Nav Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => router.back()}
@@ -154,7 +154,7 @@ export default function DriverProfilePage() {
                 </div>
                 <Link
                     href={`/admin/drivers/editor?id=${driver.id}`}
-                    className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded-2xl font-black text-sm transition"
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded-2xl font-black text-sm transition"
                 >
                     <Edit size={16} />
                     Profil bearbeiten
@@ -164,7 +164,7 @@ export default function DriverProfilePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Profile Info */}
                 <div className="lg:col-span-1 space-y-8">
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-xl shadow-blue-50/20 text-center relative overflow-hidden">
+                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-xl shadow-blue-50/20 text-center relative overflow-hidden">
                         {/* Status Toggle Button */}
                         <button
                             onClick={handleToggleStatus}
@@ -219,7 +219,7 @@ export default function DriverProfilePage() {
                     </div>
 
                     {/* Stats Widget */}
-                    <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden group">
+                    <div className="bg-slate-900 rounded-[2.5rem] p-6 sm:p-8 text-white relative overflow-hidden group">
                         <TrendingUp className="absolute -right-4 -bottom-4 text-white/5 group-hover:scale-125 transition-transform duration-700" size={120} />
                         <div className="relative z-10">
                             <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mb-4">Guthaben (Wallet)</p>
@@ -232,7 +232,7 @@ export default function DriverProfilePage() {
                     </div>
 
                     {/* Address & Banking Widget */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm space-y-6">
+                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6">
                         <div>
                             <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
                                 <Building2 size={14} /> Adresse
@@ -256,7 +256,7 @@ export default function DriverProfilePage() {
                 <div className="lg:col-span-2 space-y-8">
                     {/* Compliance Overview */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
                                     <Hash size={20} />
@@ -274,7 +274,7 @@ export default function DriverProfilePage() {
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                        <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
                                     <Star size={20} />
@@ -296,15 +296,15 @@ export default function DriverProfilePage() {
                     </div>
 
                     {/* Documents Section */}
-                    <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-                        <div className="flex items-center justify-between mb-8">
+                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
                             <div>
                                 <h3 className="text-2xl font-black text-slate-900">Dokumente & Compliance</h3>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Prüfung der gesetzlichen Unterlagen</p>
                             </div>
                             <button
                                 onClick={() => setShowUploadModal(true)}
-                                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 transition shadow-lg shadow-blue-100"
+                                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 transition shadow-lg shadow-blue-100 w-full sm:w-auto"
                             >
                                 <Plus size={16} />
                                 Neu Hochladen
