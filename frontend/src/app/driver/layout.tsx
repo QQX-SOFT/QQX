@@ -9,8 +9,7 @@ import { cn } from "@/lib/utils";
 export default function DriverLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const router = useRouter();
-    const [authLoading, setAuthLoading] = useState(true);
-    const [locationAllowed, setLocationAllowed] = useState<boolean | 'loading'>('loading');
+    const [locationAllowed, setLocationAllowed] = useState<boolean | 'loading'>(true);
 
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
@@ -38,13 +37,25 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
             return;
         }
 
+        if (navigator.permissions && navigator.permissions.query) {
+            navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+                if (result.state === 'granted') {
+                    setLocationAllowed(true);
+                }
+            }).catch(() => {});
+        }
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLocationAllowed(true);
             },
             (error) => {
-                setLocationAllowed(false);
-            }
+                // Only block if explicitly denied
+                if (error.code === error.PERMISSION_DENIED) {
+                    setLocationAllowed(false);
+                }
+            },
+            { timeout: 10000, maximumAge: 60000 }
         );
     };
 
@@ -62,14 +73,6 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         );
     }
 
-    if (locationAllowed === 'loading') {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-4" />
-                <p className="text-sm font-bold text-slate-500">Standortzugriff wird geprüft...</p>
-            </div>
-        );
-    }
 
     if (locationAllowed === false) {
         return (
