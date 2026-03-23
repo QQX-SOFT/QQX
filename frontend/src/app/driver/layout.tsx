@@ -197,6 +197,7 @@ function NavigationLinks({ setMenuOpen }: { setMenuOpen: (arg: boolean) => void 
     return (
         <nav className="flex-1 space-y-2 overflow-y-auto pr-2">
             <MenuLink href="/driver" icon={<LayoutDashboard size={18} />} label="Dashboard" sublabel="Schicht & Aufträge" active={pathname === "/driver"} onClick={() => setMenuOpen(false)} />
+            <MenuLink href="/driver/stats" icon={<Clock size={18} />} label="Zeitübersicht" active={pathname === "/driver/stats"} onClick={() => setMenuOpen(false)} />
             <MenuLink href="/driver/orders" icon={<Package size={18} />} label="Verfügbare Aufträge" active={pathname === "/driver/orders" && !filter} onClick={() => setMenuOpen(false)} />
             <MenuLink href="/driver/orders?filter=accepted" icon={<Package size={18} />} label="Angenommene Aufträge" active={pathname.includes("/orders") && filter === "accepted"} onClick={() => setMenuOpen(false)} />
             <MenuLink href="/driver/orders?filter=completed" icon={<CheckCircle2 size={18} />} label="Absolvierte Aufträge" active={pathname.includes("completed") || filter === "completed"} onClick={() => setMenuOpen(false)} />
