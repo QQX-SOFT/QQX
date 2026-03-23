@@ -161,15 +161,7 @@ export default function DriverOrdersPage() {
             </header>
 
             {/* Sorting Tabs - Only for Available Market */}
-            {filter === "accepted" && (
-                                <button 
-                                    onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedOrder.address)}`, '_blank')}
-                                    className="w-full py-5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-3 mb-3 transition-all duration-300"
-                                >
-                                    <Navigation size={18} className="fill-white" /> Route Starten
-                                </button>
-                            )}
-                            {!filter && (
+            {!filter && (
                 <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
                     <button 
                         onClick={() => setSortBy('money')} 
@@ -270,6 +262,14 @@ export default function DriverOrdersPage() {
                                              selectedOrder.status === "ON_THE_WAY" ? "Auf dem Weg" : 
                                              selectedOrder.status === "DELIVERED" ? "Zugestellt" : selectedOrder.status}
                                          </p>
+                                          {(selectedOrder.status === "ACCEPTED" || selectedOrder.status === "ON_THE_WAY") && (
+                                              <button 
+                                                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedOrder.address)}`, '_blank')}
+                                                  className="mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition-all duration-300 w-fit"
+                                              >
+                                                  <Navigation size={13} className="fill-white" /> Route Starten
+                                              </button>
+                                          )}
                                     </div>
                                 </div>
                             </div>
