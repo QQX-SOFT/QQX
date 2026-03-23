@@ -248,6 +248,119 @@ export default function DriverOrdersPage() {
 
             {/* Sorting Tabs - Only for Available Market */}
             {!filter && (
+                <div className="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
+                    <button 
+                        onClick={() => setSortBy('money')} 
+                        className={cn("flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition duration-300 flex items-center justify-center gap-1", sortBy === 'money' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500")}
+                    >
+                        💰 Nach Geld
+                    </button>
+                    <button 
+                        onClick={() => setSortBy('distance')} 
+                        className={cn("flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition duration-300 flex items-center justify-center gap-1", sortBy === 'distance' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500")}
+                    >
+                        📍 Nach Entfernung
+                    </button>
+                </div>
+            )}
+
+            {/* Orders Feed */}
+            <div className="space-y-4">
+                {loading ? (
+                    Array(3).fill(0).map((_, i) => (
+                        <div key={i} className="bg-white p-6 rounded-2xl border border-slate-100 animate-pulse h-32" />
+                    ))
+                ) : getSortedOrders().length === 0 ? (
+                    <div className="bg-white p-12 rounded-3xl border border-slate-100 text-center space-y-4">
+                        <Package size={40} className="mx-auto text-slate-300" />
+                        <h3 className="text-sm font-black text-slate-900 uppercase">Nichts gefunden</h3>
+                    </div>
+                ) : getSortedOrders().map((order, i) => (
+                    <motion.div
+                        key={order.id}
+                        onClick={() => setSelectedOrder(order)}
+                        className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-blue-200 transition duration-300 cursor-pointer"
+                    >
+                        <div className="flex justify-between items-start">
+                            <div className="flex gap-3">
+                                <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                                    <Package size={20} />
+                                </div>
+                                <div>
+                                    <h4 className="font-black text-slate-900 text-sm">{(order as any).senderName || (order as any).tenant?.name || "Abholung"}</h4>
+                                    <p className="text-xs font-medium text-slate-500 truncate max-w-[200px]">{order.address}</p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-green-600 font-extrabold">€{(order.amount * 0.4).toFixed(2)}</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Detail Modal Overlay */}
+            <AnimatePresence>
+                {selectedOrder && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSelectedOrder(null)} className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50" />
+                        <motion.div initial={{ y: "100%" }} animate={{ y: "0" }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed bottom-0 inset-x-0 bg-white rounded-t-[3rem] p-6 z-50 shadow-2xl max-h-[85vh] overflow-y-auto">
+                            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6" />
+                            
+                            <div className="flex justify-between items-start mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white">
+                                        <Package size={24} />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Detailauftrag</p>
+                                        <h2 className="text-xl font-black text-slate-900">{(selectedOrder as any).senderName || (selectedOrder as any).tenant?.name || "Abholung"}</h2>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Netto Verdienst</p>
+                                    <h3 className="text-2xl font-black text-green-600">€{(selectedOrder.amount * 0.4).toFixed(2)}</h3>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
+                                <div className="flex gap-3">
+                                    <MapPin size={18} className="text-slate-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lieferadresse</p>
+                                        <p className="text-sm font-bold text-slate-800">{selectedOrder.address}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <User size={18} className="text-slate-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Kunde</p>
+                                        <p className="text-sm font-bold text-slate-800">{(selectedOrder as any).customerName || 'Unbekannt'}</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3">
+                                    <Info size={18} className="text-slate-400 shrink-0 mt-0.5" />
+                                    <div>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</p>
+                                        <p className="text-sm font-bold text-slate-800">
+                                            {selectedOrder.status === "PENDING" ? "Wartend" : 
+                                             selectedOrder.status === "ACCEPTED" ? "Angenommen" : 
+                                             selectedOrder.status === "ON_THE_WAY" ? "Auf dem Weg" : 
+                                             selectedOrder.status === "DELIVERED" ? "Zugestellt" : selectedOrder.status}
+                                         </p>
+                                          {(selectedOrder.status === "ACCEPTED" || selectedOrder.status === "ON_THE_WAY") && (
+                                              <button 
+                                                  onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedOrder.address)}`, '_blank')}
+                                                  className="mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 transition-all duration-300 w-fit"
+                                              >
+                                                  <Navigation size={13} className="fill-white" /> Route Starten
+                                              </button>
+                                          )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {!filter && (
                                 <button 
                                     onClick={() => handleAcceptOrder(selectedOrder.id)}
                                     className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-500/20 mb-3 transition-all duration-300"
