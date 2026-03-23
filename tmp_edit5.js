@@ -1,79 +1,29 @@
-"use client";
+const fs = require('fs');
+const file = 'c:\\Users\\Anwender\\Downloads\\QQX\\frontend\\src\\app\\driver\\orders\\page.tsx';
+let content = fs.readFileSync(file, 'utf8');
 
-import { useState, useEffect, useRef } from "react";
-import {
-    Package,
-    Truck,
-    MapPin,
-    Clock,
-    CheckCircle2,
-    ArrowRight,
-    Navigation,
-    Info,
-    Calendar,
-    ArrowLeft,
-    Check,
-    X,
-    Loader2,
-    ShieldCheck,
-    User
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
-import api from "@/lib/api";
-import { useSearchParams } from "next/navigation";
+// 1. Add useRef to imports
+content = content.replace(
+    /import \{ useState, useEffect \} from "react";/,
+    `import { useState, useEffect, useRef } from "react";`
+);
 
-type Order = {
-    id: string;
-    customerName: string;
-    address: string;
-    amount: number;
-    status: "PENDING" | "ACCEPTED" | "ON_THE_WAY" | "DELIVERED";
-    createdAt: string;
-};
-
-export default function DriverOrdersPage() {
-    const [orders, setOrders] = useState<Order[]>([]);
+// 2. Add full hooks list inside component header
+const targetState = `const [orders, setOrders] = useState<Order[]>([]);`;
+const appendState = `const [orders, setOrders] = useState<Order[]>([]);
     const [isSigning, setIsSigning] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [driverId, setDriverId] = useState<string | null>(null);
-    const [sortBy, setSortBy] = useState<'money' | 'distance'>('distance');
-    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-    const [driverLocation, setDriverLocation] = useState<{lat: number, lng: number} | null>(null);
+    const [isDrawing, setIsDrawing] = useState(false);`;
 
-    const searchParams = useSearchParams();
-    const filter = searchParams.get("filter");
+if (!content.includes('const [isSigning')) {
+    content = content.replace(targetState, appendState);
+}
 
-    useEffect(() => {
-        const lat = localStorage.getItem("driver_lat");
-        const lng = localStorage.getItem("driver_lng");
-        if (lat && lng) {
-            setDriverLocation({ lat: parseFloat(lat), lng: parseFloat(lng) });
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchDashboardAndOrders();
-    }, [filter]);
-
-    useEffect(() => {
-        const selectId = searchParams.get("select");
-        if (selectId && orders.length > 0 && !selectedOrder) {
-            const found = orders.find(o => o.id === selectId);
-            if (found) {
-                setSelectedOrder(found);
-            }
-        }
-    }, [orders, searchParams]);
-
-
-    
+// 3. Add helper methods above fetchDashboardAndOrders
+const helperMethods = `
     const handleStartOrder = async (orderId: string) => {
         try {
-            await api.patch(`/orders/${orderId}/status`, { status: 'ON_THE_WAY' });
+            await api.patch(\`/orders/\${orderId}/status\`, { status: 'ON_THE_WAY' });
             setSelectedOrder((prev: any) => prev ? { ...prev, status: 'ON_THE_WAY' } : null);
             setOrders((prev: any) => prev.map((o: any) => o.id === orderId ? { ...o, status: 'ON_THE_WAY' } : o));
             alert("Fahrt gestartet! Viel Erfolg.");
@@ -88,7 +38,7 @@ export default function DriverOrdersPage() {
                 alert("Bitte unterschreiben Sie, um den Auftrag zu beenden.");
                 return;
             }
-            await api.patch(`/orders/${orderId}/status`, { 
+            await api.patch(\`/orders/\${orderId}/status\`, { 
                 status: 'DELIVERED',
                 deliverySig: signature 
             });
@@ -152,102 +102,15 @@ export default function DriverOrdersPage() {
             }
         }
     };
+`;
 
-    const fetchDashboardAndOrders = async () => {
-        setLoading(true);
-        try {
-            // 1. Fetch current driver ID
-            const meRes = await api.get("/drivers/me");
-            const meId = meRes.data.id;
-            setDriverId(meId);
+if (!content.includes('const handleStartOrder')) {
+    content = content.replace('const fetchDashboardAndOrders = async () => {', helperMethods + '\n    const fetchDashboardAndOrders = async () => {');
+}
 
-            // 2. Fetch Orders based on Filter Type
-            if (!filter) {
-                // Default: Market/Available orders
-                const { data } = await api.get("/orders/available");
-                setOrders(data);
-            } else {
-                // Fetch ALL Tenant Orders and apply JS filter
-                const { data } = await api.get("/orders");
-                if (filter === "accepted") {
-                    setOrders(data.filter((o: any) => o.driverId === meId && (o.status === "ACCEPTED" || o.status === "ON_THE_WAY")));
-                } else if (filter === "completed") {
-                    setOrders(data.filter((o: any) => o.driverId === meId && o.status === "DELIVERED"));
-                }
-            }
-        } catch (e) {
-            console.error("Failed to fetch available orders", e);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleAcceptOrder = async (id: string) => {
-        try {
-            await api.patch(`/orders/${id}/assign`, { driverId });
-            setOrders(prev => prev.filter(o => o.id !== id));
-            setSelectedOrder(null); // Close modal if open
-            alert("Auftrag erfolgreich angenommen! Er wird nun in deinem aktiven Bereich angezeigt.");
-        } catch (e) {
-            alert("Fehler beim Annehmen des Auftrags.");
-        }
-    };
-
-    // Simple Haversine distance calc for basic sorting
-    const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371; // km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    };
-
-    const getSortedOrders = () => {
-        let sorted = [...orders];
-        if (sortBy === 'money') {
-            sorted.sort((a, b) => b.amount - a.amount);
-        } else if (sortBy === 'distance') {
-            if (driverLocation) {
-                // If order has no lat/lng, we push it down. (Assuming order has senderLat/senderLng later, or we fallback)
-                // For now, pseudo sorting by ID or leaving as is if no coordinates are present in your Order schema.
-                // Assuming we can't do real distance without lat/lng on Order yet, we fallback to a string sort or 0.
-                sorted.sort((a: any, b: any) => {
-                    const distA = a.lat && a.lng ? getDistance(driverLocation.lat, driverLocation.lng, a.lat, a.lng) : 9999;
-                    const distB = b.lat && b.lng ? getDistance(driverLocation.lat, driverLocation.lng, b.lat, b.lng) : 9999;
-                    return distA - distB;
-                });
-            } else {
-                sorted.sort((a, b) => (a.address || "").localeCompare(b.address || ""));
-            }
-        }
-        return sorted;
-    };
-
-    return (
-        <div className="p-6 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-700 bg-slate-50 min-h-screen pb-32 font-sans">
-             {/* Header */}
-            <header className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <Link href="/driver" className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400">
-                        <ArrowLeft size={20} />
-                    </Link>
-                    <div>
-                        <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
-                            {!filter ? "Verfügbare Aufträge" : filter === "accepted" ? "Angenommene Aufträge" : "Absolvierte Aufträge"}
-                        </h1>
-                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
-                            {!filter ? "Live Marktplatz" : filter === "accepted" ? "Aktive Route" : "Historie"}
-                        </p>
-                    </div>
-                </div>
-            </header>
-
-            {/* Sorting Tabs - Only for Available Market */}
-            {!filter && (
+// 4. Update detail footer buttons
+const footerRegex = /\{!filter && \([\s\S]*?<button[\s\S]*?Auftrag Annehmen[\s\S]*?<\/button>[\s\S]*?\)\}/g;
+const replacementFooter = `{!filter && (
                                 <button 
                                     onClick={() => handleAcceptOrder(selectedOrder.id)}
                                     className="w-full py-5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-500/20 mb-3 transition-all duration-300"
@@ -274,12 +137,12 @@ export default function DriverOrdersPage() {
                                 >
                                     ✅ Auftrag Beenden
                                 </button>
-                            )}
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
-            
+                            )}`;
+
+content = content.replace(footerRegex, replacementFooter);
+
+// 5. Add Signature Modal inside AnimatePresence overlay loop at the bottom frame
+const signatureModalHtml = `
             {/* Signature Pad Modal Overlay */}
             <AnimatePresence>
                 {isSigning && selectedOrder && (
@@ -325,8 +188,13 @@ export default function DriverOrdersPage() {
                     </>
                 )}
             </AnimatePresence>
+`;
 
-            <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] py-4">Live Synchronisierung aktiv</p>
-        </div>
-    );
+// Insert signature overlay before the bottom closing tags or just before return closing tags
+if (!content.includes('Unterschrift des Kunden')) {
+    const returnRegex = /(<p className="text-center text-\[10px\] font-black text-slate-300)/g;
+    content = content.replace(returnRegex, signatureModalHtml + '\n            $1');
 }
+
+fs.writeFileSync(file, content, 'utf8');
+console.log("Full signature layout written!");
