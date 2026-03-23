@@ -201,7 +201,7 @@ export default function DriverOrdersPage() {
                                     <Package size={20} />
                                 </div>
                                 <div>
-                                    <h4 className="font-black text-slate-900 text-sm">#{order.id.split('-')[1]}</h4>
+                                    <h4 className="font-black text-slate-900 text-sm">{(order as any).senderName || (order as any).tenant?.name || "Abholung"}</h4>
                                     <p className="text-xs font-medium text-slate-500 truncate max-w-[200px]">{order.address}</p>
                                 </div>
                             </div>
@@ -228,7 +228,7 @@ export default function DriverOrdersPage() {
                                     </div>
                                     <div>
                                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Detailauftrag</p>
-                                        <h2 className="text-xl font-black text-slate-900">#{selectedOrder.id.split('-')[1]}</h2>
+                                        <h2 className="text-xl font-black text-slate-900">{(selectedOrder as any).senderName || (selectedOrder as any).tenant?.name || "Abholung"}</h2>
                                     </div>
                                 </div>
                                 <div className="text-right">
