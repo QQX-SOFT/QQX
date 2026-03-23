@@ -17,8 +17,11 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
     const [menuOpen, setMenuOpen] = useState(false);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        const role = localStorage.getItem("role") || document.cookie.split('; ').find(row => row.startsWith('role='))?.split('=')[1];
+        if (typeof window !== 'undefined' && localStorage.getItem("driver_lat")) {
+            setLocationAllowed(true); // Bypass loading immediately if we have cached coords
+        }
+        
+        const role = typeof window !== 'undefined' ? (localStorage.getItem("role") || document.cookie.split('; ').find(row => row.startsWith('role='))?.split('=')[1]) : null;
 
         if (!role || role !== 'DRIVER') {
             router.push('/login');
@@ -42,6 +45,13 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
             return;
         }
 
+        // Options for faster loading
+        const geoOptions = {
+            enableHighAccuracy: false, // Low accuracy fetches faster (cell tower)
+            timeout: 5000, 
+            maximumAge: 300000 // use cached position up to 5 mins old
+        };
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLocationAllowed(true);
@@ -49,8 +59,19 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                 localStorage.setItem("driver_lng", position.coords.longitude.toString());
             },
             (error) => {
-                setLocationAllowed(false);
-            }
+                const hasCachedCoords = !!localStorage.getItem("driver_lat");
+                
+                if (error.code === error.PERMISSION_DENIED) {
+                    setLocationAllowed(false); // explicit denial -> block
+                } else if (!hasCachedCoords) {
+                    // Position unavailable & no cache -> block or try again
+                    setLocationAllowed(false);
+                } else {
+                    // Timeout with cache -> let use app in background
+                    setLocationAllowed(true);
+                }
+            },
+            geoOptions
         );
     };
 
