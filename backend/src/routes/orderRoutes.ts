@@ -1,5 +1,5 @@
 import express, { Router, Response } from 'express';
-import { prisma } from '../index';
+import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { TenantRequest } from '../middleware/tenantMiddleware';
 import { getDistanceMatrix } from '../services/googleMaps';
