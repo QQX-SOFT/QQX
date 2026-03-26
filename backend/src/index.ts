@@ -63,8 +63,11 @@ app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-    console.log(`Backend server running on port ${PORT}`);
-});
+if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+        console.log(`Backend server running on port ${PORT}`);
+    });
+}
 
 export { prisma };
+export default app;
