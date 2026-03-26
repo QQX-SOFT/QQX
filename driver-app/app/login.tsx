@@ -6,25 +6,25 @@ import api from '../lib/api';
 export default function LoginScreen() {
   const { login } = useAuth();
   
-  const [subdomain, setSubdomain] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!subdomain || !email || !password) {
-      Alert.alert('Hata', 'Lütfen kurum kodunu, e-posta adresinizi ve şifrenizi girin.');
+    if (!email || !password) {
+      Alert.alert('Hata', 'Lütfen e-posta adresinizi ve şifrenizi girin.');
       return;
     }
 
     setLoading(true);
     try {
       const response = await api.post('/auth/login', 
-        { email, password },
-        { headers: { 'x-tenant-subdomain': subdomain } }
+        { email, password }
       );
       
+      
       const sessionUser = response.data.user;
+      const resolvedSubdomain = response.data.subdomain;
       
       if (!sessionUser || response.data.role !== 'DRIVER') {
           Alert.alert('Dikkat', 'Bu uygulama sadece Sürücü (Driver) hesapları içindir.');
@@ -32,7 +32,7 @@ export default function LoginScreen() {
           return;
       }
       
-      await login(sessionUser, subdomain);
+      await login(sessionUser, resolvedSubdomain);
     } catch (e: any) {
       console.error(e);
       Alert.alert('Giriş Başarısız', e.response?.data?.error || 'Kullanıcı adı veya şifre yanlış.');
@@ -56,17 +56,6 @@ export default function LoginScreen() {
         </View>
 
         <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Kurum Kodu (Sistem)</Text>
-            <TextInput 
-              style={styles.input}
-              placeholder="Örn: sirketim"
-              value={subdomain}
-              onChangeText={setSubdomain}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>E-Posta</Text>

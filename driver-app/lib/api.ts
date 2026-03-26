@@ -2,8 +2,13 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// In production, point this to your Vercel backend URL (e.g. https://qqx-api.vercel.app/api)
-const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001';
+import Constants from 'expo-constants';
+
+// Dynamically get the IP address of your computer running the Expo packager
+const debuggerHost = Constants.expoConfig?.hostUri;
+const IP = debuggerHost ? debuggerHost.split(':')[0] : 'localhost';
+
+const API_URL = `http://${IP}:3001`;
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,

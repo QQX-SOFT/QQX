@@ -31,16 +31,19 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
 
             // Check tenant context if not SUPER_ADMIN
             if (user.role !== 'SUPER_ADMIN') {
-                if (!user.tenant || user.tenant.subdomain !== subdomain) {
+                if (subdomain && (!user.tenant || user.tenant.subdomain !== subdomain)) {
                     return res.status(401).json({ error: 'Dieser Benutzer gehört nicht zu dieser App/Instanz.' });
                 }
             }
+
+            const resolvedSubdomain = user.tenant?.subdomain || subdomain || '';
 
             const { password: _, ...userWithoutPassword } = user;
             return res.json({
                 message: 'Login erfolgreich',
                 user: userWithoutPassword,
-                role: user.role
+                role: user.role,
+                subdomain: resolvedSubdomain
             });
         }
 
