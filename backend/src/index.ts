@@ -32,7 +32,22 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// CORS - allow all origins explicitly
+app.use(cors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-subdomain', 'x-user-id'],
+    credentials: true,
+}));
+
+// Handle preflight OPTIONS for all routes (Vercel serverless compatibility)
+app.options('*', cors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-subdomain', 'x-user-id'],
+    credentials: true,
+}));
+
 app.use(express.json());
 app.use(tenantMiddleware as any);
 
