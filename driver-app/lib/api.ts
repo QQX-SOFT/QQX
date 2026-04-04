@@ -4,11 +4,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import Constants from 'expo-constants';
 
-// Dynamically get the IP address of your computer running the Expo packager
-const debuggerHost = Constants.expoConfig?.hostUri;
-const IP = debuggerHost ? debuggerHost.split(':')[0] : 'localhost';
+// Production Vercel URL
+const PRODUCTION_URL = 'https://qqx-sgxb.vercel.app';
 
-const API_URL = `http://${IP}:3001`;
+// Dynamically get the IP address of your computer running the Expo packager
+// If we are in production or IP detection fails, use the production URL
+const debuggerHost = Constants.expoConfig?.hostUri;
+const IP = debuggerHost ? debuggerHost.split(':')[0] : null;
+
+const API_URL = (IP && IP !== 'localhost') 
+  ? `http://${IP}:3001` 
+  : PRODUCTION_URL;
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
