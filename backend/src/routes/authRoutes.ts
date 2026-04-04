@@ -29,13 +29,13 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
         if (user) {
             // Check password using bcrypt
             if (!user.password || !bcrypt.compareSync(password, user.password)) {
-                return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
+                return res.status(401).json({ error: 'E-Mail oder Passwort falsch. (Şifre Hatası)' });
             }
 
             // Check tenant context if not SUPER_ADMIN
             if (user.role !== 'SUPER_ADMIN') {
                 if (subdomain && (!user.tenant || user.tenant.subdomain !== subdomain)) {
-                    return res.status(401).json({ error: 'Dieser Benutzer gehört nicht zu dieser App/Instanz.' });
+                    return res.status(401).json({ error: 'Dieser Benutzer gehört nicht zu dieser Subdomain. (Subdomain Hatası)' });
                 }
             }
 
