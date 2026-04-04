@@ -1,3 +1,3 @@
-export default function handler(req: any, res: any) {
-  res.status(200).json({ message: "Hello from Vercel Node Builder!" });
-}
+import app from '../src/index';
+
+export default app;
