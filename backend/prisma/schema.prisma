@@ -688,11 +688,22 @@ model DriverApplication {
   status        ApplicationStatus @default(PENDING)
   notes         String?
   
+  // Document URLs
+  idCardUrl     String?  // Lichtbildausweis
+  licenseUrl    String?  // Führerschein
+  meldezettelUrl String? // Meldezettel
+  gisaExtractUrl String? // GISA-Auszug
+  svsConfirmationUrl String? // SVS Bestätigung
+  businessRegUrl String? // Gewerbeschein
+
+  acceptedTerms Boolean @default(false)
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@index([tenantId])
 }
+
 
 enum ApplicationStatus {
   PENDING

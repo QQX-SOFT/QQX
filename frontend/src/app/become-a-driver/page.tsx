@@ -13,7 +13,9 @@ import {
     Phone,
     MapPin,
     CreditCard,
-    Briefcase
+    Briefcase,
+    Upload,
+    FileCheck
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -36,7 +38,58 @@ export default function BecomeADriverPage() {
         gisaNumber: "",
         iban: "",
         bic: "",
+        idCardUrl: "",
+        licenseUrl: "",
+        meldezettelUrl: "",
+        gisaExtractUrl: "",
+        svsConfirmationUrl: "",
+        businessRegUrl: "",
+        acceptedTerms: false,
     });
+
+    const [uploadingField, setUploadingField] = useState<string | null>(null);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingField(field);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const { data } = await api.post("/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+            setFormData(prev => ({ ...prev, [field]: data.url }));
+        } catch (e) {
+            alert("Upload fehlgeschlagen.");
+        } finally {
+            setUploadingField(null);
+        }
+    };
+
+    const docRequirements: any = {
+        ECHTER_DIENSTNEHMER: [
+            { id: "idCardUrl", label: "Lichtbildausweis / Passport" },
+            { id: "licenseUrl", label: "Führerschein (Klasse B)" },
+            { id: "meldezettelUrl", label: "Meldezettel" }
+        ],
+        FREIER_DIENSTNEHMER: [
+            { id: "idCardUrl", label: "Lichtbildausweis / Passport" },
+            { id: "licenseUrl", label: "Führerschein (Klasse B)" },
+            { id: "meldezettelUrl", label: "Meldezettel" },
+            { id: "svsConfirmationUrl", label: "SVS Bestätigung" }
+        ],
+        SELBSTSTANDIG: [
+            { id: "idCardUrl", label: "Lichtbildausweis / Passport" },
+            { id: "licenseUrl", label: "Führerschein (Klasse B)" },
+            { id: "meldezettelUrl", label: "Meldezettel" },
+            { id: "gisaExtractUrl", label: "GISA-Auszug" },
+            { id: "svsConfirmationUrl", label: "SVS Bestätigung" },
+            { id: "businessRegUrl", label: "Gewerbeschein" }
+        ]
+    };
 
     const [checkingGisa, setCheckingGisa] = useState(false);
     const [gisaResult, setGisaResult] = useState<any>(null);
@@ -267,10 +320,75 @@ export default function BecomeADriverPage() {
                         </section>
                     </div>
 
-                    <div className="pt-8 border-t border-slate-100">
+                    {/* Documents Upload Section */}
+                    <section className="space-y-6 pt-6 border-t border-slate-50">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-900 rounded-xl"><Upload size={18} className="text-white" /></div>
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Geforderte Dokumente (PDF / Foto)</h3>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {docRequirements[formData.employmentType].map((doc: any) => (
+                                <div key={doc.id} className={cn(
+                                    "p-6 rounded-[2rem] border-2 transition-all relative group overflow-hidden",
+                                    formData[doc.id as keyof typeof formData] 
+                                        ? "border-green-100 bg-green-50/30" 
+                                        : "border-slate-50 bg-slate-50/50 hover:border-slate-100"
+                                )}>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className={cn(
+                                                "p-3 rounded-2xl",
+                                                formData[doc.id as keyof typeof formData] ? "bg-green-100 text-green-600" : "bg-white text-slate-400"
+                                            )}>
+                                                {formData[doc.id as keyof typeof formData] ? <FileCheck size={20} /> : <FileText size={20} />}
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">{doc.label}</p>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
+                                                    {formData[doc.id as keyof typeof formData] ? "Erfolgreich hochgeladen" : "Nicht hochgeladen"}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <label className="cursor-pointer">
+                                            <input 
+                                                type="file" 
+                                                className="hidden" 
+                                                accept="application/pdf,image/*" 
+                                                onChange={(e) => handleFileUpload(e, doc.id)}
+                                                disabled={uploadingField === doc.id}
+                                            />
+                                            <div className={cn(
+                                                "px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all",
+                                                uploadingField === doc.id ? "bg-slate-200 text-slate-400 animate-pulse" :
+                                                formData[doc.id as keyof typeof formData] ? "bg-white text-green-600 border border-green-100" : "bg-slate-900 text-white hover:scale-105"
+                                            )}>
+                                                {uploadingField === doc.id ? "Wird geladen..." : formData[doc.id as keyof typeof formData] ? "Ändern" : "Hochladen"}
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    <div className="pt-8 border-t border-slate-100 space-y-6">
+                        <div className="flex items-start gap-3 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+                           <input 
+                             type="checkbox" 
+                             id="terms" 
+                             required 
+                             className="mt-1 w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+                             checked={formData.acceptedTerms}
+                             onChange={e => setFormData({ ...formData, acceptedTerms: e.target.checked })}
+                           />
+                           <label htmlFor="terms" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-relaxed cursor-pointer">
+                              Ich habe die <span className="text-blue-600 font-black">Datenschutzerklärung</span> gelesen und akzeptiere diese. Ich stimme der Verarbeitung meiner Daten zum Zwecke der Bewerbung zu.
+                           </label>
+                        </div>
+
                         <button
                             type="submit"
-                            disabled={submitting}
+                            disabled={submitting || !!uploadingField}
                             className="w-full py-8 bg-blue-600 text-white rounded-3xl font-black text-sm uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-blue-700 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-2xl shadow-blue-500/20"
                         >
                             {submitting ? <Loader2 className="animate-spin" size={24} /> : (

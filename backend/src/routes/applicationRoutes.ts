@@ -20,6 +20,13 @@ const applicationSchema = z.object({
   gisaNumber: z.string().optional(),
   iban: z.string().optional(),
   bic: z.string().optional(),
+  idCardUrl: z.string().optional().nullable(),
+  licenseUrl: z.string().optional().nullable(),
+  meldezettelUrl: z.string().optional().nullable(),
+  gisaExtractUrl: z.string().optional().nullable(),
+  svsConfirmationUrl: z.string().optional().nullable(),
+  businessRegUrl: z.string().optional().nullable(),
+  acceptedTerms: z.boolean().optional(),
 });
 
 // PUBLIC: Submit application
@@ -28,11 +35,12 @@ router.post('/', async (req: Request, res: Response) => {
     const validatedData = applicationSchema.parse(req.body);
     const tenantId = req.headers['x-tenant-id'] as string; // Optional if we want to tie to a tenant via header
 
-    const application = await prisma.driverApplication.create({
+    const application = await (prisma as any).driverApplication.create({
       data: {
         ...validatedData,
         birthday: validatedData.birthday ? new Date(validatedData.birthday) : null,
-        tenantId: tenantId || null
+        tenantId: tenantId || null,
+        acceptedTerms: validatedData.acceptedTerms || false
       }
     });
 
@@ -52,7 +60,7 @@ router.get('/', async (req: TenantRequest, res: Response) => {
   if (!tenantId) return res.status(400).json({ error: 'Context missing' });
 
   try {
-    const applications = await prisma.driverApplication.findMany({
+    const applications = await (prisma as any).driverApplication.findMany({
       where: { 
         OR: [
           { tenantId: tenantId as string },
@@ -67,19 +75,114 @@ router.get('/', async (req: TenantRequest, res: Response) => {
   }
 });
 
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+
+// ... existing code ...
+
 // ADMIN: Update status
 router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
   const { id } = req.params;
   const { status, notes } = req.body;
 
   try {
-    const updated = await prisma.driverApplication.update({
+    const updated = await (prisma as any).driverApplication.update({
       where: { id },
       data: { status, notes }
     });
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Fehler beim Update' });
+  }
+});
+
+// ADMIN: Approve and Convert to Driver
+router.post('/:id/approve', async (req: TenantRequest, res: Response) => {
+  const { id } = req.params;
+  const { tenantId, subdomain } = req;
+
+  if (!tenantId) return res.status(400).json({ error: 'Context missing' });
+
+  try {
+    const app = await (prisma as any).driverApplication.findUnique({ where: { id } });
+    if (!app) return res.status(404).json({ error: 'Bewerbung nicht gefunden' });
+
+    // 1. Create User
+    const tempPassword = crypto.randomBytes(4).toString('hex');
+    const hashedPassword = bcrypt.hashSync(tempPassword, 10);
+    
+    const user = await prisma.user.create({
+      data: {
+        email: app.email,
+        clerkId: `app-${id}`,
+        password: hashedPassword,
+        role: 'DRIVER',
+        tenantId: tenantId as string
+      }
+    });
+
+    // 2. Map type
+    let prismaType: 'EMPLOYED' | 'FREELANCE' | 'COMMERCIAL' = 'EMPLOYED';
+    if (app.employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';
+    if (app.employmentType === 'SELBSTSTANDIG') prismaType = 'COMMERCIAL';
+
+    // 3. Create Driver
+    const driver = await prisma.driver.create({
+      data: {
+        userId: user.id,
+        tenantId: tenantId as string,
+        firstName: app.firstName,
+        lastName: app.lastName,
+        phone: app.phone,
+        birthday: app.birthday,
+        street: app.street,
+        zip: app.zip,
+        city: app.city,
+        ssn: app.ssn,
+        taxId: app.taxId,
+        gisaNumber: app.gisaNumber,
+        iban: app.iban,
+        bic: app.bic,
+        type: prismaType,
+        status: 'ACTIVE'
+      }
+    });
+
+    // 4. Create Documents
+    const docs = [
+      { url: app.idCardUrl, type: 'LICENSE', title: 'Lichtbildausweis' }, // Using LICENSE as internal DocumentType mapping
+      { url: app.licenseUrl, type: 'LICENSE', title: 'Führerschein' },
+      { url: app.meldezettelUrl, type: 'OTHER', title: 'Meldezettel' },
+      { url: app.gisaExtractUrl, type: 'BUSINESS_REG', title: 'GISA-Auszug' },
+      { url: app.svsConfirmationUrl, type: 'OTHER', title: 'SVS Bestätigung' },
+      { url: app.businessRegUrl, type: 'BUSINESS_REG', title: 'Gewerbeschein' },
+    ];
+
+    for (const doc of docs) {
+      if (doc.url) {
+        await prisma.document.create({
+          data: {
+            driverId: driver.id,
+            fileUrl: doc.url,
+            title: doc.title,
+            type: doc.type as any,
+            status: 'VALID'
+          }
+        });
+      }
+    }
+
+    // 5. Update Application Status
+    await (prisma as any).driverApplication.update({
+      where: { id },
+      data: { status: 'APPROVED', notes: `Konvertiert zu Fahrer am ${new Date().toLocaleDateString()}` }
+    });
+
+    res.json({ success: true, driverId: driver.id, tempPassword });
+
+  } catch (error: any) {
+    console.error("Approve error:", error);
+    res.status(500).json({ error: error.message || 'Fehler beim Genehmigen' });
   }
 });
 

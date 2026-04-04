@@ -17,7 +17,9 @@ import {
     Filter,
     ShieldCheck,
     CreditCard,
-    ArrowLeft
+    ArrowLeft,
+    ExternalLink,
+    FileSearch
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -61,15 +63,9 @@ export default function AdminApplicationsPage() {
     const convertToDriver = async (app: any) => {
         try {
             setProcessing(true);
-            // Submit to driver creation endpoint
-            await api.post("/drivers", {
-                ...app,
-                employmentType: app.employmentType,
-                password: Math.random().toString(36).slice(-8) // Temp password
-            });
-            // Update app status to APPROVED
-            await api.patch(`/applications/${app.id}/status`, { status: "APPROVED", notes: "Sürücüye dönüştürüldü" });
-            alert("Sürücü başarıyla oluşturuldu!");
+            const { data } = await api.post(`/applications/${app.id}/approve`);
+            
+            alert(`Sürücü başarıyla oluşturuldu! Geçici şifre: ${data.tempPassword}`);
             fetchApplications();
             setSelectedApp(null);
         } catch (e: any) {
@@ -219,6 +215,35 @@ export default function AdminApplicationsPage() {
                                         </div>
                                     </div>
                                 </div>
+                             </div>
+
+                             {/* Documents Section */}
+                             <div className="space-y-6 pt-6 border-t border-slate-50">
+                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Hochgeladene Dokumente</h4>
+                                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                                     {[
+                                         { id: "idCardUrl", label: "Ausweis" },
+                                         { id: "licenseUrl", label: "Führerschein" },
+                                         { id: "meldezettelUrl", label: "Meldezettel" },
+                                         { id: "gisaExtractUrl", label: "GISA-Auszug" },
+                                         { id: "svsConfirmationUrl", label: "SVS Bekatigung" },
+                                         { id: "businessRegUrl", label: "Gewerbeschein" }
+                                     ].filter(doc => selectedApp[doc.id]).map(doc => (
+                                         <a 
+                                           key={doc.id}
+                                           href={selectedApp[doc.id]} 
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between hover:bg-slate-100 transition group"
+                                         >
+                                             <div className="flex items-center gap-3">
+                                                 <div className="p-2 bg-white rounded-xl text-blue-600 shadow-sm"><FileSearch size={16} /></div>
+                                                 <span className="text-[10px] font-black uppercase text-slate-600">{doc.label}</span>
+                                             </div>
+                                             <ExternalLink size={14} className="text-slate-300 group-hover:text-blue-600 transition" />
+                                         </a>
+                                     ))}
+                                 </div>
                              </div>
                         </div>
                     ) : (
