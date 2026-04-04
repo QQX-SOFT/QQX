@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import { 
     Loader2, 
     CheckCircle2, 
@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { Autocomplete } from "@react-google-maps/api";
+import GoogleMapsProvider from "@/components/GoogleMapsProvider";
 
 const translations: any = {
     DE: {
@@ -168,13 +170,43 @@ const translations: any = {
     }
 };
 
-export default function BecomeADriverPage() {
+export function BecomeADriverForm() {
     const [lang, setLang] = useState<"DE" | "EN" | "AR">("DE");
     const t = translations[lang];
     const isRtl = lang === "AR";
 
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [autocomplete, setAutocomplete] = useState<any>(null);
+
+    const onPlaceChanged = () => {
+        if (autocomplete) {
+            const place = autocomplete.getPlace();
+            let route = "";
+            let streetNumber = "";
+            let postalCode = "";
+            let locality = "";
+
+            place.address_components?.forEach((c: any) => {
+                const types = c.types;
+                if (types.includes("route")) route = c.long_name;
+                if (types.includes("street_number")) streetNumber = c.long_name;
+                if (types.includes("postal_code")) postalCode = c.long_name;
+                if (types.includes("locality")) {
+                    locality = c.long_name;
+                } else if (!locality && types.includes("administrative_area_level_2")) {
+                    locality = c.long_name;
+                }
+            });
+
+            setFormData((prev: any) => ({
+                ...prev,
+                street: route ? `${route} ${streetNumber}` : `${place.name || ""}`,
+                zip: postalCode,
+                city: locality
+            }));
+        }
+    };
     const [formData, setFormData] = useState<any>({
         firstName: "",
         lastName: "",
@@ -462,7 +494,12 @@ export default function BecomeADriverPage() {
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">{t.address}</h3>
                             </div>
                             <div className="space-y-4">
-                                <input placeholder={t.street} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })} />
+                                <Autocomplete
+                                    onLoad={setAutocomplete}
+                                    onPlaceChanged={onPlaceChanged}
+                                >
+                                    <input placeholder={t.street} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })} />
+                                </Autocomplete>
                                 <div className="grid grid-cols-2 gap-4">
                                     <input placeholder={t.zip} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.zip} onChange={e => setFormData({ ...formData, zip: e.target.value })} />
                                     <input placeholder={t.city} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} />
@@ -636,5 +673,15 @@ export default function BecomeADriverPage() {
                 </footer>
             </div>
         </div>
+    );
+}
+
+export default function BecomeADriverPage() {
+    return (
+        <GoogleMapsProvider>
+            <Suspense fallback={<div className="flex h-screen items-center justify-center bg-slate-50"><Loader2 className="animate-spin text-blue-500" size={48} /></div>}>
+                <BecomeADriverForm />
+            </Suspense>
+        </GoogleMapsProvider>
     );
 }
