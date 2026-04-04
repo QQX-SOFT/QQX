@@ -34,6 +34,7 @@ export default function MarketTab() {
   const [displayName, setDisplayName] = useState(user?.firstName || 'Fahrer');
   const [sortBy, setSortBy] = useState<'money' | 'distance'>('money');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [todayShifts, setTodayShifts] = useState<any[]>([]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -60,8 +61,18 @@ export default function MarketTab() {
     }
   };
 
+  const fetchTodayShifts = async () => {
+    try {
+      const res = await api.get('/shifts/my-shifts');
+      setTodayShifts(res.data);
+    } catch (e) {
+      console.log('Error fetching today shifts', e);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
+    fetchTodayShifts();
   }, [user]);
 
   const handleAcceptOrder = async (id: string) => {
@@ -86,12 +97,27 @@ export default function MarketTab() {
         await api.patch(`/time/stop/${activeTimeEntryId}`, { lat: location?.lat, lng: location?.lng });
         Alert.alert('Info', 'Schicht beendet.');
       } else {
-        await api.post(`/time/start`, { driverId: user.id, lat: location?.lat, lng: location?.lng });
+        if (todayShifts.length === 0) {
+          Alert.alert('Keine Schicht', 'Sie haben heute keine zugewiesene Schicht.');
+          return;
+        }
+
+        // Ideally show a modal if there are multiple. For now, take the first one.
+        const shiftId = todayShifts[0].id;
+
+        await api.post(`/time/start`, { 
+          driverId: user.id, 
+          lat: location?.lat, 
+          lng: location?.lng,
+          shiftId 
+        });
         Alert.alert('Info', 'Schicht gestartet!');
       }
       fetchDashboardData();
-    } catch (e) {
-      Alert.alert('Fehler', 'Status konnte nicht geändert werden.');
+      fetchTodayShifts(); // Refresh
+    } catch (e: any) {
+      const msg = e.response?.data?.message || 'Status konnte nicht geändert werden.';
+      Alert.alert('Fehler', msg);
     }
   };
 

@@ -55,6 +55,7 @@ model Tenant {
   subscription Subscription?
   tickets      SupportTicket[]
   saasInvoices SaaSInvoice[]
+  applications DriverApplication[]
 
   @@index([subdomain])
 }
@@ -137,6 +138,9 @@ model Driver {
   payouts       Payout[]
   walletHistory WalletHistory[]
   shiftAssignments ShiftAssignment[]
+  
+  preferredAreaId String?
+  preferredArea   ShiftArea? @relation(fields: [preferredAreaId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
 }
@@ -721,8 +725,13 @@ model ShiftArea {
   name      String
   city      String?
   zipCodes  String? // Komma-getrennt
+
+  latitude  Float?
+  longitude Float?
+  radius    Int      @default(500) // In meters
   
   shifts    Shift[]
+  drivers   Driver[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -765,10 +774,12 @@ model ShiftAssignment {
   
   status    AssignmentStatus @default(PENDING) // PENDING, CONFIRMED, REJECTED
   
+  lastNotificationSentAt DateTime?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@id([shiftId, driverId])
+  @@unique([shiftId, driverId])
   @@index([shiftId])
   @@index([driverId])
 }

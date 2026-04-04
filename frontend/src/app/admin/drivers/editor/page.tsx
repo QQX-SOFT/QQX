@@ -43,8 +43,11 @@ function DriverEditorForm() {
         bic: "",
         isKleinunternehmer: false,
         password: "",
-        gisaNumber: ""
+        gisaNumber: "",
+        preferredAreaId: ""
     });
+
+    const [areas, setAreas] = useState<any[]>([]);
 
     const [checkingVat, setCheckingVat] = useState(false);
     const [vatResult, setVatResult] = useState<{ valid: boolean; name?: string; address?: string } | null>(null);
@@ -153,6 +156,16 @@ function DriverEditorForm() {
     };
 
     useEffect(() => {
+        const fetchAreas = async () => {
+            try {
+                const { data } = await api.get("/shifts/areas");
+                setAreas(data);
+            } catch (e) {
+                console.error("Failed to fetch areas", e);
+            }
+        };
+        fetchAreas();
+
         if (id) {
             fetchDriver(id);
         }
@@ -182,7 +195,8 @@ function DriverEditorForm() {
                 bic: data.bic || "",
                 isKleinunternehmer: data.isKleinunternehmer || false,
                 password: "",
-                gisaNumber: data.gisaNumber || ""
+                gisaNumber: data.gisaNumber || "",
+                preferredAreaId: data.preferredAreaId || ""
             });
 
             // Set formatted IBAN
@@ -425,6 +439,24 @@ function DriverEditorForm() {
                                 </label>
                             </div>
                         )}
+                    </div>
+
+                    {/* Operational Area */}
+                    <div className="space-y-6">
+                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Einsatzgebiet</h3>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Zugewiesenes Gebiet (z.B. Dornbirn, Bregenz)</label>
+                            <select 
+                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold"
+                                value={formData.preferredAreaId}
+                                onChange={e => setFormData({ ...formData, preferredAreaId: e.target.value })}
+                            >
+                                <option value="">Alle Gebiete</option>
+                                {areas.map(area => (
+                                    <option key={area.id} value={area.id}>{area.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     {/* Bank Info */}

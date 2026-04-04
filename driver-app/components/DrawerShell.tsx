@@ -22,7 +22,8 @@ import {
   Key, 
   User, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Calendar
 } from 'lucide-react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -70,6 +71,7 @@ export default function DrawerShell({ children, title }: Props) {
 
   const navItems = [
     { label: 'Dashboard', sub: 'SCHICHT & AUFTRÄGE', icon: LayoutDashboard, path: '/(tabs)' },
+    { label: 'Schichtplan', icon: Calendar, path: '/shifts' },
     { label: 'Zeitübersicht', icon: Clock, path: '/(tabs)/active' },
     { label: 'Verfügbare Aufträge', icon: Package, path: '/(tabs)' },
     { label: 'Angenommene Aufträge', icon: Package, path: '/(tabs)/active' },

@@ -31,7 +31,7 @@ export default function AdminShiftsPage() {
     const [showAreaModal, setShowAreaModal] = useState(false);
     const [showShiftModal, setShowShiftModal] = useState(false);
 
-    const [newArea, setNewArea] = useState({ name: "", city: "", zipCodes: "" });
+    const [newArea, setNewArea] = useState({ name: "", city: "", zipCodes: "", latitude: "", longitude: "", radius: 500 });
     const [newShift, setNewShift] = useState({ 
         areaId: "", 
         date: new Date().toISOString().split('T')[0], 
@@ -65,9 +65,14 @@ export default function AdminShiftsPage() {
     const createArea = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post("/shifts/areas", newArea);
+            await api.post("/shifts/areas", {
+                ...newArea,
+                latitude: newArea.latitude ? parseFloat(newArea.latitude) : null,
+                longitude: newArea.longitude ? parseFloat(newArea.longitude) : null,
+                radius: parseInt(newArea.radius.toString())
+            });
             setShowAreaModal(false);
-            setNewArea({ name: "", city: "", zipCodes: "" });
+            setNewArea({ name: "", city: "", zipCodes: "", latitude: "", longitude: "", radius: 500 });
             fetchData();
         } catch (e) { alert("Fehler"); }
     };
@@ -89,7 +94,7 @@ export default function AdminShiftsPage() {
     };
 
     const deleteShift = async (id: string) => {
-        if (!confirm("Vardiyayı silmek istiyor musunuz?")) return;
+        if (!confirm("Möchten Sie diese Schicht wirklich löschen?")) return;
         try {
             await api.delete(`/shifts/${id}`);
             fetchData();
@@ -111,20 +116,20 @@ export default function AdminShiftsPage() {
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Schichtmanagement</h1>
-                   <p className="text-slate-500 font-medium tracking-tight uppercase text-[10px] tracking-widest mt-1">Vardiya ve Bölge Yönetimi</p>
+                   <p className="text-slate-500 font-medium tracking-tight uppercase text-[10px] tracking-widest mt-1">Verwaltung von Schichten und Gebieten</p>
                 </div>
                 <div className="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
                     <button 
                         onClick={() => setActiveTab("PLAN")}
                         className={cn("px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all", activeTab === "PLAN" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}
                     >
-                        Vardiya Planı
+                        Schichtplan
                     </button>
                     <button 
                         onClick={() => setActiveTab("AREAS")}
                         className={cn("px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] transition-all", activeTab === "AREAS" ? "bg-white text-slate-900 shadow-sm" : "text-slate-400 hover:text-slate-600")}
                     >
-                        Gebiete (Bölgeler)
+                        Gebiete
                     </button>
                 </div>
             </header>
@@ -187,7 +192,7 @@ export default function AdminShiftsPage() {
                                     </div>
 
                                     <div className="space-y-4">
-                                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Sürücü Atamaları</div>
+                                        <div className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Fahrerzuweisungen</div>
                                         <div className="flex flex-wrap gap-2">
                                             {shift.assignments.map((as: any) => (
                                                 <div key={as.id} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-xl group transition hover:bg-slate-100 border border-slate-100">
@@ -201,7 +206,7 @@ export default function AdminShiftsPage() {
                                                         <Plus size={16} />
                                                     </button>
                                                     <div className="absolute top-full left-0 mt-2 bg-white shadow-2xl rounded-2xl border border-slate-100 p-2 z-10 w-48 hidden group-hover/assign:block animate-in fade-in zoom-in-95">
-                                                        <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest px-2 py-1">Hızlı Ata</div>
+                                                        <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest px-2 py-1">Schnellzuweisung</div>
                                                         {drivers.filter(d => !shift.assignments.some((a: any) => a.driverId === d.id)).slice(0, 5).map(driver => (
                                                             <button 
                                                                 key={driver.id}
@@ -222,7 +227,7 @@ export default function AdminShiftsPage() {
                                         className="w-full pt-4 border-t border-slate-50 flex items-center justify-center gap-2 text-red-300 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
                                     >
                                         <Trash2 size={14} />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">Sil</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest">Löschen</span>
                                     </button>
                                 </div>
                             );
@@ -246,16 +251,30 @@ export default function AdminShiftsPage() {
                             />
                             <div className="grid grid-cols-2 gap-4">
                                 <input 
-                                    placeholder="Stadt" 
+                                    placeholder="Latitude (z.B. 48.2082)" 
+                                    type="number"
+                                    step="0.000001"
                                     className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
-                                    value={newArea.city}
-                                    onChange={e => setNewArea({...newArea, city: e.target.value})}
+                                    value={newArea.latitude}
+                                    onChange={e => setNewArea({...newArea, latitude: e.target.value})}
                                 />
                                 <input 
-                                    placeholder="PLZ (z.B. 1010, 1020)" 
+                                    placeholder="Longitude (z.B. 16.3738)" 
+                                    type="number"
+                                    step="0.000001"
                                     className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
-                                    value={newArea.zipCodes}
-                                    onChange={e => setNewArea({...newArea, zipCodes: e.target.value})}
+                                    value={newArea.longitude}
+                                    onChange={e => setNewArea({...newArea, longitude: e.target.value})}
+                                />
+                            </div>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Radius in Metern (für Startbeschränkung)</label>
+                                <input 
+                                    placeholder="Radius (Standard 500m)" 
+                                    type="number"
+                                    className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
+                                    value={newArea.radius}
+                                    onChange={e => setNewArea({...newArea, radius: parseInt(e.target.value)})}
                                 />
                             </div>
                             <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition shadow-xl">

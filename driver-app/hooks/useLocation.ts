@@ -38,7 +38,7 @@ export function useLocation() {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setErrorMsg('Konum erişim izni reddedildi!');
+        setErrorMsg('Standortzugriff verweigert!');
         return;
       }
 
