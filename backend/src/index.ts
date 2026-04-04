@@ -32,21 +32,29 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// CORS - allow all origins explicitly
+// CORS - Use a more robust dynamic origin matcher
+const allowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+const allowedHeaders = ['Content-Type', 'Authorization', 'x-tenant-subdomain', 'x-user-id'];
+
 app.use(cors({
-    origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-subdomain', 'x-user-id'],
+    origin: (origin, callback) => {
+        // Allow all origins (returning the origin itself) to support credentials
+        // Use origin || '*' if needed, but for credentials: true we must return origin.
+        callback(null, origin || '*');
+    },
+    methods: allowedMethods,
+    allowedHeaders: allowedHeaders,
     credentials: true,
 }));
 
-// Handle preflight OPTIONS for all routes (Vercel serverless compatibility)
-app.options('*', cors({
-    origin: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-subdomain', 'x-user-id'],
-    credentials: true,
-}));
+// Robust preflight handling
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Methods', allowedMethods.join(','));
+    res.header('Access-Control-Allow-Headers', allowedHeaders.join(','));
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.sendStatus(204);
+});
 
 app.use(express.json());
 app.use(tenantMiddleware as any);

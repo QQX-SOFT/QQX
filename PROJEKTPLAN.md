@@ -50,7 +50,7 @@ Die Plattform wird als **Multi-Tenant SaaS** aufgebaut. Jedes Unternehmen (Kunde
 
 ### ☁️ Cloud-Infrastruktur
 - **Frontend**: Next.js App Router, optimiert für Vercel Edge Runtime.
-- **Backend API**: Node.js Cluster auf AWS oder Render, skalierbar je nach Last.
+- **Backend API**: Node.js Cluster auf AWS, skalierbar je nach Last.
 - **Datenbank**: Managed PostgreSQL mit automatischer Replikation und Backups.
 - **File Storage**: AWS S3 für Rechnungen (PDFs) und Fahrer-Dokumente.
 - **Isolation**: Strikte Subdomain-zu-Tenant Zuordnung über Middleware.
@@ -61,7 +61,7 @@ Die Plattform wird als **Multi-Tenant SaaS** aufgebaut. Jedes Unternehmen (Kunde
 -   **Backend**: Node.js / Express mit TypeScript.
 -   **Datenbank**: PostgreSQL (via Prisma ORM).
 -   **Authentifizierung**: Custom Solution (identifiziert via Header/JWT) oder Clerk Integration mit Tenant-Context.
--   **Infrastruktur**: Cloud-Hosting (Vercel für Frontend, Render/AWS für Backend).
+-   **Infrastruktur**: Cloud-Hosting (Vercel für Frontend, AWS für Backend).
 
 ## 5. Phasenplan (Roadmap)
 

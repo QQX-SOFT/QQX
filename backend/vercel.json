@@ -1,16 +1,5 @@
 {
   "version": 2,
-  "outputDirectory": "public",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization,x-tenant-subdomain,x-user-id" }
-      ]
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",

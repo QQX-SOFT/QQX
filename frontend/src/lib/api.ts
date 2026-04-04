@@ -1,9 +1,10 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const baseURL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 const api = axios.create({
     baseURL: baseURL.endsWith("/") ? baseURL.slice(0, -1) : baseURL,
+    withCredentials: true,
 });
 
 if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL && window.location.hostname !== "localhost") {
