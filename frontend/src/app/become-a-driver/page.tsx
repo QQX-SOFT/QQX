@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { 
     Loader2, 
     CheckCircle2, 
@@ -19,7 +19,9 @@ import {
     Globe,
     Languages,
     BadgeCheck,
-    AlertCircle
+    AlertCircle,
+    ChevronDown,
+    Search
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -170,6 +172,77 @@ const translations: any = {
     }
 };
 
+const SearchableSelect = ({ label, value, options, onChange, isRtl }: any) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [open, setOpen] = useState(false);
+
+    const filtered = options.filter((o: any) => 
+        o.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <div className="relative">
+            <button 
+                type="button"
+                onClick={() => setOpen(!open)}
+                className={cn(
+                    "w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-900 flex justify-between items-center transition-all",
+                    open && "border-blue-500 ring-4 ring-blue-500/5",
+                    isRtl ? "text-right flex-row-reverse" : "text-left flex-row"
+                )}
+            >
+                <span className={cn(!value && "text-slate-400")}>{value || label}</span>
+                <ChevronDown size={16} className={cn("transition-transform opacity-30", open && "rotate-180 opacity-100 text-blue-500")} />
+            </button>
+            {open && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div className={cn(
+                        "absolute z-50 top-[110%] left-0 right-0 bg-white border border-slate-100 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200",
+                        isRtl ? "text-right" : "text-left"
+                    )}>
+                        <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
+                            <Search size={14} className="text-slate-300" />
+                            <input 
+                                className="w-full bg-transparent border-none outline-none text-xs font-bold placeholder:text-slate-300"
+                                placeholder={isRtl ? "...بحث" : "Suchen..."}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        <div className="max-h-64 overflow-y-auto overscroll-contain custom-scrollbar">
+                            {filtered.map((o: any) => (
+                                <button
+                                    key={o.code}
+                                    type="button"
+                                    onClick={() => {
+                                        onChange(o.name);
+                                        setOpen(false);
+                                        setSearchTerm("");
+                                    }}
+                                    className={cn(
+                                        "w-full p-5 text-xs font-bold transition-colors border-b border-slate-50/50 last:border-0 hover:bg-blue-50 hover:text-blue-600",
+                                        value === o.name ? "bg-blue-50 text-blue-600" : "text-slate-600",
+                                        isRtl ? "text-right" : "text-left"
+                                    )}
+                                >
+                                    {o.name}
+                                </button>
+                            ))}
+                            {filtered.length === 0 && (
+                                <div className="p-10 text-center space-y-2">
+                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Keine Treffer</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+
 export function BecomeADriverForm() {
     const [lang, setLang] = useState<"DE" | "EN" | "AR">("DE");
     const t = translations[lang];
@@ -178,6 +251,19 @@ export function BecomeADriverForm() {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [autocomplete, setAutocomplete] = useState<any>(null);
+    const [countries, setCountries] = useState<{ code: string, name: string }[]>([]);
+
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const { data } = await api.get('/applications/countries');
+                setCountries(data);
+            } catch (e) {
+                console.error("Failed to fetch countries", e);
+            }
+        };
+        fetchCountries();
+    }, []);
 
     const onPlaceChanged = () => {
         if (autocomplete) {
@@ -476,9 +562,21 @@ export function BecomeADriverForm() {
                                     <input placeholder={t.phone} required className={cn("w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold", isRtl ? "pr-14" : "pl-14")} value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                                 </div>
                                 <input type="date" required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-500 uppercase text-[10px] tracking-widest" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input placeholder={t.placeOfBirth} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.placeOfBirth} onChange={e => setFormData({ ...formData, placeOfBirth: e.target.value })} />
-                                    <input placeholder={t.nationality} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <SearchableSelect 
+                                        label={t.placeOfBirth}
+                                        value={formData.placeOfBirth}
+                                        options={countries}
+                                        isRtl={isRtl}
+                                        onChange={(val: string) => setFormData({ ...formData, placeOfBirth: val })}
+                                    />
+                                    <SearchableSelect 
+                                        label={t.nationality}
+                                        value={formData.nationality}
+                                        options={countries}
+                                        isRtl={isRtl}
+                                        onChange={(val: string) => setFormData({ ...formData, nationality: val })}
+                                    />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <input placeholder={t.maritalStatus} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.maritalStatus} onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })} />

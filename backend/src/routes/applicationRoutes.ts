@@ -5,6 +5,15 @@ import { TenantRequest } from '../middleware/tenantMiddleware';
 
 const router = express.Router();
 
+router.get('/countries', async (req, res) => {
+  try {
+    const countries = await (prisma as any).country.findMany({ orderBy: { name: 'asc' } });
+    res.json(countries);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch countries' });
+  }
+});
+
 const applicationSchema = z.object({
   firstName: z.string().min(2),
   lastName: z.string().min(2),
