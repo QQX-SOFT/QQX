@@ -55,10 +55,15 @@ export default function UnifiedLoginPage() {
             }
         } catch (err: any) {
             setLoading(false);
-            if (err.response?.data?.error) {
-                setError(err.response.data.error);
+            const errorData = err.response?.data;
+            if (errorData?.error) {
+                // Ensure error is a string to prevent React Error #31
+                setError(typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error));
+                if (errorData.details) {
+                    console.error('Server error details:', errorData.details);
+                }
             } else {
-                setError("Anmeldefehler. E-Mail oder Passwort falsch.");
+                setError("Anmeldefehler. Bitte überprüfen Sie Ihre Verbindung.");
             }
         }
     };

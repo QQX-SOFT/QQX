@@ -81,10 +81,15 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
         return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
 
     } catch (error) {
+        console.error('--- LOGIN ERROR ---');
+        console.error(error);
         if (error instanceof z.ZodError) {
             return res.status(400).json({ errors: error.errors });
         }
-        res.status(500).json({ error: 'Interner Serverfehler beim Login' });
+        res.status(500).json({ 
+            error: 'Sunucu hatası oluştu.', 
+            details: error instanceof Error ? error.message : 'Unknown error' 
+        });
     }
 });
 
