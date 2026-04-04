@@ -29,13 +29,13 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
         if (user) {
             // Check password using bcrypt
             if (!user.password || !bcrypt.compareSync(password, user.password)) {
-                return res.status(401).json({ error: 'E-Mail oder Passwort falsch. (Şifre Hatası)' });
+                return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
             }
 
             // Check tenant context if not SUPER_ADMIN
             if (user.role !== 'SUPER_ADMIN') {
                 if (subdomain && (!user.tenant || user.tenant.subdomain !== subdomain)) {
-                    return res.status(401).json({ error: 'Dieser Benutzer gehört nicht zu dieser Subdomain. (Subdomain Hatası)' });
+                    return res.status(401).json({ error: 'Dieser Benutzer gehört nicht zu dieser Subdomain.' });
                 }
             }
 
@@ -87,8 +87,8 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
             return res.status(400).json({ errors: error.errors });
         }
         res.status(500).json({ 
-            error: 'Sunucu hatası oluştu.', 
-            details: error instanceof Error ? error.message : 'Unknown error' 
+            error: 'Ein interner Serverfehler ist aufgetreten.', 
+            details: error instanceof Error ? error.stack : JSON.stringify(error) 
         });
     }
 });
