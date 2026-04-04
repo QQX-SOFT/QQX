@@ -41,6 +41,22 @@ export default function BecomeADriverPage() {
     const [checkingGisa, setCheckingGisa] = useState(false);
     const [gisaResult, setGisaResult] = useState<any>(null);
 
+    const [checkingVat, setCheckingVat] = useState(false);
+    const [vatResult, setVatResult] = useState<any>(null);
+
+    const checkVat = async () => {
+        if (!formData.taxId) return alert("UID-Nummer fehlt!");
+        setCheckingVat(true);
+        try {
+            const { data } = await api.post("/vat/validate", { vatNumber: formData.taxId });
+            setVatResult(data);
+        } catch (e) {
+            setVatResult({ valid: false });
+        } finally {
+            setCheckingVat(false);
+        }
+    };
+
     const checkGisa = async () => {
         if (!formData.gisaNumber) return alert("GISA-Zahl fehlt!");
         setCheckingGisa(true);
@@ -192,20 +208,49 @@ export default function BecomeADriverPage() {
                                     <input placeholder="SV-Nummer (SSN)" required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.ssn} onChange={e => setFormData({ ...formData, ssn: e.target.value })} />
                                 )}
                                 {(formData.employmentType === "SELBSTSTANDIG" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
-                                    <>
-                                        <input placeholder="UID-Nummer (optional)" className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.taxId} onChange={e => setFormData({ ...formData, taxId: e.target.value })} />
-                                        <div className="flex gap-2">
-                                            <input placeholder="GISA-Zahl" className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.gisaNumber} onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })} />
-                                            <button type="button" onClick={checkGisa} disabled={checkingGisa} className="px-6 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition">
-                                                {checkingGisa ? <Loader2 className="animate-spin" size={16} /> : "Prüfen"}
-                                            </button>
-                                        </div>
-                                        {gisaResult && (
-                                            <div className={cn("p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest", gisaResult.valid ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")}>
-                                                {gisaResult.valid ? `✓ GISA Aktiv: ${gisaResult.name}` : "✗ GISA nicht gefunden"}
+                                    <div className="space-y-6">
+                                        {/* UID Section */}
+                                        <div className="space-y-3">
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">UID-Nummer (Steuer-ID)</label>
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    placeholder="ATU..." 
+                                                    className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" 
+                                                    value={formData.taxId} 
+                                                    onChange={e => setFormData({ ...formData, taxId: e.target.value.toUpperCase() })} 
+                                                />
+                                                <button type="button" onClick={checkVat} disabled={checkingVat} className="px-6 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition">
+                                                    {checkingVat ? <Loader2 className="animate-spin" size={16} /> : "UID Prüfen"}
+                                                </button>
                                             </div>
-                                        )}
-                                    </>
+                                            {vatResult && (
+                                                <div className={cn("p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest", vatResult.valid ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")}>
+                                                    {vatResult.valid ? `✓ UID Gültig: ${vatResult.name}` : "✗ UID ungültig"}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* GISA Section */}
+                                        <div className="space-y-3">
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">GISA-Zahl</label>
+                                            <div className="flex gap-2">
+                                                <input 
+                                                    placeholder="GISA-Zahl" 
+                                                    className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" 
+                                                    value={formData.gisaNumber} 
+                                                    onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })} 
+                                                />
+                                                <button type="button" onClick={checkGisa} disabled={checkingGisa} className="px-6 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition">
+                                                    {checkingGisa ? <Loader2 className="animate-spin" size={16} /> : "GISA Prüfen"}
+                                                </button>
+                                            </div>
+                                            {gisaResult && (
+                                                <div className={cn("p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest", gisaResult.valid ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-700 border-red-200")}>
+                                                    {gisaResult.valid ? `✓ GISA Aktiv: ${gisaResult.name}` : "✗ GISA nicht gefunden"}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </section>
