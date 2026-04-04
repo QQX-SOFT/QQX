@@ -56,14 +56,13 @@ export default function UnifiedLoginPage() {
         } catch (err: any) {
             setLoading(false);
             const errorData = err.response?.data;
-            if (errorData?.error) {
-                // Ensure error is a string to prevent React Error #31
-                setError(typeof errorData.error === 'string' ? errorData.error : JSON.stringify(errorData.error));
-                if (errorData.details) {
-                    console.error('Server error details:', errorData.details);
-                }
+            if (errorData) {
+                // Determine the best message to show without crashing React
+                const message = errorData.error || errorData.message || (typeof errorData === 'string' ? errorData : JSON.stringify(errorData));
+                setError(typeof message === 'string' ? message : JSON.stringify(message));
+                console.error('Server error details:', errorData.details || errorData);
             } else {
-                setError("Anmeldefehler. Bitte überprüfen Sie Ihre Verbindung.");
+                setError("Anmeldefehler. Bitte überprüfen Sie Ihre Verbindung oder versuchen Sie es später erneut.");
             }
         }
     };
