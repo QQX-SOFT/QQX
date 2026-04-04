@@ -7,11 +7,7 @@ const api = axios.create({
     withCredentials: true,
 });
 
-if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL && window.location.hostname !== "localhost") {
-    console.warn("⚠️ NEXT_PUBLIC_API_URL is not set. Frontend is trying to connect to localhost:3001, which will fail for external users.");
-}
-
-// Add a request interceptor to attach the tenant subdomain from the current window location
+// Request interceptor to attach tenant subdomain and user metadata
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     if (typeof window !== "undefined") {
         const hostname = window.location.hostname;

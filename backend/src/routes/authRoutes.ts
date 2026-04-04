@@ -2,6 +2,7 @@ import express, { Router, Response, Request } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { TenantRequest } from '../middleware/tenantMiddleware';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -15,17 +16,19 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
         const { email, password } = loginSchema.parse(req.body);
         const subdomain = req.headers['x-tenant-subdomain'] as string;
 
-        // Find user by email (SUPER_ADMIN, CUSTOMER_ADMIN, DRIVER)
-        let user = await prisma.user.findUnique({
-            where: { email },
+        // Find user by email (SUPER_ADMIN, CUSTOMER_ADMIN, DRIVER) - Case-insensitive
+        let user = await prisma.user.findFirst({
+            where: { 
+                email: { equals: email, mode: 'insensitive' } 
+            },
             include: {
                 tenant: true
             }
         });
 
         if (user) {
-            // Check password
-            if (!user.password || user.password !== password) {
+            // Check password using bcrypt
+            if (!user.password || !bcrypt.compareSync(password, user.password)) {
                 return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
             }
 
@@ -54,13 +57,14 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
             if (tenant) {
                 const customer = await prisma.customer.findFirst({
                     where: {
-                        email,
+                        email: { equals: email, mode: 'insensitive' },
                         tenantId: tenant.id
                     }
                 });
 
                 if (customer) {
-                    if (!customer.password || customer.password !== password) {
+                    // Check password using bcrypt
+                    if (!customer.password || !bcrypt.compareSync(password, customer.password)) {
                         return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
                     }
 
@@ -136,15 +140,16 @@ router.post('/change-password', async (req: TenantRequest, res: Response) => {
             return res.status(404).json({ error: 'Benutzer nicht gefunden' });
         }
 
-        // Verify current password
-        if (!user.password || user.password !== currentPassword) {
+        // Verify current password using bcrypt
+        if (!user.password || !bcrypt.compareSync(currentPassword, user.password)) {
             return res.status(401).json({ error: 'Aktuelles Passwort ist falsch.' });
         }
 
-        // Update password
+        // Update password with hash
+        const hashedPassword = bcrypt.hashSync(newPassword, 10);
         await prisma.user.update({
             where: { id: userId },
-            data: { password: newPassword }
+            data: { password: hashedPassword }
         });
 
         res.json({ message: 'Passwort erfolgreich geändert.' });
