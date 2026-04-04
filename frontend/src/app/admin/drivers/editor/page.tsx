@@ -42,11 +42,35 @@ function DriverEditorForm() {
         iban: "",
         bic: "",
         isKleinunternehmer: false,
-        password: ""
+        password: "",
+        gisaNumber: ""
     });
 
     const [checkingVat, setCheckingVat] = useState(false);
     const [vatResult, setVatResult] = useState<{ valid: boolean; name?: string; address?: string } | null>(null);
+
+    const [checkingGisa, setCheckingGisa] = useState(false);
+    const [gisaResult, setGisaResult] = useState<{ valid: boolean; name?: string; description?: string } | null>(null);
+
+    const checkGisa = async () => {
+        if (!formData.gisaNumber) return alert("Bitte GISA-Zahl eingeben!");
+        setCheckingGisa(true);
+        setGisaResult(null);
+        try {
+            // Using full name or last name for check as required by GISA API
+            const searchName = formData.lastName || formData.firstName;
+            const { data } = await api.post("/gisa/validate", { 
+                gisaNumber: formData.gisaNumber,
+                name: searchName 
+            });
+            setGisaResult(data);
+        } catch (error: any) {
+            console.error("Failed to check GISA", error);
+            setGisaResult({ valid: false });
+        } finally {
+            setCheckingGisa(false);
+        }
+    };
 
     const checkVat = async () => {
         if (!formData.taxId) return alert("Bitte UID eingeben!");
@@ -157,7 +181,8 @@ function DriverEditorForm() {
                 iban: data.iban || "",
                 bic: data.bic || "",
                 isKleinunternehmer: data.isKleinunternehmer || false,
-                password: ""
+                password: "",
+                gisaNumber: data.gisaNumber || ""
             });
 
             // Set formatted IBAN
@@ -339,6 +364,45 @@ function DriverEditorForm() {
                                             ) : (
                                                 <div className="flex items-center gap-2">
                                                     <p className="font-black text-sm">✗ Ungültige UID / Fehler bei VIES</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {(formData.employmentType === "SELBSTSTANDIG" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
+                                <div className="mt-4">
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">GISA-Zahl *</label>
+                                    <div className="flex gap-2">
+                                        <input 
+                                          type="text" 
+                                          placeholder="GISA-Zahl (z.B. 12345678)" 
+                                          required 
+                                          className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" 
+                                          value={formData.gisaNumber} 
+                                          onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })} 
+                                        />
+                                        <button 
+                                          type="button" 
+                                          onClick={checkGisa} 
+                                          disabled={checkingGisa} 
+                                          className="bg-blue-600 text-white font-bold px-6 py-4 rounded-2xl hover:bg-blue-700 transition flex items-center gap-2"
+                                        >
+                                            {checkingGisa ? <Loader2 className="animate-spin" size={16} /> : "GISA Prüfen"}
+                                        </button>
+                                    </div>
+                                    {gisaResult && (
+                                        <div className={cn("mt-2 p-4 rounded-2xl border text-xs font-bold", gisaResult.valid ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-700 border-red-200")}>
+                                            {gisaResult.valid ? (
+                                                <div className="space-y-1">
+                                                    <p className="font-black text-sm">✓ GISA Aktiv</p>
+                                                    <p><span className="text-slate-500">Inhaber/Firma:</span> {gisaResult.name}</p>
+                                                    {gisaResult.description && <p><span className="text-slate-500">Wortlaut:</span> {gisaResult.description}</p>}
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-black text-sm">✗ GISA nicht gefunden / Name passt nicht</p>
                                                 </div>
                                             )}
                                         </div>

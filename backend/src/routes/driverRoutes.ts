@@ -2,6 +2,7 @@ import express, { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { TenantRequest } from '../middleware/tenantMiddleware';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ const driverSchema = z.object({
     bic: z.string().optional().nullable(),
     isKleinunternehmer: z.boolean().optional().nullable(),
     password: z.string().optional().nullable(),
+    gisaNumber: z.string().optional().nullable(),
 });
 
 // GET all drivers
@@ -151,11 +153,13 @@ router.post('/', async (req: TenantRequest, res: Response) => {
         if (validatedData.employmentType === 'FREIER_DIENSTNEHMER') prismaType = 'FREELANCE';
         if (validatedData.employmentType === 'SELBSTSTANDIG') prismaType = 'COMMERCIAL';
 
+        const hashedPassword = validatedData.password ? bcrypt.hashSync(validatedData.password, 10) : null;
+
         const user = await prisma.user.create({
             data: {
                 email: validatedData.email || `${validatedData.firstName.toLowerCase()}.${validatedData.lastName.toLowerCase()}@${subdomain || 'qqx'}.local`,
                 clerkId: `manual-${Date.now()}`,
-                password: validatedData.password, // Ideally hash this
+                password: hashedPassword,
                 role: 'DRIVER',
                 tenantId: tenantId as string
             }
@@ -175,6 +179,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 taxId: validatedData.taxId,
                 iban: validatedData.iban,
                 bic: validatedData.bic,
+                gisaNumber: validatedData.gisaNumber,
                 isKleinunternehmer: validatedData.isKleinunternehmer || false,
                 tenantId: tenantId as string,
                 userId: user.id
@@ -203,7 +208,7 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
 
     try {
         const validatedData = driverSchema.partial().parse(req.body);
-        const { password, email, employmentType, ...driverData } = validatedData;
+        const { password, email, employmentType, gisaNumber, ...driverData } = validatedData;
 
         const driver = await prisma.driver.findFirst({
             where: { id, tenantId: tenantId as string },
@@ -223,17 +228,19 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
                 ...driverData as any,
                 birthday: driverData.birthday ? new Date(driverData.birthday) : undefined,
                 type: prismaType,
+                gisaNumber: gisaNumber,
             }
         });
 
         // Update User email / password if provided
         if (email || password) {
+            const updateData: any = {};
+            if (email) updateData.email = email;
+            if (password) updateData.password = bcrypt.hashSync(password, 10);
+
             await prisma.user.update({
                 where: { id: driver.userId },
-                data: { 
-                    ...(email && { email }),
-                    ...(password && { password })
-                }
+                data: updateData
             });
         }
 

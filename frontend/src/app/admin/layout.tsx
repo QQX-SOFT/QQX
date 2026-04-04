@@ -25,7 +25,8 @@ import {
     Key,
     Building2,
     Banknote,
-    ScrollText
+    ScrollText,
+    UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,7 @@ const operationsLinks = [
     { name: "Kunden", icon: Building2, href: "/admin/customers" },
     { name: "Vermietung", icon: Key, href: "/admin/rentals" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
+    { name: "Bewerbungen", icon: UserPlus, href: "/admin/drivers/applications" },
     { name: "Verträge", icon: ScrollText, href: "/admin/contracts" },
     { name: "Dokumente", icon: FileText, href: "/admin/documents" },
 ];

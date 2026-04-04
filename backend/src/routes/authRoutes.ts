@@ -16,39 +16,51 @@ router.post('/login', async (req: TenantRequest, res: Response) => {
         const { email, password } = loginSchema.parse(req.body);
         const subdomain = req.headers['x-tenant-subdomain'] as string;
 
+        console.log(`[LOGIN ATTEMPT] Email: ${email}, Header Subdomain: ${subdomain || 'NONE'}`);
+
         // Find user by email (SUPER_ADMIN, CUSTOMER_ADMIN, DRIVER) - Case-insensitive
         let user = await prisma.user.findFirst({
             where: { 
                 email: { equals: email, mode: 'insensitive' } 
             },
             include: {
-                tenant: true
+                tenant: true,
+                driver: true // Include driver profile to get firstName/lastName
             }
         });
 
         if (user) {
+            console.log(`[LOGIN] User found: ${user.email}, Role: ${user.role}, User Tenant: ${user.tenant?.subdomain || 'NONE'}`);
+
             // Check password using bcrypt
-            if (!user.password || !bcrypt.compareSync(password, user.password)) {
+            const passwordMatch = user.password ? bcrypt.compareSync(password, user.password) : false;
+            if (!passwordMatch) {
+                console.warn(`[LOGIN] Password mismatch for ${email}`);
                 return res.status(401).json({ error: 'E-Mail oder Passwort falsch.' });
             }
 
-            // Check tenant context if not SUPER_ADMIN
-            if (user.role !== 'SUPER_ADMIN') {
-                if (subdomain && (!user.tenant || user.tenant.subdomain !== subdomain)) {
-                    return res.status(401).json({ error: 'Dieser Benutzer gehört nicht zu dieser Subdomain.' });
-                }
-            }
-
+            // Trust the user's tenant from DB over the header during login
             const resolvedSubdomain = user.tenant?.subdomain || subdomain || '';
 
             const { password: _, ...userWithoutPassword } = user;
+            
+            // Flatten driver name for convenience in mobile/apps
+            const finalUser = {
+                ...userWithoutPassword,
+                firstName: user.driver?.firstName,
+                lastName: user.driver?.lastName
+            };
+
+            console.log(`[LOGIN SUCCESS] User: ${user.email}, Resolved Subdomain: ${resolvedSubdomain}`);
             return res.json({
                 message: 'Login erfolgreich',
-                user: userWithoutPassword,
+                user: finalUser,
                 role: user.role,
                 subdomain: resolvedSubdomain
             });
         }
+
+        console.warn(`[LOGIN] No user found with email: ${email}`);
 
         // If not in User table, check Customer table
         // We only allow customers to login to a specific subdomain

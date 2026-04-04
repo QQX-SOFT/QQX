@@ -1,45 +1,25 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Package, Truck, Clock, Wallet, MessageCircle } from 'lucide-react-native';
 
+/**
+ * Tab tabanli navigasyonu Drawer ile değiştirdiğimiz için 
+ * bottom nav bar'ı tamamen gizliyoruz. 
+ * Sidebar Drawer özelliği DrawerShell bileşeni ile sayfa bazlı sağlanacak.
+ */
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: '#2563eb', headerShown: false }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Marktplatz',
-          tabBarIcon: ({ color }) => <Package size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="active"
-        options={{
-          title: 'Route',
-          tabBarIcon: ({ color }) => <Truck size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="wallet"
-        options={{
-          title: 'Geldbörse',
-          tabBarIcon: ({ color }) => <Wallet size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="messages"
-        options={{
-          title: 'Support',
-          tabBarIcon: ({ color }) => <MessageCircle size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: 'Historie',
-          tabBarIcon: ({ color }) => <Clock size={24} color={color} />,
-        }}
-      />
+    <Tabs 
+      screenOptions={{ 
+        tabBarActiveTintColor: '#2563eb',
+        tabBarStyle: { display: 'none' }, // Navbar gizli
+        headerShown: false,
+      }}
+    >
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="active" />
+      <Tabs.Screen name="wallet" />
+      <Tabs.Screen name="messages" />
+      <Tabs.Screen name="history" />
     </Tabs>
   );
 }

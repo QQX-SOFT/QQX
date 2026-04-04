@@ -24,6 +24,10 @@ import uploadRoutes from './routes/uploadRoutes';
 import authRoutes from './routes/authRoutes';
 import vatRoutes from './routes/vatRoutes';
 import messageRoutes from './routes/messageRoutes';
+import gisaRoutes from './routes/gisaRoutes';
+import applicationRoutes from './routes/applicationRoutes';
+
+
 
 import { tenantMiddleware } from './middleware/tenantMiddleware';
 
@@ -81,6 +85,10 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/vat', vatRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/gisa', gisaRoutes);
+app.use('/api/applications', applicationRoutes);
+
+
 
 app.get('/health', (req: express.Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });

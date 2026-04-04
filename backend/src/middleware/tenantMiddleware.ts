@@ -20,8 +20,13 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
     const isTenantAPI = path.includes('/api/tenants') || path.includes('/api/superadmin');
     const isHealthOrAuth = path.includes('/health') || path.includes('/auth');
 
-    if (isTenantAPI || isHealthOrAuth || !subdomain) {
-        console.log(`[TenantMiddleware] Bypassing check for ${path}. Subdomain: ${subdomain || 'none'}`);
+    if (isTenantAPI || isHealthOrAuth) {
+        console.log(`[TenantMiddleware] Bypassing check for ${path}. Subdomain header ignored.`);
+        return next();
+    }
+
+    if (!subdomain) {
+        console.log(`[TenantMiddleware] No subdomain for ${path}. Proceeding...`);
         return next();
     }
 

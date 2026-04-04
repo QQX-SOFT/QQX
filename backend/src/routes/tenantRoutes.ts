@@ -1,6 +1,7 @@
 import express, { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -90,7 +91,7 @@ router.post('/', async (req: express.Request, res: Response) => {
             await prisma.user.create({
                 data: {
                     email: adminEmail,
-                    password: adminPassword, // Should be hashed
+                    password: bcrypt.hashSync(adminPassword, 10),
                     role: 'CUSTOMER_ADMIN',
                     tenantId: tenant.id,
                     clerkId: `initial-admin-${Date.now()}`
@@ -212,7 +213,7 @@ router.post('/:id/admins', async (req: express.Request, res: Response) => {
         const user = await prisma.user.create({
             data: {
                 email,
-                password, // Should be hashed
+                password: bcrypt.hashSync(password, 10),
                 role: 'CUSTOMER_ADMIN',
                 tenantId: id,
                 clerkId: `manual-admin-${Date.now()}`

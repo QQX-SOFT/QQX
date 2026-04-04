@@ -5,7 +5,9 @@ type User = {
   id: string;
   email: string;
   role: string;
-  tenant?: { subdomain: string };
+  firstName?: string;
+  lastName?: string;
+  tenant?: { name: string, subdomain: string };
 };
 
 type AuthContextType = {

@@ -5,6 +5,8 @@ import OrderCard, { Order } from '../../components/OrderCard';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react-native';
 
+import DrawerShell from '../../components/DrawerShell';
+
 export default function HistoryTab() {
   const { user, logout } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -28,26 +30,9 @@ export default function HistoryTab() {
     fetchOrders();
   }, [user]);
 
-  const handleLogout = () => {
-    Alert.alert('Abmelden', 'Sind Sie sicher, dass Sie sich abmelden möchten?', [
-      { text: 'Abbrechen', style: 'cancel' },
-      { text: 'Abmelden', style: 'destructive', onPress: logout }
-    ]);
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <DrawerShell title="Historie">
       <View style={styles.container}>
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.title}>Historie</Text>
-            <Text style={styles.subtitle}>Absolvierte Aufträge</Text>
-          </View>
-          <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-            <LogOut color="#ef4444" size={24} />
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.statsCard}>
           <Text style={styles.statsLabel}>Heute abgeschlossen</Text>
           <Text style={styles.statsValue}>{orders.length}</Text>
@@ -71,7 +56,7 @@ export default function HistoryTab() {
           />
         )}
       </View>
-    </SafeAreaView>
+    </DrawerShell>
   );
 }
 

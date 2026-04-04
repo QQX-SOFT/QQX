@@ -4,6 +4,8 @@ import { Wallet, TrendingUp, Star, Download, CheckCircle2, Clock } from 'lucide-
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 
+import DrawerShell from '../../components/DrawerShell';
+
 export default function WalletTab() {
   const { user } = useAuth();
   const [balance, setBalance] = useState<number>(0);
@@ -54,16 +56,11 @@ export default function WalletTab() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <DrawerShell title="Geldbörse">
       <ScrollView 
         style={styles.container}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchWalletData} />}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Geldbörse</Text>
-          <Text style={styles.subtitle}>Einnahmen & Zahlungen</Text>
-        </View>
-
         {/* Wallet Card */}
         <View style={styles.walletCard}>
           <View style={styles.cardHeader}>
@@ -139,7 +136,7 @@ export default function WalletTab() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </DrawerShell>
   );
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Package } from 'lucide-react-native';
+import { MapPin, ChevronRight, Euro } from 'lucide-react-native';
 
 export type Order = {
   id: string;
@@ -20,21 +20,32 @@ type Props = {
 
 export default function OrderCard({ order, onPress }: Props) {
   const sender = order.senderName || order.tenant?.name || "Abholung";
+  // Assuming a 40% driver cut for display
   const driverCut = (order.amount * 0.4).toFixed(2);
 
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(order)}>
+    <TouchableOpacity 
+        style={styles.card} 
+        onPress={() => onPress(order)}
+        activeOpacity={0.7}
+    >
       <View style={styles.left}>
         <View style={styles.iconContainer}>
-          <Package size={20} color="#2563eb" />
+          <MapPin size={22} color="#2563eb" strokeWidth={2} />
         </View>
         <View style={styles.details}>
-          <Text style={styles.title}>{sender}</Text>
-          <Text style={styles.address} numberOfLines={1}>{order.address}</Text>
+          <Text style={styles.title} numberOfLines={1}>{sender}</Text>
+          <View style={styles.addressRow}>
+             <Text style={styles.address} numberOfLines={1}>{order.address}</Text>
+          </View>
         </View>
       </View>
       <View style={styles.right}>
-        <Text style={styles.price}>€{driverCut}</Text>
+        <View style={styles.priceContainer}>
+           <Text style={styles.priceLabel}>VERDIENST</Text>
+           <Text style={styles.price}>€{driverCut}</Text>
+        </View>
+        <ChevronRight size={18} color="#cbd5e1" />
       </View>
     </TouchableOpacity>
   );
@@ -42,34 +53,74 @@ export default function OrderCard({ order, onPress }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: '#f1f5f9',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowColor: '#64748b',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  left: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  left: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    flex: 1 
+  },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     backgroundColor: '#eff6ff',
-    borderRadius: 12,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
-  details: { flex: 1, paddingRight: 8 },
-  title: { fontSize: 14, fontWeight: '800', color: '#0f172a' },
-  address: { fontSize: 12, fontWeight: '500', color: '#64748b' },
-  right: { alignItems: 'flex-end', justifyContent: 'center', height: '100%' },
-  price: { fontSize: 16, fontWeight: '800', color: '#16a34a' },
+  details: { 
+    flex: 1, 
+    justifyContent: 'center' 
+  },
+  title: { 
+    fontSize: 15, 
+    fontWeight: '800', 
+    color: '#0f172a',
+    marginBottom: 2
+  },
+  addressRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  address: { 
+    fontSize: 12, 
+    fontWeight: '500', 
+    color: '#64748b',
+    maxWidth: '90%'
+  },
+  right: { 
+    flexDirection: 'row',
+    alignItems: 'center', 
+    gap: 8
+  },
+  priceContainer: {
+    alignItems: 'flex-end',
+    marginRight: 4
+  },
+  priceLabel: {
+    fontSize: 8,
+    fontWeight: '900',
+    color: '#94a3b8',
+    letterSpacing: 1,
+    marginBottom: 1
+  },
+  price: { 
+    fontSize: 18, 
+    fontWeight: '900', 
+    color: '#16a34a' 
+  },
 });

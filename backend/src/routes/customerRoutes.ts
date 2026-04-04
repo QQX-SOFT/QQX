@@ -1,6 +1,7 @@
 import express, { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { TenantRequest } from '../middleware/tenantMiddleware';
+import bcrypt from 'bcryptjs';
 
 const router = Router();
 
@@ -53,7 +54,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
         if (email) customerData.email = email;
         if (phone) customerData.phone = phone;
         if (address) customerData.address = address;
-        if (password) customerData.password = password;
+        if (password) customerData.password = bcrypt.hashSync(password, 10);
 
         // Optionally, create a user if credentials are provided so they can log in
         if (email && password) {
@@ -63,7 +64,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 await prisma.user.create({
                     data: {
                         email,
-                        password, // Should be hashed in production
+                        password: bcrypt.hashSync(password, 10),
                         role: 'CUSTOMER_ADMIN',
                         tenantId: tenantId as string,
                         clerkId: `customer-${Date.now()}`
@@ -99,7 +100,7 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
         if (email !== undefined) updateData.email = email;
         if (phone !== undefined) updateData.phone = phone;
         if (address !== undefined) updateData.address = address;
-        if (password) updateData.password = password;
+        if (password) updateData.password = bcrypt.hashSync(password, 10);
 
         const customer = await prisma.customer.update({
             where: { id, tenantId: tenantId as string },
