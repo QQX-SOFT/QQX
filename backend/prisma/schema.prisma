@@ -101,6 +101,10 @@ model Driver {
   lastName      String
   phone         String?
   birthday      DateTime?
+  placeOfBirth  String?
+  nationality   String?
+  religion      String?
+  maritalStatus String?
   
   // Professional / Legal
   ssn           String?   // Sozialversicherungsnummer
@@ -679,6 +683,10 @@ model DriverApplication {
   email         String
   phone         String?
   birthday      DateTime?
+  placeOfBirth  String?
+  nationality   String?
+  religion      String?
+  maritalStatus String?
   
   employmentType String  // ECHTER_DIENSTNEHMER, FREIER_DIENSTNEHMER, SELBSTSTANDIG
   

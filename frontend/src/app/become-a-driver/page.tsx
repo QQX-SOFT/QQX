@@ -43,6 +43,10 @@ const translations: any = {
         email: "E-Mail Adresse",
         phone: "Telefonnummer",
         birthday: "Geburtsdatum",
+        placeOfBirth: "Geburtsort",
+        nationality: "Staatsbürgerschaft",
+        religion: "Religionszugehörigkeit (optional)",
+        maritalStatus: "Familienstand",
         street: "Straße / Hausnummer",
         zip: "PLZ",
         city: "Stadt",
@@ -86,6 +90,10 @@ const translations: any = {
         email: "Email Address",
         phone: "Phone Number",
         birthday: "Date of Birth",
+        placeOfBirth: "Place of Birth",
+        nationality: "Nationality",
+        religion: "Religion (optional)",
+        maritalStatus: "Marital Status",
         street: "Street / Number",
         zip: "ZIP",
         city: "City",
@@ -129,6 +137,10 @@ const translations: any = {
         email: "البريد الإلكتروني",
         phone: "رقم الهاتف",
         birthday: "تاريخ الميلاد",
+        placeOfBirth: "مكان الولادة",
+        nationality: "الجنسية",
+        religion: "الديانة (اختياري)",
+        maritalStatus: "الحالة الاجتماعية",
         street: "الشارع / الرقم",
         zip: "الرمز البريدي",
         city: "المدينة",
@@ -169,6 +181,10 @@ export default function BecomeADriverPage() {
         email: "",
         phone: "",
         birthday: "",
+        placeOfBirth: "",
+        nationality: "",
+        religion: "",
+        maritalStatus: "",
         employmentType: "ECHTER_DIENSTNEHMER",
         street: "",
         zip: "",
@@ -428,6 +444,14 @@ export default function BecomeADriverPage() {
                                     <input placeholder={t.phone} required className={cn("w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold", isRtl ? "pr-14" : "pl-14")} value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
                                 </div>
                                 <input type="date" required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-500 uppercase text-[10px] tracking-widest" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input placeholder={t.placeOfBirth} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.placeOfBirth} onChange={e => setFormData({ ...formData, placeOfBirth: e.target.value })} />
+                                    <input placeholder={t.nationality} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.nationality} onChange={e => setFormData({ ...formData, nationality: e.target.value })} />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input placeholder={t.maritalStatus} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.maritalStatus} onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })} />
+                                    <input placeholder={t.religion} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.religion} onChange={e => setFormData({ ...formData, religion: e.target.value })} />
+                                </div>
                             </div>
                         </section>
 
