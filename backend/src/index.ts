@@ -26,6 +26,8 @@ import vatRoutes from './routes/vatRoutes';
 import messageRoutes from './routes/messageRoutes';
 import gisaRoutes from './routes/gisaRoutes';
 import applicationRoutes from './routes/applicationRoutes';
+import shiftRoutes from './routes/shiftRoutes';
+
 
 
 
@@ -87,6 +89,8 @@ app.use('/api/vat', vatRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/gisa', gisaRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/shifts', shiftRoutes);
+
 
 
 

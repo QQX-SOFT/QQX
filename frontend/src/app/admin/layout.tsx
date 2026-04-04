@@ -43,6 +43,7 @@ const operationsLinks = [
     { name: "Vermietung", icon: Key, href: "/admin/rentals" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
     { name: "Bewerbungen", icon: UserPlus, href: "/admin/drivers/applications" },
+    { name: "Schichten", icon: Calendar, href: "/admin/shifts" },
     { name: "Verträge", icon: ScrollText, href: "/admin/contracts" },
     { name: "Dokumente", icon: FileText, href: "/admin/documents" },
 ];

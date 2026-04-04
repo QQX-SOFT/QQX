@@ -19,7 +19,9 @@ import {
     CreditCard,
     ArrowLeft,
     ExternalLink,
-    FileSearch
+    FileSearch,
+    BadgeCheck,
+    AlertCircle
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -142,13 +144,27 @@ export default function AdminApplicationsPage() {
                                     <div className="w-16 h-16 bg-slate-900 rounded-[1.75rem] flex items-center justify-center text-white font-black text-2xl">
                                         {selectedApp.firstName[0]}
                                     </div>
-                                    <div>
-                                        <h2 className="text-2xl font-black text-slate-900">{selectedApp.firstName} {selectedApp.lastName}</h2>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">{selectedApp.employmentType}</span>
-                                            <span className="w-1 h-1 bg-slate-200 rounded-full" />
-                                            <span className="text-xs font-bold text-slate-400">Eingegangen am {new Date(selectedApp.createdAt).toLocaleDateString()}</span>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h2 className="text-2xl font-black text-slate-900">{selectedApp.firstName} {selectedApp.lastName}</h2>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">{selectedApp.employmentType}</span>
+                                                <span className="w-1 h-1 bg-slate-200 rounded-full" />
+                                                <span className="text-xs font-bold text-slate-400">Eingegangen am {new Date(selectedApp.createdAt).toLocaleDateString()}</span>
+                                            </div>
                                         </div>
+
+                                        {selectedApp.hasWorkPermit ? (
+                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-green-100 shadow-sm">
+                                                <BadgeCheck size={14} />
+                                                Arbeitsbewilligung: Ja
+                                            </div>
+                                        ) : (
+                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm">
+                                                <AlertCircle size={14} />
+                                                Arbeitsbewilligung: Nein
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
@@ -162,8 +178,8 @@ export default function AdminApplicationsPage() {
                                             </button>
                                             <button 
                                               onClick={() => convertToDriver(selectedApp)}
-                                              disabled={processing}
-                                              className="px-6 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-green-700 shadow-lg shadow-green-500/20 flex items-center gap-2"
+                                              disabled={processing || !selectedApp.hasWorkPermit}
+                                              className="px-6 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-green-700 shadow-lg shadow-green-500/20 flex items-center gap-2 disabled:opacity-50"
                                             >
                                                 {processing ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
                                                 Bestätigen & Erstellen
@@ -222,12 +238,14 @@ export default function AdminApplicationsPage() {
                                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Hochgeladene Dokumente</h4>
                                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                                      {[
-                                         { id: "idCardUrl", label: "Ausweis" },
-                                         { id: "licenseUrl", label: "Führerschein" },
+                                         { id: "idCardUrl", label: "Passport" },
+                                         { id: "licenseUrl", label: "Führerschein B" },
                                          { id: "meldezettelUrl", label: "Meldezettel" },
+                                         { id: "eCardUrl", label: "eCard" },
+                                         { id: "greyCardUrl", label: "Graue Karte" },
+                                         { id: "businessRegUrl", label: "Gewerbeschein" },
                                          { id: "gisaExtractUrl", label: "GISA-Auszug" },
-                                         { id: "svsConfirmationUrl", label: "SVS Bekatigung" },
-                                         { id: "businessRegUrl", label: "Gewerbeschein" }
+                                         { id: "svsConfirmationUrl", label: "SVS Bestätigung" }
                                      ].filter(doc => selectedApp[doc.id]).map(doc => (
                                          <a 
                                            key={doc.id}

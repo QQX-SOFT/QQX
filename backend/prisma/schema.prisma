@@ -45,6 +45,9 @@ model Tenant {
   contractTemplates ContractTemplate[]
   messages   Message[]
   
+  shiftAreas   ShiftArea[]
+  shifts       Shift[]
+  
   // New SaaS relations
   locations    Location[]
   planId       String?
@@ -133,6 +136,7 @@ model Driver {
   contracts     Contract[]
   payouts       Payout[]
   walletHistory WalletHistory[]
+  shiftAssignments ShiftAssignment[]
 
   @@index([tenantId])
 }
@@ -688,15 +692,20 @@ model DriverApplication {
   status        ApplicationStatus @default(PENDING)
   notes         String?
   
+  hasWorkPermit Boolean  @default(false)
+
   // Document URLs
-  idCardUrl     String?  // Lichtbildausweis
-  licenseUrl    String?  // Führerschein
+  idCardUrl     String?  // Passport / Lichtbildausweis
+  licenseUrl    String?  // Führerschein B
   meldezettelUrl String? // Meldezettel
+  eCardUrl      String?  // eCard
+  greyCardUrl   String?  // Graue Karte (subsidiär Schutzberechtigte)
   gisaExtractUrl String? // GISA-Auszug
   svsConfirmationUrl String? // SVS Bestätigung
   businessRegUrl String? // Gewerbeschein
 
   acceptedTerms Boolean @default(false)
+
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -704,6 +713,79 @@ model DriverApplication {
   @@index([tenantId])
 }
 
+model ShiftArea {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  name      String
+  city      String?
+  zipCodes  String? // Komma-getrennt
+  
+  shifts    Shift[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+}
+
+model Shift {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  areaId      String
+  area        ShiftArea @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  
+  startTime   DateTime
+  endTime     DateTime
+  
+  maxDrivers  Int      @default(1)
+  notes       String?
+  
+  status      ShiftStatus @default(OPEN)
+  
+  assignments ShiftAssignment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([areaId])
+}
+
+model ShiftAssignment {
+  id        String   @id @default(uuid())
+  shiftId   String
+  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  
+  status    AssignmentStatus @default(PENDING) // PENDING, CONFIRMED, REJECTED
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([shiftId, driverId])
+  @@index([shiftId])
+  @@index([driverId])
+}
+
+enum ShiftStatus {
+  OPEN
+  FULL
+  CANCELLED
+  COMPLETED
+}
+
+enum AssignmentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  CANCELLED
+}
 
 enum ApplicationStatus {
   PENDING

@@ -20,9 +20,12 @@ const applicationSchema = z.object({
   gisaNumber: z.string().optional(),
   iban: z.string().optional(),
   bic: z.string().optional(),
+  hasWorkPermit: z.boolean().optional(),
   idCardUrl: z.string().optional().nullable(),
   licenseUrl: z.string().optional().nullable(),
   meldezettelUrl: z.string().optional().nullable(),
+  eCardUrl: z.string().optional().nullable(),
+  greyCardUrl: z.string().optional().nullable(),
   gisaExtractUrl: z.string().optional().nullable(),
   svsConfirmationUrl: z.string().optional().nullable(),
   businessRegUrl: z.string().optional().nullable(),
@@ -150,15 +153,18 @@ router.post('/:id/approve', async (req: TenantRequest, res: Response) => {
 
     // 4. Create Documents
     const docs = [
-      { url: app.idCardUrl, type: 'LICENSE', title: 'Lichtbildausweis' }, // Using LICENSE as internal DocumentType mapping
-      { url: app.licenseUrl, type: 'LICENSE', title: 'Führerschein' },
-      { url: app.meldezettelUrl, type: 'OTHER', title: 'Meldezettel' },
-      { url: app.gisaExtractUrl, type: 'BUSINESS_REG', title: 'GISA-Auszug' },
-      { url: app.svsConfirmationUrl, type: 'OTHER', title: 'SVS Bestätigung' },
-      { url: app.businessRegUrl, type: 'BUSINESS_REG', title: 'Gewerbeschein' },
+      { url: app.idCardUrl, type: 'LICENSE' as const, title: 'Passport' },
+      { url: app.licenseUrl, type: 'LICENSE' as const, title: 'Führerschein B' },
+      { url: app.meldezettelUrl, type: 'OTHER' as const, title: 'Meldezettel' },
+      { url: app.eCardUrl, type: 'OTHER' as const, title: 'eCard' },
+      { url: app.greyCardUrl, type: 'OTHER' as const, title: 'Graue Karte' },
+      { url: app.gisaExtractUrl, type: 'BUSINESS_REG' as const, title: 'GISA-Auszug' },
+      { url: app.svsConfirmationUrl, type: 'OTHER' as const, title: 'SVS Bestätigung' },
+      { url: app.businessRegUrl, type: 'BUSINESS_REG' as const, title: 'Gewerbeschein' },
     ];
 
     for (const doc of docs) {
+
       if (doc.url) {
         await prisma.document.create({
           data: {

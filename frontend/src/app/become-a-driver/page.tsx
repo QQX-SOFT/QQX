@@ -17,7 +17,9 @@ import {
     Upload,
     FileCheck,
     Globe,
-    Languages
+    Languages,
+    BadgeCheck,
+    AlertCircle
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,9 @@ const translations: any = {
         title: "Fahrer werden",
         subtitle: "Starten Sie Ihre Karriere bei QQX. Füllen Sie das Formular aus.",
         joinFleet: "Join the Fleet",
+        workPermit: "Haben Sie eine gültige Arbeitsbewilligung?",
+        yes: "Ja",
+        no: "Nein",
         contractType: "Wählen Sie Ihren Vertragstyp",
         personalInfo: "Persönliche Informationen",
         address: "Anschrift",
@@ -67,6 +72,9 @@ const translations: any = {
         title: "Become a Driver",
         subtitle: "Start your career with QQX. Please fill out the form.",
         joinFleet: "Join the Fleet",
+        workPermit: "Do you have a valid work permit?",
+        yes: "Yes",
+        no: "No",
         contractType: "Select Your Contract Type",
         personalInfo: "Personal Information",
         address: "Address",
@@ -107,6 +115,9 @@ const translations: any = {
         title: "كن سائقاً",
         subtitle: "ابدأ مسيرتك المهنية مع QQX. يرجى ملء النموذج.",
         joinFleet: "انضم إلى الأسطول",
+        workPermit: "هل لديك تصريح عمل ساري المفعول؟",
+        yes: "نعم",
+        no: "لا",
         contractType: "اختر نوع عقدك",
         personalInfo: "المعلومات الشخصية",
         address: "العنوان",
@@ -152,7 +163,7 @@ export default function BecomeADriverPage() {
 
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<any>({
         firstName: "",
         lastName: "",
         email: "",
@@ -165,9 +176,12 @@ export default function BecomeADriverPage() {
         ssn: "",
         taxId: "",
         gisaNumber: "",
+        hasWorkPermit: true,
         idCardUrl: "",
         licenseUrl: "",
         meldezettelUrl: "",
+        eCardUrl: "",
+        greyCardUrl: "",
         gisaExtractUrl: "",
         svsConfirmationUrl: "",
         businessRegUrl: "",
@@ -190,7 +204,7 @@ export default function BecomeADriverPage() {
             const { data } = await api.post("/upload", fData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
-            setFormData(prev => ({ ...prev, [field]: data.url }));
+            setFormData((prev: any) => ({ ...prev, [field]: data.url }));
         } catch (e) {
             alert(lang === "AR" ? "فشل التحميل" : (lang === "EN" ? "Upload failed" : "Upload fehlgeschlagen."));
         } finally {
@@ -200,23 +214,27 @@ export default function BecomeADriverPage() {
 
     const docRequirements: any = {
         ECHTER_DIENSTNEHMER: [
-            { id: "idCardUrl", label: lang === "AR" ? "الهوية / الجواز" : (lang === "EN" ? "ID Card / Passport" : "Lichtbildausweis / Passport") },
-            { id: "licenseUrl", label: lang === "AR" ? "رخصة القيادة" : (lang === "EN" ? "Driver's License" : "Führerschein (Klasse B)") },
-            { id: "meldezettelUrl", label: lang === "AR" ? "تأكيد السكن" : (lang === "EN" ? "Proof of Residence" : "Meldezettel") }
+            { id: "idCardUrl", label: "Passport", required: true },
+            { id: "licenseUrl", label: "Führerschein B", required: true },
+            { id: "meldezettelUrl", label: "Meldezettel (Optional)", required: false },
+            { id: "eCardUrl", label: "eCard", required: true },
+            { id: "greyCardUrl", label: "Graue Karte (Subsidiär Schutzberechtigte)", required: true },
         ],
         FREIER_DIENSTNEHMER: [
-            { id: "idCardUrl", label: lang === "AR" ? "الهوية / الجواز" : (lang === "EN" ? "ID Card / Passport" : "Lichtbildausweis / Passport") },
-            { id: "licenseUrl", label: lang === "AR" ? "رخصة القيادة" : (lang === "EN" ? "Driver's License" : "Führerschein (Klasse B)") },
-            { id: "meldezettelUrl", label: lang === "AR" ? "تأكيد السكن" : (lang === "EN" ? "Proof of Residence" : "Meldezettel") },
-            { id: "svsConfirmationUrl", label: "SVS Bestätigung" }
+            { id: "idCardUrl", label: "Passport", required: true },
+            { id: "licenseUrl", label: "Führerschein B", required: true },
+            { id: "meldezettelUrl", label: "Meldezettel (Optional)", required: false },
+            { id: "eCardUrl", label: "eCard", required: true },
+            { id: "greyCardUrl", label: "Graue Karte (Subsidiär Schutzberechtigte)", required: true },
+            { id: "businessRegUrl", label: "Gewerbeschein (Optional)", required: false },
         ],
         SELBSTSTANDIG: [
-            { id: "idCardUrl", label: lang === "AR" ? "الهوية / الجواز" : (lang === "EN" ? "ID Card / Passport" : "Lichtbildausweis / Passport") },
-            { id: "licenseUrl", label: lang === "AR" ? "رخصة القيادة" : (lang === "EN" ? "Driver's License" : "Führerschein (Klasse B)") },
-            { id: "meldezettelUrl", label: lang === "AR" ? "تأكيد السكن" : (lang === "EN" ? "Proof of Residence" : "Meldezettel") },
-            { id: "gisaExtractUrl", label: "GISA-Auszug" },
-            { id: "svsConfirmationUrl", label: "SVS Bestätigung" },
-            { id: "businessRegUrl", label: lang === "AR" ? "الترخيص التجاري" : (lang === "EN" ? "Business License" : "Gewerbeschein") }
+            { id: "idCardUrl", label: "Passport", required: true },
+            { id: "licenseUrl", label: "Führerschein B", required: true },
+            { id: "meldezettelUrl", label: "Meldezettel (Optional)", required: false },
+            { id: "eCardUrl", label: "eCard", required: true },
+            { id: "greyCardUrl", label: "Graue Karte (Subsidiär Schutzberechtigte)", required: true },
+            { id: "businessRegUrl", label: "Gewerbeschein (Optional)", required: false },
         ]
     };
 
@@ -321,6 +339,47 @@ export default function BecomeADriverPage() {
                 </header>
 
                 <form onSubmit={handleSubmit} className="bg-white rounded-[3.5rem] p-8 lg:p-16 border border-slate-200 shadow-2xl space-y-12">
+                    
+                    {/* Work Permit Section */}
+                    <section className="space-y-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-slate-900 rounded-xl"><BadgeCheck size={18} className="text-white" /></div>
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">{t.workPermit}</h3>
+                        </div>
+                        <div className="flex gap-4">
+                            <button
+                                type="button"
+                                onClick={() => setFormData({...formData, hasWorkPermit: true})}
+                                className={cn(
+                                    "flex-1 py-6 rounded-[2rem] border-2 font-black text-[10px] uppercase tracking-widest transition-all",
+                                    formData.hasWorkPermit ? "border-blue-600 bg-blue-50 text-blue-600" : "border-slate-100 bg-white text-slate-400"
+                                )}
+                            >
+                                {t.yes}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setFormData({...formData, hasWorkPermit: false})}
+                                className={cn(
+                                    "flex-1 py-6 rounded-[2rem] border-2 font-black text-[10px] uppercase tracking-widest transition-all",
+                                    !formData.hasWorkPermit ? "border-red-600 bg-red-50 text-red-600" : "border-slate-100 bg-white text-slate-400"
+                                )}
+                            >
+                                {t.no}
+                            </button>
+                        </div>
+                        {!formData.hasWorkPermit && (
+                            <div className="p-6 bg-red-50 border border-red-100 rounded-3xl flex items-center gap-4 animate-in slide-in-from-top-4">
+                                <AlertCircle className="text-red-500" size={24} />
+                                <p className="text-[10px] font-black uppercase text-red-600 tracking-widest leading-relaxed">
+                                    {lang === "DE" ? "Ohne gültige Arbeitsbewilligung können wir Ihre Bewerbung leider nicht bearbeiten." : 
+                                     lang === "EN" ? "Without a valid work permit, we cannot process your application." :
+                                     "بدون تصريح عمل ساري المفعول، لا يمكننا معالجة طلبك."}
+                                </p>
+                            </div>
+                        )}
+                    </section>
+                    
                     {/* Employment Type Selector */}
                     <section className="space-y-6">
                         <div className="flex items-center gap-3">
@@ -481,7 +540,7 @@ export default function BecomeADriverPage() {
                                             )}>
                                                 {formData[doc.id as keyof typeof formData] ? <FileCheck size={20} /> : <FileText size={20} />}
                                             </div>
-                                            <div>
+                                            <div className="flex flex-col">
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">{doc.label}</p>
                                                 <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">
                                                     {formData[doc.id as keyof typeof formData] ? t.uploaded : t.notUploaded}
@@ -505,6 +564,11 @@ export default function BecomeADriverPage() {
                                             </div>
                                         </label>
                                     </div>
+                                    {doc.required && !formData[doc.id as keyof typeof formData] && (
+                                        <div className="absolute top-0 right-0 p-2">
+                                            <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -527,8 +591,11 @@ export default function BecomeADriverPage() {
 
                         <button
                             type="submit"
-                            disabled={submitting || !!uploadingField}
-                            className="w-full py-8 bg-blue-600 text-white rounded-3xl font-black text-sm uppercase tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-blue-700 hover:scale-[1.01] active:scale-[0.99] transition-all shadow-2xl shadow-blue-500/20"
+                            disabled={submitting || !!uploadingField || !formData.hasWorkPermit}
+                            className={cn(
+                                "w-full py-8 text-white rounded-3xl font-black text-sm uppercase tracking-[0.3em] flex items-center justify-center gap-4 transition-all shadow-2xl",
+                                !formData.hasWorkPermit ? "bg-slate-300 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700 hover:scale-[1.01] active:scale-[0.99] shadow-blue-500/20"
+                            )}
                         >
                             {submitting ? <Loader2 className="animate-spin" size={24} /> : (
                                 <>
