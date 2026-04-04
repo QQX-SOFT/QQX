@@ -81,6 +81,15 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
         }
     }, [authLoading]);
 
+    const handleLogout = () => {
+        // Clear cookie
+        document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT; SameSite=Lax";
+        // Clear all storage
+        localStorage.clear();
+        // Force full reload
+        window.location.href = "/login";
+    };
+
     if (authLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -173,7 +182,10 @@ export default function DriverLayout({ children }: { children: React.ReactNode }
                                 <NavigationLinks setMenuOpen={setMenuOpen} />
                             </Suspense>
 
-                            <button className="w-full mt-auto p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition duration-300">
+                            <button 
+                                onClick={handleLogout}
+                                className="w-full mt-auto p-4 bg-red-50 hover:bg-red-100 text-red-600 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition duration-300"
+                            >
                                 <LogOut size={16} /> Abmelden
                             </button>
                         </motion.div>
