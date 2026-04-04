@@ -80,8 +80,8 @@ export default function MessagesTab() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <View style={styles.header}>
-            <Text style={styles.title}>Destek & Sohbet</Text>
-            <Text style={styles.subtitle}>Merkez ile İletişim</Text>
+            <Text style={styles.title}>Support & Chat</Text>
+            <Text style={styles.subtitle}>Kommunikation mit der Zentrale</Text>
         </View>
 
         {loading ? (
@@ -99,8 +99,8 @@ export default function MessagesTab() {
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <MessageSquare size={48} color="#e2e8f0" />
-                <Text style={styles.emptyText}>Henüz mesajınız yok.</Text>
-                <Text style={styles.emptySubtext}>Bir sorun yaşarsanız buradan merkeze yazabilirsiniz.</Text>
+                <Text style={styles.emptyText}>Noch keine Nachrichten.</Text>
+                <Text style={styles.emptySubtext}>Bei Problemen können Sie hier die Zentrale kontaktieren.</Text>
               </View>
             }
           />
@@ -109,7 +109,7 @@ export default function MessagesTab() {
         <View style={styles.inputArea}>
           <TextInput
             style={styles.input}
-            placeholder="Bir mesaj yazın..."
+            placeholder="Schreiben Sie eine Nachricht..."
             value={inputText}
             onChangeText={setInputText}
             multiline

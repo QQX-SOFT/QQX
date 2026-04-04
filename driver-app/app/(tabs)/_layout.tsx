@@ -22,14 +22,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="wallet"
         options={{
-          title: 'Cüzdan',
+          title: 'Geldbörse',
           tabBarIcon: ({ color }) => <Wallet size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Destek',
+          title: 'Support',
           tabBarIcon: ({ color }) => <MessageCircle size={24} color={color} />,
         }}
       />

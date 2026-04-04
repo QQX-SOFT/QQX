@@ -36,18 +36,18 @@ export default function WalletTab() {
 
   const requestPayout = async () => {
     if (balance <= 0) {
-      Alert.alert('Hata', 'Çekilebilir bakiyeniz bulunmuyor.');
+      Alert.alert('Fehler', 'Sie haben kein auszahlbares Guthaben.');
       return;
     }
-    Alert.alert('Para Çekme', `Tüm bakiyeniz (€${balance.toFixed(2)}) için ödeme talebi oluşturulsun mu?`, [
-      { text: 'İptal', style: 'cancel' },
-      { text: 'Talep Et', onPress: async () => {
+    Alert.alert('Auszahlung', `Möchten Sie eine Auszahlung Ihres gesamten Guthabens (€${balance.toFixed(2)}) anfordern?`, [
+      { text: 'Abbrechen', style: 'cancel' },
+      { text: 'Anfordern', onPress: async () => {
         try {
           await api.post('/payouts', { driverId, amount: balance, notes: "App Payout Request" });
-          Alert.alert('Başarılı', 'Ödeme talebiniz oluşturuldu.');
+          Alert.alert('Erfolg', 'Ihre Auszahlungsanfrage wurde erstellt.');
           fetchWalletData();
         } catch(e) {
-          Alert.alert('Hata', 'Talep oluşturulamadı.');
+          Alert.alert('Fehler', 'Anfrage konnte nicht erstellt werden.');
         }
       }}
     ]);
@@ -60,15 +60,15 @@ export default function WalletTab() {
         refreshControl={<RefreshControl refreshing={loading} onRefresh={fetchWalletData} />}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>Cüzdan</Text>
-          <Text style={styles.subtitle}>Kazançlar & Ödemeler</Text>
+          <Text style={styles.title}>Geldbörse</Text>
+          <Text style={styles.subtitle}>Einnahmen & Zahlungen</Text>
         </View>
 
         {/* Wallet Card */}
         <View style={styles.walletCard}>
           <View style={styles.cardHeader}>
             <View>
-              <Text style={styles.cardLabel}>Mevcut Bakiye</Text>
+              <Text style={styles.cardLabel}>Aktuelles Guthaben</Text>
               <Text style={styles.balanceText}>€{balance.toFixed(2)}</Text>
             </View>
             <View style={styles.walletIconBox}>
@@ -78,10 +78,10 @@ export default function WalletTab() {
 
           <View style={styles.actionRow}>
             <TouchableOpacity style={styles.payoutBtn} onPress={requestPayout}>
-              <Text style={styles.payoutBtnText}>Parayı Çek</Text>
+              <Text style={styles.payoutBtnText}>Auszahlung</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.detailsBtn}>
-              <Text style={styles.detailsBtnText}>Para Hareketleri</Text>
+              <Text style={styles.detailsBtnText}>Transaktionen</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -93,7 +93,7 @@ export default function WalletTab() {
                <TrendingUp size={24} color="#2563eb" />
             </View>
             <View style={styles.statContent}>
-              <Text style={styles.statLabel}>Teslimat Kazancı</Text>
+              <Text style={styles.statLabel}>Lieferverdienst</Text>
               <Text style={styles.statValue}>€{balance.toFixed(2)}</Text>
             </View>
           </View>
@@ -103,7 +103,7 @@ export default function WalletTab() {
                <Star size={24} color="#d97706" />
             </View>
             <View style={styles.statContent}>
-              <Text style={styles.statLabel}>Bahşiş (Nakit/Kart)</Text>
+              <Text style={styles.statLabel}>Trinkgeld (Bar/Karte)</Text>
               <Text style={styles.statValue}>€0.00</Text>
             </View>
           </View>
@@ -111,11 +111,11 @@ export default function WalletTab() {
 
         {/* Payouts */}
         <View style={styles.historySection}>
-          <Text style={styles.sectionTitle}>Ödeme Geçmişi</Text>
+          <Text style={styles.sectionTitle}>Zahlungshistorie</Text>
           
           {payouts.length === 0 ? (
             <View style={styles.empty}>
-               <Text style={styles.emptyText}>Henüz ödeme talebiniz yok.</Text>
+               <Text style={styles.emptyText}>Sie haben noch keine Auszahlungsanfragen.</Text>
             </View>
           ) : (
             payouts.map((p) => (
@@ -128,11 +128,11 @@ export default function WalletTab() {
                       <Text style={styles.historyAmount}>€{p.amount.toFixed(2)}</Text>
                       <View style={[styles.badge, p.status === 'PAID' ? styles.badgePaid : styles.badgePending]}>
                          <Text style={[styles.badgeText, p.status === 'PAID' ? styles.badgeTextPaid : styles.badgeTextPending]}>
-                            {p.status === 'PAID' ? 'Ödendi' : p.status === 'PENDING' ? 'Bekliyor' : p.status}
+                            {p.status === 'PAID' ? 'Bezahlt' : p.status === 'PENDING' ? 'Ausstehend' : p.status}
                          </Text>
                       </View>
                     </View>
-                    <Text style={styles.historyDate}>Tarih: {new Date(p.createdAt).toLocaleDateString()}</Text>
+                    <Text style={styles.historyDate}>Datum: {new Date(p.createdAt).toLocaleDateString()}</Text>
                  </View>
               </View>
             ))

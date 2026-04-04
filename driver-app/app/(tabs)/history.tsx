@@ -29,9 +29,9 @@ export default function HistoryTab() {
   }, [user]);
 
   const handleLogout = () => {
-    Alert.alert('Çıkış', 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?', [
-      { text: 'Vazgeç', style: 'cancel' },
-      { text: 'Çıkış Yap', style: 'destructive', onPress: logout }
+    Alert.alert('Abmelden', 'Sind Sie sicher, dass Sie sich abmelden möchten?', [
+      { text: 'Abbrechen', style: 'cancel' },
+      { text: 'Abmelden', style: 'destructive', onPress: logout }
     ]);
   };
 
@@ -49,7 +49,7 @@ export default function HistoryTab() {
         </View>
 
         <View style={styles.statsCard}>
-          <Text style={styles.statsLabel}>Bugün Tamamlanan</Text>
+          <Text style={styles.statsLabel}>Heute abgeschlossen</Text>
           <Text style={styles.statsValue}>{orders.length}</Text>
         </View>
 

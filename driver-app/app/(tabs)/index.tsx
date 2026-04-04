@@ -30,7 +30,7 @@ export default function MarketTab() {
   const handleAcceptOrder = async (order: Order) => {
     if (!user?.id) return;
     if (!activeTimeEntryId) {
-       Alert.alert('Hata', 'Lütfen önce mesaiye (şifte) başlayın!');
+       Alert.alert('Fehler', 'Bitte starten Sie zuerst Ihre Schicht!');
        return;
     }
     try {
@@ -48,15 +48,15 @@ export default function MarketTab() {
       if (activeTimeEntryId) {
         // Stop shift
         await api.patch(`/time/stop/${activeTimeEntryId}`, { lat: location?.lat, lng: location?.lng });
-        Alert.alert('Bilgi', 'Mesai bitirildi, konum takibi durduruldu.');
+        Alert.alert('Info', 'Schicht beendet, Standort-Tracking gestoppt.');
       } else {
         // Start shift
         await api.post(`/time/start`, { driverId: user.id, lat: location?.lat, lng: location?.lng });
-        Alert.alert('Bilgi', 'Mesai başladı! Canlı konum merkeze iletiliyor.');
+        Alert.alert('Info', 'Schicht gestartet! Live-Standort wird übertragen.');
       }
     } catch (e) {
       console.error(e);
-      Alert.alert('Hata', 'Mesai durumu değiştirilemedi.');
+      Alert.alert('Fehler', 'Schichtstatus konnte nicht geändert werden.');
     }
   };
 
@@ -75,7 +75,7 @@ export default function MarketTab() {
           >
             <View style={[styles.shiftDot, activeTimeEntryId ? { backgroundColor: 'white' } : { backgroundColor: '#ef4444' }]} />
             <Text style={[styles.shiftBtnText, activeTimeEntryId ? { color: 'white' } : { color: '#ef4444' }]}>
-              {activeTimeEntryId ? 'Mesai Aktif' : 'Mesai Kapalı'}
+              {activeTimeEntryId ? 'Schicht Aktiv' : 'Schicht Aus'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -110,7 +110,7 @@ export default function MarketTab() {
             )}
             ListEmptyComponent={
               <View style={styles.empty}>
-                <Text style={styles.emptyText}>Şu an uygun görev yok</Text>
+                <Text style={styles.emptyText}>Aktuell keine Aufträge verfügbar</Text>
               </View>
             }
           />
