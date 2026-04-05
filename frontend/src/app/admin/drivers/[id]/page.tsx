@@ -230,21 +230,34 @@ export default function DriverProfilePage() {
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Gesamtguthaben inkl. Reports</p>
                                 <h3 className="text-5xl font-black italic tracking-tighter">
                                     € {(() => {
+                                        const perOrderIds = ['4530788', '4524536', '4328784', '4468810', '4524892'];
+                                        const isPerOrder = perOrderIds.includes(driver.driverNumber!);
                                         const totalKpiSalary = (driver.riderKpis || []).reduce((acc, k) => {
-                                            const payOrders = k.deliveredOrders * (driver.payPerOrder || driver.orderFee || 0);
-                                            const payKm = (k.distanceTotal || 0) * (driver.payPerKm || 0);
-                                            return acc + payOrders + payKm;
+                                            if (isPerOrder) {
+                                                const payOrders = k.deliveredOrders * (driver.payPerOrder || driver.orderFee || 0);
+                                                const payKm = (k.distanceTotal || 0) * (driver.payPerKm || 0);
+                                                return acc + payOrders + payKm;
+                                            } else {
+                                                return acc + (k.hoursWorked * (driver.hourlyWage || 0));
+                                            }
                                         }, 0);
                                         return (driver.walletBalance + totalKpiSalary).toFixed(2);
                                     })()}
                                 </h3>
                              </div>
                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                                 <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-green-400">Stundenlohn</p><p className="font-black text-lg">€ {(driver.hourlyWage || 0).toFixed(2)}</p></div>
-                                 <div className="group relative">
-                                    <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-blue-400">Pauschale</p>
-                                    <p className="font-black text-lg">€ {(driver.payPerOrder || driver.orderFee || 0).toFixed(2)}</p>
-                                 </div>
+                                 {(() => {
+                                     const perOrderIds = ['4530788', '4524536', '4328784', '4468810', '4524892'];
+                                     const isPerOrder = perOrderIds.includes(driver.driverNumber!);
+                                     return isPerOrder ? (
+                                         <>
+                                            <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-blue-400">Pauschale</p><p className="font-black text-lg">€ {(driver.payPerOrder || driver.orderFee || 0).toFixed(2)}</p></div>
+                                            <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-slate-400">KM-Geld</p><p className="font-black text-lg text-slate-300">€ {(driver.payPerKm || 0).toFixed(2)}</p></div>
+                                         </>
+                                     ) : (
+                                        <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-green-400">Stundenlohn</p><p className="font-black text-lg">€ {(driver.hourlyWage || 0).toFixed(2)}</p></div>
+                                     );
+                                 })()}
                              </div>
                              <button className="w-full py-5 bg-blue-600 hover:bg-blue-700 rounded-3xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition">
                                 <CreditCard size={18} /> Auszahlung
@@ -263,35 +276,65 @@ export default function DriverProfilePage() {
                                 <span className="text-[10px] font-black text-slate-400 uppercase">Aktuelles Monat</span>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-4 bg-slate-50 rounded-2xl">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Delivered</p>
-                                    <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0)}</p>
-                                </div>
-                                <div className="p-4 bg-slate-50 rounded-2xl">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Distanz (KM)</p>
-                                    <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0).toFixed(1)}</p>
-                                </div>
-                            </div>
+                            {(() => {
+                                const perOrderIds = ['4530788', '4524536', '4328784', '4468810', '4524892'];
+                                const isPerOrder = perOrderIds.includes(driver.driverNumber!);
+                                const totalOrders = driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0);
+                                const totalKm = driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0);
+                                const totalHours = driver.riderKpis.reduce((acc, k) => acc + (k.hoursWorked || 0), 0);
 
-                            <div className="p-8 bg-blue-600 rounded-[2.5rem] shadow-xl shadow-blue-200 text-white relative overflow-hidden">
-                                <Banknote className="absolute -right-6 -bottom-6 text-white/10" size={120} />
-                                <div className="relative z-10">
-                                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Errechneter Verdienst</p>
-                                    <h4 className="text-4xl font-black italic tracking-tighter">
-                                        € {(() => {
-                                            const totalOrders = driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0);
-                                            const totalKm = driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0);
-                                            const payOrders = totalOrders * (driver.payPerOrder || driver.orderFee || 0);
-                                            const payKm = totalKm * (driver.payPerKm || 0);
-                                            return (payOrders + payKm).toFixed(2);
-                                        })()}
-                                    </h4>
-                                    <div className="mt-4 flex gap-4 opacity-70">
-                                        <p className="text-[8px] font-bold uppercase tracking-widest">Rate: €{(driver.payPerOrder || driver.orderFee || 0)}/Order</p>
-                                    </div>
-                                </div>
-                            </div>
+                                return (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="p-4 bg-slate-50 rounded-2xl">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Delivered</p>
+                                                <p className="text-xl font-black text-slate-900">{totalOrders}</p>
+                                            </div>
+                                            <div className="p-4 bg-slate-50 rounded-2xl">
+                                                {isPerOrder ? (
+                                                    <>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Distanz (KM)</p>
+                                                        <p className="text-xl font-black text-slate-900">{totalKm.toFixed(1)}</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Stunden (Online)</p>
+                                                        <p className="text-xl font-black text-slate-900">{totalHours.toFixed(1)}</p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-8 bg-blue-600 rounded-[2.5rem] shadow-xl shadow-blue-200 text-white relative overflow-hidden">
+                                            <Banknote className="absolute -right-6 -bottom-6 text-white/10" size={120} />
+                                            <div className="relative z-10">
+                                                <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Errechneter Verdienst</p>
+                                                <h4 className="text-4xl font-black italic tracking-tighter">
+                                                    € {(() => {
+                                                        if (isPerOrder) {
+                                                            const payOrders = totalOrders * (driver.payPerOrder || driver.orderFee || 0);
+                                                            const payKm = totalKm * (driver.payPerKm || 0);
+                                                            return (payOrders + payKm).toFixed(2);
+                                                        } else {
+                                                            return (totalHours * (driver.hourlyWage || 0)).toFixed(2);
+                                                        }
+                                                    })()}
+                                                </h4>
+                                                <div className="mt-4 flex flex-col gap-1 opacity-80">
+                                                    {isPerOrder ? (
+                                                        <>
+                                                            <p className="text-[9px] font-bold uppercase tracking-widest">Sipariş Kazancı: €{(totalOrders * (driver.payPerOrder || driver.orderFee || 0)).toFixed(2)}</p>
+                                                            <p className="text-[9px] font-bold uppercase tracking-widest">KM Kazancı: €{(totalKm * (driver.payPerKm || 0)).toFixed(2)}</p>
+                                                        </>
+                                                    ) : (
+                                                        <p className="text-[9px] font-bold uppercase tracking-widest">Satz: €{(driver.hourlyWage || 0).toFixed(2)} / Stunde</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
 
                             <button className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
                                 ANALYTIK ÖFFNEN
