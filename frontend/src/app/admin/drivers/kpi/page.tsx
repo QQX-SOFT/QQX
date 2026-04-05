@@ -27,6 +27,7 @@ export default function AdminKpiPage() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState<string>("");
+    const [searchQuery, setSearchQuery] = useState<string>("");
     const [visibleColumns, setVisibleColumns] = useState<string[]>(["riderId", "riderName", "cityName", "dateLocal", "deliveredOrders", "hoursWorked"]);
 
     const allColumnOptions = [
@@ -99,9 +100,16 @@ export default function AdminKpiPage() {
             alert("Löschvorgang fehlgeschlagen.");
         }
     };
-    const totalOrders = kpis.reduce((acc, curr) => acc + curr.deliveredOrders, 0);
-    const totalHours = kpis.reduce((acc, curr) => acc + curr.hoursWorked, 0);
-    const avgUtr = kpis.length ? (kpis.reduce((acc, curr) => acc + (curr.utr || 0), 0) / kpis.length).toFixed(2) : 0;
+    const filteredKpis = kpis.filter(k => 
+        k.riderName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        k.riderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        k.driver?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        k.driver?.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const totalOrders = filteredKpis.reduce((acc, curr) => acc + curr.deliveredOrders, 0);
+    const totalHours = filteredKpis.reduce((acc, curr) => acc + curr.hoursWorked, 0);
+    const avgUtr = filteredKpis.length ? (filteredKpis.reduce((acc, curr) => acc + (curr.utr || 0), 0) / filteredKpis.length).toFixed(2) : 0;
 
     return (
         <div className="space-y-10 pb-20">
@@ -216,7 +224,21 @@ export default function AdminKpiPage() {
                                 </div>
                                 <div className="relative flex-1 md:flex-initial">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                                    <input placeholder="Suchen..." className="pl-12 pr-6 py-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-sm w-full" />
+                                    <input 
+                                        placeholder="Name veya Rider ID..." 
+                                        className="pl-12 pr-6 py-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-sm w-full md:w-[300px]" 
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                        list="rider-suggestions"
+                                    />
+                                    <datalist id="rider-suggestions">
+                                        {[...new Set(kpis.map(k => k.riderName))].map(name => (
+                                            <option key={name} value={name} />
+                                        ))}
+                                        {[...new Set(kpis.map(k => k.riderId))].map(id => (
+                                            <option key={id} value={id} />
+                                        ))}
+                                    </datalist>
                                 </div>
                             </div>
                         </div>
@@ -243,13 +265,13 @@ export default function AdminKpiPage() {
                                                 <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
                                             </td>
                                         </tr>
-                                    ) : kpis.length === 0 ? (
+                                    ) : filteredKpis.length === 0 ? (
                                         <tr>
                                             <td colSpan={visibleColumns.length + 1} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
-                                                Keine Daten vorhanden. Bitte Report hochladen.
+                                                Keine passenden Daten gefunden.
                                             </td>
                                         </tr>
-                                    ) : kpis.map((k) => (
+                                    ) : filteredKpis.map((k) => (
                                         <tr key={k.id} className="hover:bg-slate-50/50 transition-colors group">
                                             {visibleColumns.includes("riderId") && <td className="px-8 py-6 text-sm font-black text-slate-900">{k.riderId}</td>}
                                             {visibleColumns.includes("riderName") && (
