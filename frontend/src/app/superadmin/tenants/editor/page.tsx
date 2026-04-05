@@ -32,6 +32,11 @@ const INITIAL_FORM = {
     companyRegister: "",
     legalForm: "GmbH",
     commercialCourt: "",
+    ownerName: "",
+    gisaNumber: "",
+    taxNumber: "",
+    email: "",
+    phone: "",
     adminEmail: "",
     adminPassword: ""
 };
@@ -73,6 +78,11 @@ function TenantEditorForm() {
                         companyRegister: t.companyRegister || "",
                         legalForm: t.legalForm || "GmbH",
                         commercialCourt: t.commercialCourt || "",
+                        ownerName: t.ownerName || "",
+                        gisaNumber: t.gisaNumber || "",
+                        taxNumber: t.taxNumber || "",
+                        email: t.email || "",
+                        phone: t.phone || "",
                     });
                     setAdmins(adminsRes.data);
                 } catch (error) {
@@ -163,6 +173,36 @@ function TenantEditorForm() {
                         />
                     </div>
                     <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Firmeninhaber</label>
+                        <input
+                            type="text"
+                            placeholder="z.B. Volkan Meral"
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            value={formData.ownerName}
+                            onChange={e => setFormData({ ...formData, ownerName: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Email (Unternehmen)</label>
+                        <input
+                            type="email"
+                            placeholder="info@firma.at"
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            value={formData.email}
+                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Telefon (Unternehmen)</label>
+                        <input
+                            type="text"
+                            placeholder="+43..."
+                            className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                            value={formData.phone}
+                            onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                        />
+                    </div>
+                    <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Subdomain *</label>
                         <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl px-6 py-4 focus-within:border-indigo-500 transition">
                             <input
@@ -256,6 +296,19 @@ function TenantEditorForm() {
                         </div>
                     </div>
                     <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Steuernummer</label>
+                        <div className="relative">
+                            <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                            <input
+                                type="text"
+                                placeholder="12 345/6789"
+                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                value={formData.taxNumber}
+                                onChange={e => setFormData({ ...formData, taxNumber: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div>
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Firmenbuchnummer</label>
                         <div className="relative">
                             <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
@@ -265,6 +318,19 @@ function TenantEditorForm() {
                                 className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
                                 value={formData.companyRegister}
                                 onChange={e => setFormData({ ...formData, companyRegister: e.target.value })}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">GISA Nummer</label>
+                        <div className="relative">
+                            <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                            <input
+                                type="text"
+                                placeholder="GISA 12345678"
+                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                value={formData.gisaNumber}
+                                onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })}
                             />
                         </div>
                     </div>

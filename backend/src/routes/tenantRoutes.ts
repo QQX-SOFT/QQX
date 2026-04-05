@@ -17,6 +17,11 @@ const tenantSchema = z.object({
     companyRegister: z.string().optional(), // Firmenbuchnummer
     legalForm: z.string().optional(), // Rechtsform
     commercialCourt: z.string().optional(), // Gerichtsstand
+    ownerName: z.string().optional(), // Firmeninhaber
+    gisaNumber: z.string().optional(), // GISA-Zahl
+    taxNumber: z.string().optional(), // Steuernummer
+    email: z.string().email().optional(), // Firmen-Email
+    phone: z.string().optional(), // Firmen-Telefon
 
     // Admin info
     adminEmail: z.string().email().optional(),
