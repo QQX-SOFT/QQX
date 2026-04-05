@@ -54,7 +54,7 @@ async function main() {
                 imageUrl: row['Bild'] || null,
                 firstName: row['Vorname'] || '',
                 lastName: row['Familienname'] || '',
-                workLocation: row['Arbeitsort'] || null,
+                workLocation: (row['Arbeitsort'] || '').replace(/[\[\]"]/g, '').trim() || null,
                 employmentModel: row['Beschäftigungs modell'] || null,
                 employmentType: row['Beschäftigungsart'] || null,
                 iban: row['Bankverbindung'] || null,
