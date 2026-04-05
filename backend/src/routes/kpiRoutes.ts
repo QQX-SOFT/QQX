@@ -71,6 +71,11 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                 // Ensure riderId is not null for the unique constraint
                 const finalRiderId = riderId || `unknown-${Date.now()}-${recordCount}`;
 
+                const safeFloat = (val: any) => {
+                    const parsed = parseFloat(val);
+                    return isNaN(parsed) ? 0 : parsed;
+                };
+
                 await tx.riderKpi.upsert({
                     where: {
                         tenantId_riderId_isoweek: {
@@ -88,9 +93,9 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         hoursWorked: hours,
                         isoweek: week,
                         driverId: driver?.id,
-                        acceptanceRate: parseFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || 0),
-                        utr: parseFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
-                        avgDeliveryTime: parseFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || 0),
+                        acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate']),
+                        utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
+                        avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time']),
                     },
                     update: {
                         deliveredOrders: delivered,
@@ -98,9 +103,9 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         hoursWorked: hours,
                         driverId: driver?.id ?? undefined,
                         riderName,
-                        acceptanceRate: parseFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || 0),
-                        utr: parseFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
-                        avgDeliveryTime: parseFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || 0),
+                        acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate']),
+                        utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
+                        avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time']),
                     }
                 });
                 recordCount++;
