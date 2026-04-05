@@ -49,7 +49,7 @@ const translations: any = {
         birthday: "Geburtsdatum",
         placeOfBirth: "Geburtsort",
         nationality: "Staatsbürgerschaft",
-        religion: "Religionszugehörigkeit (optional)",
+        religion: "Religionszugehörigkeit",
         maritalStatus: "Familienstand",
         street: "Straße / Hausnummer",
         zip: "PLZ",
@@ -96,7 +96,7 @@ const translations: any = {
         birthday: "Date of Birth",
         placeOfBirth: "Place of Birth",
         nationality: "Nationality",
-        religion: "Religion (optional)",
+        religion: "Religion",
         maritalStatus: "Marital Status",
         street: "Street / Number",
         zip: "ZIP",
@@ -348,27 +348,28 @@ export function BecomeADriverForm() {
 
     const docRequirements: any = {
         ECHTER_DIENSTNEHMER: [
-            { id: "idCardUrl", label: "Passport", required: true },
+            { id: "idCardUrl", label: "Ausweis / Reisepass", required: true },
             { id: "licenseUrl", label: "Führerschein B", required: true },
-            { id: "meldezettelUrl", label: "Meldezettel (Optional)", required: false },
-            { id: "eCardUrl", label: "eCard", required: true },
-            { id: "greyCardUrl", label: "Graue Karte (Subsidiär Schutzberechtigte)", required: true },
+            { id: "meldezettelUrl", label: "Meldezettel", required: true },
+            { id: "eCardUrl", label: "e-Card", required: true },
         ],
         FREIER_DIENSTNEHMER: [
-            { id: "idCardUrl", label: "Passport", required: true },
+            { id: "idCardUrl", label: "Ausweis / Reisepass", required: true },
             { id: "licenseUrl", label: "Führerschein B", required: true },
-            { id: "meldezettelUrl", label: "Meldezettel (Optional)", required: false },
-            { id: "eCardUrl", label: "eCard", required: true },
-            { id: "greyCardUrl", label: "Graue Karte (Subsidiär Schutzberechtigte)", required: true },
-            { id: "businessRegUrl", label: "Gewerbeschein (Optional)", required: false },
+            { id: "meldezettelUrl", label: "Meldezettel", required: true },
+            { id: "eCardUrl", label: "e-Card", required: true },
+            { id: "greyCardUrl", label: "Graue Karte / Zulassung", required: true },
+            { id: "svsConfirmationUrl", label: "SVS Bestätigung", required: true },
         ],
         SELBSTSTANDIG: [
-            { id: "idCardUrl", label: "Passport", required: true },
+            { id: "idCardUrl", label: "Ausweis / Reisepass", required: true },
             { id: "licenseUrl", label: "Führerschein B", required: true },
-            { id: "meldezettelUrl", label: "Meldezettel (Optional)", required: false },
-            { id: "eCardUrl", label: "eCard", required: true },
-            { id: "greyCardUrl", label: "Graue Karte (Subsidiär Schutzberechtigte)", required: true },
-            { id: "businessRegUrl", label: "Gewerbeschein (Optional)", required: false },
+            { id: "meldezettelUrl", label: "Meldezettel", required: true },
+            { id: "eCardUrl", label: "e-Card", required: true },
+            { id: "greyCardUrl", label: "Graue Karte / Zulassung", required: true },
+            { id: "businessRegUrl", label: "Gewerbeschein", required: true },
+            { id: "gisaExtractUrl", label: "GISA-Auszug", required: true },
+            { id: "svsConfirmationUrl", label: "SVS Bestätigung", required: true },
         ]
     };
 
@@ -447,20 +448,7 @@ export function BecomeADriverForm() {
         <div className="min-h-screen bg-slate-50 py-20 px-6 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px]" dir={isRtl ? "rtl" : "ltr"}>
             <div className="max-w-4xl mx-auto space-y-12">
                 {/* Language Switcher */}
-                <div className={cn("flex gap-2", isRtl ? "justify-start" : "justify-end")}>
-                    {["DE", "EN", "AR"].map((l) => (
-                        <button
-                            key={l}
-                            onClick={() => setLang(l as any)}
-                            className={cn(
-                                "px-4 py-2 rounded-xl text-[10px] font-black tracking-widest transition-all",
-                                lang === l ? "bg-slate-900 text-white shadow-lg" : "bg-white text-slate-400 hover:text-slate-600"
-                            )}
-                        >
-                            {l}
-                        </button>
-                    ))}
-                </div>
+                {/* Language switcher removed for German-only enforcement */}
 
                 {/* Header */}
                 <header className="text-center space-y-4">
@@ -576,11 +564,12 @@ export function BecomeADriverForm() {
                                         options={countries}
                                         isRtl={isRtl}
                                         onChange={(val: string) => setFormData({ ...formData, nationality: val })}
+                                        required
                                     />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <input placeholder={t.maritalStatus} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.maritalStatus} onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })} />
-                                    <input placeholder={t.religion} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.religion} onChange={e => setFormData({ ...formData, religion: e.target.value })} />
+                                    <input placeholder={t.maritalStatus} required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.maritalStatus} onChange={e => setFormData({ ...formData, maritalStatus: e.target.value })} />
+                                    <input placeholder={t.religion} required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" value={formData.religion} onChange={e => setFormData({ ...formData, religion: e.target.value })} />
                                 </div>
                             </div>
                         </section>
@@ -625,6 +614,7 @@ export function BecomeADriverForm() {
                                             <div className="flex gap-2">
                                                 <input 
                                                     placeholder="ATU..." 
+                                                    required
                                                     className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" 
                                                     value={formData.taxId} 
                                                     onChange={e => setFormData({ ...formData, taxId: e.target.value.toUpperCase() })} 
@@ -646,6 +636,7 @@ export function BecomeADriverForm() {
                                             <div className="flex gap-2">
                                                 <input 
                                                     placeholder={t.gisa} 
+                                                    required
                                                     className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" 
                                                     value={formData.gisaNumber} 
                                                     onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })} 
@@ -672,7 +663,7 @@ export function BecomeADriverForm() {
                             </div>
                             <div className="space-y-4">
                                 <input placeholder={t.iban} required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-mono font-bold" value={formData.iban} onChange={e => setFormData({ ...formData, iban: e.target.value.toUpperCase() })} />
-                                <input placeholder={t.bic} className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-mono font-bold" value={formData.bic} onChange={e => setFormData({ ...formData, bic: e.target.value.toUpperCase() })} />
+                                <input placeholder={t.bic} required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-mono font-bold" value={formData.bic} onChange={e => setFormData({ ...formData, bic: e.target.value.toUpperCase() })} />
                             </div>
                         </section>
                     </div>

@@ -67,7 +67,7 @@ export default function AdminApplicationsPage() {
             setProcessing(true);
             const { data } = await api.post(`/applications/${app.id}/approve`);
             
-            alert(`Sürücü başarıyla oluşturuldu! Geçici şifre: ${data.tempPassword}`);
+            alert(`Fahrer wurde erfolgreich erstellt! Temporäres Passwort: ${data.tempPassword}`);
             fetchApplications();
             setSelectedApp(null);
         } catch (e: any) {
@@ -208,10 +208,34 @@ export default function AdminApplicationsPage() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-6">
-                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 pb-2">Yasal & Banka</h4>
+                                 <div className="space-y-6">
+                                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-50 pb-2">Rechtliches & Bank</h4>
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-3">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase">Geburtsdatum</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedApp.birthday ? new Date(selectedApp.birthday).toLocaleDateString() : 'N/A'}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase">Geburtsort</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedApp.placeOfBirth || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase">Staatsbürgerschaft</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedApp.nationality || 'N/A'}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <p className="text-[9px] font-black text-slate-400 uppercase">Familienstand</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedApp.maritalStatus || 'N/A'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] font-black text-slate-400 uppercase">Religionszugehörigkeit</p>
+                                            <p className="text-sm font-bold text-slate-700">{selectedApp.religion || 'N/A'}</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 pt-2">
                                             <ShieldCheck size={18} className="text-slate-300" />
                                             <span className="text-sm font-bold text-slate-700">SSN: {selectedApp.ssn || 'N/A'}</span>
                                         </div>
@@ -227,7 +251,7 @@ export default function AdminApplicationsPage() {
                                         )}
                                         <div className="flex items-center gap-3">
                                             <CreditCard size={18} className="text-slate-300" />
-                                            <span className="text-xs font-mono font-bold text-slate-600">{selectedApp.iban}</span>
+                                            <span className="text-xs font-mono font-bold text-slate-600">{selectedApp.iban} / {selectedApp.bic}</span>
                                         </div>
                                     </div>
                                 </div>
