@@ -27,6 +27,7 @@ import messageRoutes from './routes/messageRoutes';
 import gisaRoutes from './routes/gisaRoutes';
 import applicationRoutes from './routes/applicationRoutes';
 import shiftRoutes from './routes/shiftRoutes';
+import kpiRoutes from './routes/kpiRoutes';
 
 
 
@@ -90,6 +91,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/gisa', gisaRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/shifts', shiftRoutes);
+app.use('/api/kpis', kpiRoutes);
 
 
 

@@ -42,6 +42,7 @@ const operationsLinks = [
     { name: "Kunden", icon: Building2, href: "/admin/customers" },
     { name: "Vermietung", icon: Key, href: "/admin/rentals" },
     { name: "Fahrer", icon: Users, href: "/admin/drivers" },
+    { name: "Rider Analyse (KPI)", icon: LineChart, href: "/admin/drivers/kpi" },
     { name: "Bewerbungen", icon: UserPlus, href: "/admin/drivers/applications" },
     { name: "Schichten", icon: Calendar, href: "/admin/shifts" },
     { name: "Verträge", icon: ScrollText, href: "/admin/contracts" },
