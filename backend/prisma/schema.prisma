@@ -124,8 +124,23 @@ model Driver {
   iban          String?
   bic           String?
 
-  gisaNumber    String?   // GISA-Zahl
+  imageUrl      String?
+  workLocation  String?
+  employmentModel String?
+  employmentType  String?
+  address       String?
+  citizenship   String?
+  jobTitle      String?
+  employmentStart DateTime?
+  employmentEnd   DateTime?
+  signatureStatus String?
+  visaExpiry    DateTime?
+  orderFee      Float? @default(0)
+  hourlyWage    Float? @default(0)
+  hasWorkPermit Boolean? @default(false)
 
+  gisaNumber    String?   // GISA-Zahl
+  
   type          DriverType @default(EMPLOYED) // Angestellt / Selbstständig
   isKleinunternehmer Boolean @default(false)
   status        DriverStatus @default(INACTIVE)
@@ -170,6 +185,8 @@ enum DriverStatus {
   INACTIVE
   ON_LEAVE
   SICK
+  GEKUENDIGT
+  PASSIV
 }
 
 model Document {

@@ -26,7 +26,11 @@ import {
     Banknote,
     Power,
     PowerOff,
-    Edit
+    Edit,
+    Briefcase,
+    Stethoscope,
+    Globe,
+    Euro
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
@@ -54,6 +58,17 @@ interface DriverDetails {
     city: string | null;
     iban: string | null;
     bic: string | null;
+    jobTitle: string | null;
+    workLocation: string | null;
+    citizenship: string | null;
+    nationality: string | null;
+    employmentStart: string | null;
+    employmentEnd: string | null;
+    visaExpiry: string | null;
+    hasWorkPermit: boolean;
+    hourlyWage: number;
+    orderFee: number;
+    imageUrl: string | null;
     user: {
         email: string;
     };
@@ -67,7 +82,6 @@ export default function DriverProfilePage() {
     const [driver, setDriver] = useState<DriverDetails | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Upload Modal State
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [newDoc, setNewDoc] = useState({
@@ -123,13 +137,7 @@ export default function DriverProfilePage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="animate-spin text-blue-600" size={48} />
-            </div>
-        );
-    }
+    if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={48} /></div>;
 
     if (!driver) {
         return (
@@ -142,291 +150,166 @@ export default function DriverProfilePage() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-10 pb-20">
             {/* Nav Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => router.back()}
-                        className="p-3 bg-white border border-slate-100 rounded-2xl text-slate-400 hover:text-slate-900 hover:border-slate-300 transition shadow-sm"
-                    >
+            <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div className="flex items-center gap-6">
+                    <button onClick={() => router.back()} className="p-4 bg-white border border-slate-100 rounded-[2rem] text-slate-400 hover:text-slate-900 shadow-sm transition active:scale-95">
                         <ChevronLeft size={24} />
                     </button>
                     <div>
-                        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fahrerprofil</h1>
-                        <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-0.5">Fahrer-ID: {driver.driverNumber || "Nicht zugewiesen"}</p>
+                        <div className="flex items-center gap-3 mb-1">
+                             <h1 className="text-4xl font-black text-slate-900 tracking-tight">{driver.firstName} {driver.lastName}</h1>
+                             <span className={cn(
+                                 "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest", 
+                                 driver.status === "ACTIVE" ? "bg-green-50 text-green-600" : 
+                                 driver.status === "GEKUENDIGT" ? "bg-red-50 text-red-600" :
+                                 "bg-slate-100 text-slate-400"
+                             )}>
+                                 {driver.status === "ACTIVE" ? "Aktiv" : 
+                                  driver.status === "GEKUENDIGT" ? "Gekündigt" : 
+                                  driver.status === "PASSIV" ? "Passiv" : "Passiv"}
+                             </span>
+                        </div>
+                        <p className="text-sm font-bold text-blue-600 uppercase tracking-[0.2em]">Rider-ID: {driver.driverNumber || "-"}</p>
                     </div>
                 </div>
-                <Link
-                    href={`/admin/drivers/editor?id=${driver.id}`}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 rounded-2xl font-black text-sm transition"
-                >
-                    <Edit size={16} />
-                    Profil bearbeiten
+                <Link href={`/admin/drivers/editor?id=${driver.id}`} className="flex items-center justify-center gap-3 px-10 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-widest hover:bg-black transition shadow-xl shadow-slate-200">
+                    <Edit size={16} /> Profil bearbeiten
                 </Link>
-            </div>
+            </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Profile Info */}
-                <div className="lg:col-span-1 space-y-8">
-                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-xl shadow-blue-50/20 text-center relative overflow-hidden">
-                        {/* Status Toggle Button */}
-                        <button
-                            onClick={handleToggleStatus}
-                            className={cn(
-                                "absolute top-6 right-6 p-2 rounded-xl border transition-all",
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Profile Card */}
+                <div className="lg:col-span-4 space-y-8">
+                    <div className="bg-white rounded-[3.5rem] p-10 border border-slate-50 shadow-2xl shadow-slate-200/40 relative overflow-hidden">
+                         <div className="absolute top-10 right-10">
+                             <button onClick={handleToggleStatus} className={cn(
+                                "p-4 rounded-3xl border transition-all", 
                                 driver.status === "ACTIVE"
-                                    ? "bg-green-50 text-green-600 border-green-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-100"
-                                    : "bg-slate-50 text-slate-400 border-slate-100 hover:bg-green-50 hover:text-green-600 hover:border-green-100"
-                            )}
-                            title={driver.status === "ACTIVE" ? "Auf Passiv setzen" : "Auf Aktiv setzen"}
-                        >
-                            {driver.status === "ACTIVE" ? <Power size={20} /> : <PowerOff size={20} />}
-                        </button>
+                                     ? "bg-green-50 text-green-600 border-green-100 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-100"
+                                     : driver.status === "GEKUENDIGT"
+                                     ? "bg-red-50 text-red-600 border-red-100 hover:bg-green-50 hover:text-green-600 hover:border-green-100"
+                                     : "bg-slate-50 text-slate-300 border-slate-100"
+                             )}>
+                                {driver.status === "ACTIVE" ? <Power size={24} /> : 
+                                 driver.status === "GEKUENDIGT" ? <X size={24} /> :
+                                 <PowerOff size={24} />}
+                             </button>
+                         </div>
 
-                        <div className="w-24 h-24 bg-blue-600 rounded-[2rem] mx-auto flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-100 mb-6">
-                            {driver.firstName[0]}{driver.lastName[0]}
-                        </div>
-                        <h2 className="text-2xl font-black text-slate-900">{driver.firstName} {driver.lastName}</h2>
-                        <div className={cn(
-                            "mt-2 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest",
-                            driver.status === "ACTIVE" ? "bg-green-50 text-green-600" : "bg-slate-100 text-slate-400"
-                        )}>
-                            <ShieldCheck size={12} />
-                            Status: {driver.status === "ACTIVE" ? "Aktiv" : "Passiv"}
+                        <div className="w-32 h-32 bg-blue-600 rounded-[3rem] flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-blue-200 mb-8">
+                             {driver.firstName[0]}{driver.lastName[0]}
                         </div>
 
-                        <div className="mt-8 space-y-4 text-left">
-                            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <Mail className="text-slate-400" size={18} />
-                                <div className="overflow-hidden">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">E-Mail Adresse</p>
-                                    <p className="font-bold text-slate-900 text-sm truncate">{driver.user.email}</p>
-                                </div>
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                                <Mail className="text-blue-500" size={20} />
+                                <div className="overflow-hidden"><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">E-Mail</p><p className="font-bold text-slate-900 text-sm truncate">{driver.user.email}</p></div>
                             </div>
-                            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <Phone className="text-slate-400" size={18} />
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Telefonnummer</p>
-                                    <p className="font-bold text-slate-900 text-sm">{driver.phone || "-"}</p>
-                                </div>
+                            <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                                <Phone className="text-blue-500" size={20} />
+                                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Telefon</p><p className="font-bold text-slate-900 text-sm">{driver.phone || "-"}</p></div>
                             </div>
-                            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <Calendar className="text-slate-400" size={18} />
-                                <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Geburtsdatum</p>
-                                    <p className="font-bold text-slate-900 text-sm">
-                                        {driver.birthday ? new Date(driver.birthday).toLocaleDateString('de-DE') : "-"}
-                                    </p>
-                                </div>
+                            <div className="flex items-center gap-4 p-5 bg-slate-50 rounded-3xl border border-slate-100">
+                                <MapPin className="text-blue-500" size={20} />
+                                <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Anschrift</p><p className="font-bold text-slate-900 text-sm">{driver.street || "-"}, {driver.zip} {driver.city}</p></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Stats Widget */}
-                    <div className="bg-slate-900 rounded-[2.5rem] p-6 sm:p-8 text-white relative overflow-hidden group">
-                        <TrendingUp className="absolute -right-4 -bottom-4 text-white/5 group-hover:scale-125 transition-transform duration-700" size={120} />
-                        <div className="relative z-10">
-                            <p className="text-white/60 text-xs font-bold uppercase tracking-[0.2em] mb-4">Guthaben (Wallet)</p>
-                            <h3 className="text-4xl font-black mb-6">€ {driver.walletBalance.toFixed(2)}</h3>
-                            <button className="w-full py-4 bg-blue-600 hover:bg-blue-700 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition">
-                                <CreditCard size={18} />
-                                Auszahlung veranlassen
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Address & Banking Widget */}
-                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6">
-                        <div>
-                            <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
-                                <Building2 size={14} /> Adresse
-                            </h4>
-                            <p className="font-black text-slate-900 leading-tight">
-                                {driver.street || "Keine Straße hinterlegt"}<br />
-                                {driver.zip} {driver.city}
-                            </p>
-                        </div>
-                        <div className="pt-6 border-t border-slate-50">
-                            <h4 className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
-                                <Banknote size={14} /> Bankverbindung
-                            </h4>
-                            <p className="font-mono text-xs font-bold text-slate-900 truncate">IBAN: {driver.iban ? formatIBAN(driver.iban) : "-"}</p>
-                            <p className="font-mono text-xs font-bold text-slate-900 mt-1">BIC: {driver.bic || "-"}</p>
-                        </div>
+                    {/* Financial Summary */}
+                    <div className="bg-slate-900 rounded-[3.5rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-blue-200/20">
+                         <TrendingUp className="absolute -right-10 -bottom-10 text-white/5" size={250} />
+                         <div className="relative z-10 space-y-8">
+                             <div><p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Gesamtguthaben</p><h3 className="text-5xl font-black italic tracking-tighter">€ {driver.walletBalance.toFixed(2)}</h3></div>
+                             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                                 <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-green-400">Stundenlohn</p><p className="font-black text-lg">€ {driver.hourlyWage.toFixed(2)}</p></div>
+                                 <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-blue-400">Bestellpauschale</p><p className="font-black text-lg">€ {driver.orderFee.toFixed(2)}</p></div>
+                             </div>
+                             <button className="w-full py-5 bg-blue-600 hover:bg-blue-700 rounded-3xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition">
+                                <CreditCard size={18} /> Auszahlung
+                             </button>
+                         </div>
                     </div>
                 </div>
 
-                {/* Right Column: Details & Tabs */}
-                <div className="lg:col-span-2 space-y-8">
-                    {/* Compliance Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
-                                    <Hash size={20} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Identifikation</span>
+                {/* Main Content Areas */}
+                <div className="lg:col-span-8 space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Employment Details */}
+                        <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-100/50 space-y-8">
+                            <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+                                <Briefcase className="text-blue-600" size={20} />
+                                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Beschäftigung</h3>
                             </div>
-                            <div className="space-y-3">
-                                <div>
-                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SV-Nummer (SSN)</h4>
-                                    <p className="text-lg font-black text-slate-900">{driver.ssn || "Nicht hinterlegt"}</p>
-                                </div>
-                                <div>
-                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Steuer-ID</h4>
-                                    <p className="text-lg font-black text-slate-900">{driver.taxId || "Nicht hinterlegt"}</p>
+                            <div className="grid grid-cols-1 gap-6">
+                                <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl"><span className="text-[10px] font-bold text-slate-400 uppercase">Titel</span><span className="font-black text-slate-900 uppercase">{driver.jobTitle || "-"}</span></div>
+                                <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl"><span className="text-[10px] font-bold text-slate-400 uppercase">Region</span><span className="font-black text-slate-900 uppercase text-blue-600">{driver.workLocation || "-"}</span></div>
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                     <div className="p-4 bg-slate-50 rounded-2xl text-center"><p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Eintritt</p><p className="font-black text-xs">{driver.employmentStart ? new Date(driver.employmentStart).toLocaleDateString('de-DE') : "-"}</p></div>
+                                     <div className="p-4 bg-slate-50 rounded-2xl text-center"><p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Austritt</p><p className="font-black text-xs">{driver.employmentEnd ? new Date(driver.employmentEnd).toLocaleDateString('de-DE') : "-"}</p></div>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white p-6 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl">
-                                    <Star size={20} />
-                                </div>
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Schnitt</span>
+
+                        {/* Legal & Nationality */}
+                        <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-100/50 space-y-8">
+                             <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+                                <Globe className="text-blue-600" size={20} />
+                                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Rechtliches</h3>
                             </div>
-                            <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-1">Bewertung</h4>
-                            <div className="flex items-center gap-2">
-                                <p className="text-4xl font-black text-slate-900">4.8</p>
-                                <div className="flex text-yellow-400">
-                                    <Star size={16} fill="currentColor" />
-                                    <Star size={16} fill="currentColor" />
-                                    <Star size={16} fill="currentColor" />
-                                    <Star size={16} fill="currentColor" />
-                                    <Star size={16} fill="none" strokeWidth={3} />
-                                </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl"><Hash className="text-slate-300" size={18} /><div><p className="text-[9px] font-bold text-slate-400 uppercase">SV-Nummer</p><p className="font-black text-slate-900">{driver.ssn || "-"}</p></div></div>
+                                <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl"><Globe className="text-slate-300" size={18} /><div><p className="text-[9px] font-bold text-slate-400 uppercase">Nationalität</p><p className="font-black text-slate-900">{driver.nationality || "-"}</p></div></div>
+                                {driver.nationality !== "Österreich" && (
+                                     <div className={cn("p-4 rounded-2xl border flex items-center gap-4", driver.hasWorkPermit ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100")}>
+                                         <Stethoscope className={driver.hasWorkPermit ? "text-green-600" : "text-red-600"} size={18} />
+                                         <div>
+                                             <p className={cn("text-[9px] font-black uppercase tracking-widest", driver.hasWorkPermit ? "text-green-600" : "text-red-600")}>Arbeitsbewilligung</p>
+                                             <p className="font-black text-xs italic">{driver.visaExpiry ? `Gültig bis: ${new Date(driver.visaExpiry).toLocaleDateString('de-DE')}` : "Nicht vorhanden"}</p>
+                                         </div>
+                                     </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Documents Section */}
-                    <div className="bg-white rounded-[2.5rem] p-6 sm:p-8 border border-slate-100 shadow-sm">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-                            <div>
-                                <h3 className="text-2xl font-black text-slate-900">Dokumente & Compliance</h3>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Prüfung der gesetzlichen Unterlagen</p>
-                            </div>
-                            <button
-                                onClick={() => setShowUploadModal(true)}
-                                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl font-black text-xs hover:bg-blue-700 transition shadow-lg shadow-blue-100 w-full sm:w-auto"
-                            >
-                                <Plus size={16} />
-                                Neu Hochladen
-                            </button>
+                    {/* Documents */}
+                    <div className="bg-white p-10 rounded-[3.5rem] border border-slate-100 shadow-xl shadow-slate-100/50">
+                        <div className="flex justify-between items-center border-b border-slate-50 pb-6 mb-8">
+                             <div className="flex items-center gap-3"><FileText className="text-blue-600" size={20} /><h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Unterlagen & Verträge</h3></div>
+                             <button onClick={() => setShowUploadModal(true)} className="p-3 bg-blue-50 text-blue-600 rounded-2xl hover:bg-blue-600 hover:text-white transition shadow-sm"><Plus size={20} /></button>
                         </div>
-
-                        <div className="space-y-4">
-                            {driver.documents.length === 0 ? (
-                                <div className="py-12 text-center bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                                    <FileText className="mx-auto text-slate-300 mb-2" size={32} />
-                                    <p className="text-slate-500 font-bold text-sm">Keine Dokumente gefunden</p>
-                                </div>
-                            ) : (
-                                driver.documents.map((doc: any) => (
-                                    <div key={doc.id} className="group p-5 bg-slate-50 border border-slate-100 rounded-3xl flex items-center justify-between hover:border-blue-200 hover:bg-white transition-all duration-300">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100 overflow-hidden group-hover:scale-110 transition-transform">
-                                                <FileText size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="font-black text-slate-900 mb-0.5">{doc.title}</p>
-                                                <div className="flex items-center gap-3">
-                                                    <span className={cn(
-                                                        "flex items-center gap-1.5 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest",
-                                                        doc.status === "VALID" ? "text-green-500 bg-green-50" : "text-amber-500 bg-amber-50"
-                                                    )}>
-                                                        {doc.status === "VALID" ? <CheckCircle size={10} /> : <AlertTriangle size={10} />}
-                                                        {doc.status}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                        Typ: {doc.type}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {doc.expiryDate && (
-                                                <div className="mr-4 text-right hidden sm:block">
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gültig bis</p>
-                                                    <p className="text-xs font-black text-slate-900">{new Date(doc.expiryDate).toLocaleDateString('de-DE')}</p>
-                                                </div>
-                                            )}
-                                            <a href={doc.fileUrl} target="_blank" className="p-3 bg-white border border-slate-100 rounded-xl text-slate-400 hover:text-blue-600 shadow-sm transition">
-                                                <Eye size={20} />
-                                            </a>
-                                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             {driver.documents.length === 0 ? (
+                                <div className="col-span-full py-12 text-center bg-slate-50 rounded-[2rem] border-2 border-dashed border-slate-100"><FileText className="mx-auto text-slate-200 mb-2" size={32} /><p className="text-xs font-bold text-slate-400 uppercase">Warten auf Bilduploads...</p></div>
+                             ) : driver.documents.map(doc => (
+                                <div key={doc.id} className="p-5 bg-white border border-slate-50 rounded-3xl flex items-center justify-between hover:border-blue-200 transition-all shadow-sm">
+                                    <div className="flex items-center gap-4 truncate">
+                                        <div className="p-3 bg-slate-50 text-blue-600 rounded-xl"><FileText size={18} /></div>
+                                        <div className="truncate"><p className="font-black text-slate-900 text-xs truncate">{doc.title}</p><p className="text-[9px] font-bold text-slate-400 uppercase">{doc.type}</p></div>
                                     </div>
-                                ))
-                            )}
+                                    <a href={doc.fileUrl} target="_blank" className="p-2 text-slate-300 hover:text-blue-600 transition"><Eye size={18} /></a>
+                                </div>
+                             ))}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Document Upload Modal */}
+            {/* Reuse Modals from existing code or make new ones */}
             <AnimatePresence>
                 {showUploadModal && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/20 backdrop-blur-sm">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl relative"
-                        >
-                            <button onClick={() => setShowUploadModal(false)} className="absolute top-8 right-8 text-slate-400 hover:text-slate-900 transition">
-                                <X size={24} />
-                            </button>
-                            <h2 className="text-2xl font-black text-slate-900 mb-8">Dokument hochladen</h2>
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-[3rem] p-12 w-full max-w-lg shadow-2xl relative">
+                            <button onClick={() => setShowUploadModal(false)} className="absolute top-10 right-10 text-slate-400 hover:text-slate-900 transition"><X size={24} /></button>
+                            <h2 className="text-3xl font-black text-slate-900 mb-8 italic tracking-tighter uppercase">Dokument hinzufügen</h2>
                             <form onSubmit={handleUploadDoc} className="space-y-6">
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Dokument-Typ</label>
-                                    <select
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newDoc.type}
-                                        onChange={(e) => setNewDoc({ ...newDoc, type: e.target.value })}
-                                    >
-                                        <option value="LICENSE">Führerschein</option>
-                                        <option value="INSURANCE">Versicherung</option>
-                                        <option value="TAX_ID">Steuerunterlagen</option>
-                                        <option value="BUSINESS_REG">Gewerbeanmeldung</option>
-                                        <option value="OTHER">Sonstiges</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Bezeichnung / Titel</label>
-                                    <input
-                                        type="text" required
-                                        placeholder="z.B. Führerschein Vorderseite"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newDoc.title}
-                                        onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Ablaufdatum (optional)</label>
-                                    <input
-                                        type="date"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 outline-none focus:border-blue-500 transition font-bold"
-                                        value={newDoc.expiryDate}
-                                        onChange={(e) => setNewDoc({ ...newDoc, expiryDate: e.target.value })}
-                                    />
-                                </div>
-                                <div className="p-8 border-2 border-dashed border-slate-200 rounded-[2rem] text-center hover:border-blue-400 transition-colors group cursor-pointer">
-                                    <Upload className="mx-auto text-slate-300 group-hover:text-blue-500 transition-colors mb-2" size={32} />
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Datei auswählen oder hierher ziehen</p>
-                                    <p className="text-[10px] text-slate-300 mt-2">PDF, JPG, PNG (Max. 10MB)</p>
-                                </div>
-                                <div className="pt-4 flex gap-4">
-                                    <button type="button" onClick={() => setShowUploadModal(false)} className="flex-1 py-4 rounded-2xl bg-slate-50 text-slate-600 font-bold hover:bg-slate-100 transition">Abbrechen</button>
-                                    <button
-                                        type="submit"
-                                        disabled={uploading}
-                                        className="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-xl shadow-blue-200"
-                                    >
-                                        {uploading ? <Loader2 className="animate-spin" size={20} /> : "Hinzufügen"}
-                                    </button>
-                                </div>
+                                <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-2">Kategorie</label><select className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 font-bold" value={newDoc.type} onChange={(e) => setNewDoc({ ...newDoc, type: e.target.value })}><option value="LICENSE">Führerschein</option><option value="INSURANCE">Versicherung</option><option value="TAX_ID">Steuer</option><option value="BUSINESS_REG">Gewerbe</option><option value="OTHER">Sonstiges</option></select></div>
+                                <div><label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-2">Bezeichnung</label><input type="text" required placeholder="z.B. Reisepass" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none focus:border-blue-500 font-bold" value={newDoc.title} onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })} /></div>
+                                <div className="p-10 border-4 border-dashed border-slate-50 rounded-[2.5rem] text-center hover:bg-blue-50/30 hover:border-blue-100 transition-all cursor-pointer group"><Upload className="mx-auto text-slate-200 group-hover:text-blue-400 transition-colors mb-4" size={40} /><p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Datei hochladen</p></div>
+                                <button type="submit" disabled={uploading} className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black uppercase tracking-widest shadow-2xl shadow-blue-200 active:scale-95 transition-all">{uploading ? <Loader2 className="animate-spin" size={20} /> : "Dokument speichern"}</button>
                             </form>
                         </motion.div>
                     </div>

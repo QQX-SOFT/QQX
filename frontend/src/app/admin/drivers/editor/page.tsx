@@ -13,7 +13,13 @@ import {
     Briefcase,
     ShieldCheck,
     Search,
-    ChevronDown
+    ChevronDown,
+    Building2,
+    MapPin,
+    Stethoscope,
+    Wallet,
+    Info,
+    Check
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -51,7 +57,20 @@ function DriverEditorForm() {
         payPerOrder: 5.5,
         payPerKm: 0.3,
         nationality: "Österreich",
-        workPermitUntil: ""
+        workPermitUntil: "",
+        imageUrl: "",
+        workLocation: "",
+        employmentModel: "",
+        address: "",
+        citizenship: "",
+        jobTitle: "",
+        employmentStart: "",
+        employmentEnd: "",
+        signatureStatus: "",
+        visaExpiry: "",
+        orderFee: 0,
+        hourlyWage: 0,
+        hasWorkPermit: false
     });
     const [countries, setCountries] = useState<{ code: string, name: string }[]>([]);
 
@@ -66,7 +85,6 @@ function DriverEditorForm() {
         setCheckingGisa(true);
         setGisaResult(null);
         try {
-            // Using full name or last name for check as required by GISA API
             const searchName = formData.lastName || formData.firstName;
             const { data } = await api.post("/gisa/validate", { 
                 gisaNumber: formData.gisaNumber,
@@ -102,32 +120,8 @@ function DriverEditorForm() {
 
     const handleIbanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const clean = e.target.value.replace(/\s/g, '').toUpperCase();
-        if (clean.length > 34) return; // Full IBAN with formats
+        if (clean.length > 34) return;
         setFormData({ ...formData, iban: formatIban(clean) });
-    };
-
-    const docRequirements = {
-        ECHTER_DIENSTNEHMER: [
-            "Lichtbildausweis/Reisepass",
-            "Führerschein (Klasse B)",
-            "Meldezettel",
-            "E-Card Kopie"
-        ],
-        FREIER_DIENSTNEHMER: [
-            "Lichtbildausweis/Reisepass",
-            "Führerschein (Klasse B)",
-            "Meldezettel",
-            "SVS Bestätigung"
-        ],
-        SELBSTSTANDIG: [
-            "Lichtbildausweis/Reisepass",
-            "Führerschein (Klasse B)",
-            "Meldezettel",
-            "GISA-Auszug",
-            "SVS Bestätigung",
-            "UID / Steuer-ID",
-            "Gewerbeschein"
-        ]
     };
 
     const [autocomplete, setAutocomplete] = useState<any>(null);
@@ -206,10 +200,22 @@ function DriverEditorForm() {
                 payPerOrder: data.payPerOrder ?? 5.5,
                 payPerKm: data.payPerKm ?? 0.3,
                 nationality: data.nationality || "Österreich",
-                workPermitUntil: data.workPermitUntil ? data.workPermitUntil.split('T')[0] : ""
+                workPermitUntil: data.workPermitUntil ? data.workPermitUntil.split('T')[0] : "",
+                imageUrl: data.imageUrl || "",
+                workLocation: data.workLocation || "",
+                employmentModel: data.employmentModel || "",
+                address: data.address || "",
+                citizenship: data.citizenship || "",
+                jobTitle: data.jobTitle || "",
+                employmentStart: data.employmentStart ? data.employmentStart.split('T')[0] : "",
+                employmentEnd: data.employmentEnd ? data.employmentEnd.split('T')[0] : "",
+                signatureStatus: data.signatureStatus || "",
+                visaExpiry: data.visaExpiry ? data.visaExpiry.split('T')[0] : "",
+                orderFee: data.orderFee || 0,
+                hourlyWage: data.hourlyWage || 0,
+                hasWorkPermit: data.hasWorkPermit || false
             });
 
-            // Set formatted IBAN
             if (data.iban) {
                 setFormData(prev => ({ ...prev, iban: formatIban(data.iban) }));
             }
@@ -225,12 +231,11 @@ function DriverEditorForm() {
         setSaving(true);
         const payload = { 
             ...formData,
-            iban: formData.iban.replace(/\s/g, '') // strip spaces for API
+            iban: formData.iban.replace(/\s/g, '')
         };
 
         try {
             if (id) {
-                // Using patch to update driver. The API might have specific fields expected.
                 await api.patch(`/drivers/${id}`, payload);
                 router.push(`/admin/drivers/${id}`);
             } else {
@@ -278,358 +283,186 @@ function DriverEditorForm() {
         );
     };
 
-    if (loading) {
-        return (
-            <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="animate-spin text-blue-500" size={48} />
-            </div>
-        );
-    }
+    if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>;
 
     return (
-        <form onSubmit={handleSave} className="space-y-8">
-            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 lg:p-12 border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50">
+        <form onSubmit={handleSave} className="space-y-8 pb-20">
+            <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-10 lg:p-14 border border-slate-100 dark:border-slate-800 shadow-2xl shadow-slate-200/40">
                 {/* Type Selector */}
-                <div className="flex p-1 bg-slate-100 rounded-2xl w-full mb-8">
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, employmentType: "ECHTER_DIENSTNEHMER" })}
-                        className={cn(
-                            "flex-1 py-3 rounded-xl text-[11px] font-black transition-all",
-                            formData.employmentType === "ECHTER_DIENSTNEHMER" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                        )}
-                    >
-                        Dienstnehmer
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, employmentType: "FREIER_DIENSTNEHMER" })}
-                        className={cn(
-                            "flex-1 py-3 rounded-xl text-[11px] font-black transition-all",
-                            formData.employmentType === "FREIER_DIENSTNEHMER" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                        )}
-                    >
-                        Freie Dienstnehmer
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, employmentType: "SELBSTSTANDIG" })}
-                        className={cn(
-                            "flex-1 py-3 rounded-xl text-[11px] font-black transition-all",
-                            formData.employmentType === "SELBSTSTANDIG" ? "bg-white text-blue-600 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                        )}
-                    >
-                        SFU = Selbstfahrende Unternehmer
-                    </button>
+                <div className="flex p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full mb-12 shadow-inner">
+                    {[
+                        { key: "ECHTER_DIENSTNEHMER", label: "Dienstnehmer" },
+                        { key: "FREIER_DIENSTNEHMER", label: "Freier Dienstnehmer" },
+                        { key: "SELBSTSTANDIG", label: "Selbstständig (SFU)" }
+                    ].map((t) => (
+                        <button
+                            key={t.key}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, employmentType: t.key as any })}
+                            className={cn(
+                                "flex-1 py-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all",
+                                formData.employmentType === t.key ? "bg-white dark:bg-slate-700 text-blue-600 shadow-xl" : "text-slate-400 hover:text-slate-600"
+                            )}
+                        >
+                            {t.label}
+                        </button>
+                    ))}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
-                    {/* Personal Info */}
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Persönliche Daten</h3>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Fahrer-ID (Manuell) *</label>
-                            <input type="text" placeholder="F123" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-blue-600" value={formData.driverNumber} onChange={e => setFormData({ ...formData, driverNumber: e.target.value })} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-12">
+                    {/* Personal Data Section */}
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Users size={18} /></div>
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Persönliche Daten</h3>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Vorname *</label>
-                                <input type="text" placeholder="Max" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Fahrer-ID (Manuell) *</label>
+                                <input type="text" placeholder="z.B. 955" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-blue-600 shadow-sm" value={formData.driverNumber} onChange={e => setFormData({ ...formData, driverNumber: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Nachname *</label>
-                                <input type="text" placeholder="Mustermann" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">E-Mail *</label>
-                            <input type="email" placeholder="fahrer@beispiel.de" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-blue-600" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Telefon *</label>
-                                <input type="tel" placeholder="+43 664..." required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Geburtsdatum *</label>
-                                <input type="date" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-slate-600" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Job Titel</label>
+                                <input type="text" placeholder="Rider" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.jobTitle} onChange={e => setFormData({ ...formData, jobTitle: e.target.value })} />
                             </div>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Staatsbürgerschaft *</label>
-                                <SearchableSelectCountry 
-                                    label="Staatsbürgerschaft wählen" 
-                                    value={formData.nationality}
-                                    options={countries}
-                                    onChange={(val: string) => setFormData({ ...formData, nationality: val })}
-                                />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Vorname *</label>
+                                <input type="text" placeholder="Max" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
                             </div>
-                            {formData.nationality !== "Österreich" && (
-                                <div className="animate-in slide-in-from-top-4 duration-300">
-                                    <label className="block text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1 ml-2">Aufenthaltserlaubnis vorhanden bis: *</label>
-                                    <input 
-                                        type="date" 
-                                        required 
-                                        className="w-full bg-red-50/30 border border-red-100 rounded-2xl px-5 py-4 focus:border-red-500 outline-none font-bold text-red-600" 
-                                        value={formData.workPermitUntil} 
-                                        onChange={e => setFormData({ ...formData, workPermitUntil: e.target.value })} 
-                                    />
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Nachname *</label>
+                                <input type="text" placeholder="Mustermann" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">E-Mail *</label>
+                                <input type="email" placeholder="email@beispiel.at" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold text-blue-600" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Telefon</label>
+                                <input type="tel" placeholder="+43 660..." className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Geburtsdatum</label>
+                                <input type="date" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Staatsbürgerschaft</label>
+                                <SearchableSelectCountry options={countries} value={formData.nationality} onChange={(val: string) => setFormData({ ...formData, nationality: val })} />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                             <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Dienstbeginn</label>
+                                <input type="date" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.employmentStart} onChange={e => setFormData({ ...formData, employmentStart: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Dienstende</label>
+                                <input type="date" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.employmentEnd} onChange={e => setFormData({ ...formData, employmentEnd: e.target.value })} />
+                            </div>
+                        </div>
+
+                        {formData.nationality !== "Österreich" && (
+                            <div className="p-6 bg-red-50 rounded-[2rem] border border-red-100 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <Stethoscope className="text-red-500" size={20} />
+                                    <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Arbeitsbewilligung Details</p>
                                 </div>
-                            )}
-                        </div>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Passwort {id ? "(leer lassen für keine Änderung)" : "*"}</label>
-                            <input
-                                type="password"
-                                placeholder="••••••••"
-                                required={!id}
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold"
-                                value={formData.password}
-                                onChange={e => setFormData({ ...formData, password: e.target.value })}
-                            />
-                        </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-red-100">
+                                        <input type="checkbox" id="hasWorkPermit" checked={formData.hasWorkPermit} onChange={e => setFormData({ ...formData, hasWorkPermit: e.target.checked })} className="w-5 h-5 accent-red-500" />
+                                        <label htmlFor="hasWorkPermit" className="text-xs font-black text-red-700 cursor-pointer">Vorhanden</label>
+                                    </div>
+                                    <input type="date" value={formData.visaExpiry} onChange={e => setFormData({ ...formData, visaExpiry: e.target.value })} className="w-full bg-white border border-red-100 rounded-xl px-4 py-3 focus:border-red-500 outline-none font-bold text-red-600" />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Address Info */}
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Anschrift</h3>
+                    {/* Address & Work Section */}
+                    <div className="space-y-8">
+                        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><MapPin size={18} /></div>
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Anschrift & Arbeitsort</h3>
+                        </div>
+
                         <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Straße / Hausnummer</label>
-                            <Autocomplete
-                                onLoad={setAutocomplete}
-                                onPlaceChanged={onPlaceChanged}
-                            >
-                                <input type="text" placeholder="Musterstraße 1" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })} />
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Straße / Nr (Autocomplete)</label>
+                            <Autocomplete onLoad={setAutocomplete} onPlaceChanged={onPlaceChanged}>
+                                <input type="text" placeholder="Musterstraße 1" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.street} onChange={e => setFormData({ ...formData, street: e.target.value })} />
                             </Autocomplete>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+
+                        <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">PLZ</label>
-                                <input type="text" placeholder="1010" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.zip} onChange={e => setFormData({ ...formData, zip: e.target.value })} />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">PLZ</label>
+                                <input type="text" placeholder="1010" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.zip} onChange={e => setFormData({ ...formData, zip: e.target.value })} />
                             </div>
                             <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Stadt</label>
-                                <input type="text" placeholder="Wien" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Stadt / Ort</label>
+                                <input type="text" placeholder="Wien" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.city} onChange={e => setFormData({ ...formData, city: e.target.value })} />
                             </div>
                         </div>
-                    </div>
 
-                    {/* Legal Info */}
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Rechtliches / Steuern</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {(formData.employmentType === "ECHTER_DIENSTNEHMER" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">SV-Nummer (SSN) *</label>
-                                    <input type="text" placeholder="1234 010190" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.ssn} onChange={e => setFormData({ ...formData, ssn: e.target.value })} />
-                                </div>
-                            )}
-                            {(formData.employmentType === "SELBSTSTANDIG" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
-                                <div>
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Steuer-ID / UID *</label>
-                                    <div className="flex gap-2">
-                                        <input type="text" placeholder="Steuernummer / UID (z.B. ATU...)" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" value={formData.taxId} onChange={e => setFormData({ ...formData, taxId: e.target.value })} />
-                                        {formData.employmentType === "SELBSTSTANDIG" && (
-                                            <button type="button" onClick={checkVat} disabled={checkingVat} className="bg-blue-600 text-white font-bold px-6 py-4 rounded-2xl hover:bg-blue-700 transition flex items-center gap-2">
-                                                {checkingVat ? <Loader2 className="animate-spin" size={16} /> : "Prüfen"}
-                                            </button>
-                                        )}
-                                    </div>
-                                    {vatResult && (
-                                        <div className={cn("mt-2 p-4 rounded-2xl border text-xs font-bold", vatResult.valid ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")}>
-                                            {vatResult.valid ? (
-                                                <div className="space-y-1">
-                                                    <p className="font-black text-sm">✓ UID Gültig</p>
-                                                    <p><span className="text-slate-500">Firma:</span> {vatResult.name}</p>
-                                                    <p><span className="text-slate-500">Adresse:</span> {vatResult.address}</p>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-black text-sm">✗ Ungültige UID / Fehler bei VIES</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {(formData.employmentType === "SELBSTSTANDIG" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
-                                <div className="mt-4">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">GISA-Zahl *</label>
-                                    <div className="flex gap-2">
-                                        <input 
-                                          type="text" 
-                                          placeholder="GISA-Zahl (z.B. 12345678)" 
-                                          required 
-                                          className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold" 
-                                          value={formData.gisaNumber} 
-                                          onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })} 
-                                        />
-                                        <button 
-                                          type="button" 
-                                          onClick={checkGisa} 
-                                          disabled={checkingGisa} 
-                                          className="bg-blue-600 text-white font-bold px-6 py-4 rounded-2xl hover:bg-blue-700 transition flex items-center gap-2"
-                                        >
-                                            {checkingGisa ? <Loader2 className="animate-spin" size={16} /> : "GISA Prüfen"}
-                                        </button>
-                                    </div>
-                                    {gisaResult && (
-                                        <div className={cn("mt-2 p-4 rounded-2xl border text-xs font-bold", gisaResult.valid ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-red-50 text-red-700 border-red-200")}>
-                                            {gisaResult.valid ? (
-                                                <div className="space-y-1">
-                                                    <p className="font-black text-sm">✓ GISA Aktiv</p>
-                                                    <p><span className="text-slate-500">Inhaber/Firma:</span> {gisaResult.name}</p>
-                                                    {gisaResult.description && <p><span className="text-slate-500">Wortlaut:</span> {gisaResult.description}</p>}
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-black text-sm">✗ GISA nicht gefunden / Name passt nicht</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                        <div>
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Arbeitsort (Region)</label>
+                            <input type="text" placeholder="z.B. Wien" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.workLocation} onChange={e => setFormData({ ...formData, workLocation: e.target.value })} />
                         </div>
 
-                        {formData.employmentType === "SELBSTSTANDIG" && (
-                            <div className="mt-4 flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                                <input
-                                    type="checkbox"
-                                    id="kleinunternehmer"
-                                    className="w-5 h-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
-                                    checked={formData.isKleinunternehmer}
-                                    onChange={e => setFormData({ ...formData, isKleinunternehmer: e.target.checked })}
-                                />
-                                <label htmlFor="kleinunternehmer" className="text-xs font-bold text-slate-700 cursor-pointer">
-                                    Kleinunternehmerregelung (Umsatzsteuerbefreit)
-                                </label>
+                        {/* Financials Section */}
+                        <div className="pt-8 flex items-center gap-3 border-b border-slate-50 pb-4">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Wallet size={18} /></div>
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Vergütung & Finanzen</h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Stundenlohn (€)</label>
+                                <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-green-600" value={formData.hourlyWage} onChange={e => setFormData({ ...formData, hourlyWage: parseFloat(e.target.value) || 0 })} />
+                            </div>
+                             <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Bestellgebühr (€)</label>
+                                <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-blue-600" value={formData.orderFee} onChange={e => setFormData({ ...formData, orderFee: parseFloat(e.target.value) || 0 })} />
+                            </div>
+                        </div>
+
+                        <div>
+                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">IBAN *</label>
+                             <input type="text" placeholder="AT..." required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-mono font-black" value={formData.iban} onChange={handleIbanChange} />
+                        </div>
+
+                        {(formData.employmentType === "ECHTER_DIENSTNEHMER" || formData.employmentType === "FREIER_DIENSTNEHMER") && (
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">SV-Nummer (SSN) *</label>
+                                <input type="text" placeholder="1234 010190" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold" value={formData.ssn} onChange={e => setFormData({ ...formData, ssn: e.target.value })} />
                             </div>
                         )}
                     </div>
-
-                    {/* Arbeitsstil / Bezahlung */}
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Arbeitsstil (Bezahlung)</h3>
-                        <div className="space-y-4">
-                            <label className={cn(
-                                "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer hover:bg-slate-50",
-                                formData.workStyle === "PER_ORDER_CUSTOM" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
-                            )}>
-                                <input 
-                                    type="radio" 
-                                    name="workStyle" 
-                                    className="w-5 h-5 accent-blue-600"
-                                    checked={formData.workStyle === "PER_ORDER_CUSTOM"}
-                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_CUSTOM" })}
-                                />
-                                <div className="flex-1 space-y-2">
-                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option A: Pauschal pro Bestellung</p>
-                                    <div className="flex items-center gap-2">
-                                        <input 
-                                            type="number" 
-                                            step="0.01"
-                                            className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-blue-600"
-                                            value={formData.payPerOrder}
-                                            onChange={e => setFormData({...formData, payPerOrder: parseFloat(e.target.value) || 0})}
-                                            onClick={e => e.stopPropagation()}
-                                        />
-                                        <span className="text-[10px] font-bold text-slate-500 uppercase">€ pro Bestellung</span>
-                                    </div>
-                                </div>
-                            </label>
-
-                            <label className={cn(
-                                "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer hover:bg-slate-50",
-                                formData.workStyle === "PER_ORDER_KM_CUSTOM" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
-                            )}>
-                                <input 
-                                    type="radio" 
-                                    name="workStyle" 
-                                    className="w-5 h-5 accent-blue-600"
-                                    checked={formData.workStyle === "PER_ORDER_KM_CUSTOM"}
-                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_KM_CUSTOM" })}
-                                />
-                                <div className="flex-1 space-y-3">
-                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option B: Bestellung + Kilometer</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="number" 
-                                                step="0.01"
-                                                className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-blue-600"
-                                                value={formData.payPerOrder}
-                                                onChange={e => setFormData({...formData, payPerOrder: parseFloat(e.target.value) || 0})}
-                                                onClick={e => e.stopPropagation()}
-                                            />
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase">€ / Best.</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="number" 
-                                                step="0.01"
-                                                className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-blue-600"
-                                                value={formData.payPerKm}
-                                                onChange={e => setFormData({...formData, payPerKm: parseFloat(e.target.value) || 0})}
-                                                onClick={e => e.stopPropagation()}
-                                            />
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase">€ / km</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Bank Info */}
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Bankverbindung</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">IBAN *</label>
-                                <input type="text" placeholder="AT..." required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.iban} onChange={handleIbanChange} />
-                            </div>
-                            <div>
-                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">BIC</label>
-                                <input type="text" placeholder="BIC" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-mono font-bold" value={formData.bic} onChange={e => setFormData({ ...formData, bic: e.target.value })} />
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Information Box */}
-                {!id && (
-                    <div className="mt-8 p-6 bg-blue-50/50 rounded-3xl border border-blue-100 flex items-start gap-4">
-                        <ShieldCheck className="text-blue-600 shrink-0" size={24} />
-                        <div>
-                            <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-2">Gesetzliche Anforderungen (Österreich)</h4>
-                            <p className="text-[10px] text-slate-500 font-medium leading-relaxed mb-4 uppercase tracking-widest">Die folgenden Dokumente werden für diesen Typ benötigt und können später im Profil hochgeladen werden:</p>
-                            <div className="flex flex-wrap gap-2">
-                                {(docRequirements[formData.employmentType] || []).map(req => (
-                                    <span key={req} className="px-3 py-1 bg-white rounded-full text-[10px] font-bold text-blue-700 border border-blue-100">{req}</span>
-                                ))}
-                            </div>
-                        </div>
+                {/* Footer Actions */}
+                <div className="mt-20 pt-10 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="flex items-center gap-3 text-slate-400 italic">
+                        <Info size={16} />
+                        <p className="text-[10px] uppercase font-bold tracking-widest">Alle mit * markierten Felder sind Pflichtfelder.</p>
                     </div>
-                )}
-
-                <div className="mt-12 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                    <Link
-                        href={id ? `/admin/drivers/${id}` : "/admin/drivers"}
-                        className="px-8 py-4 rounded-2xl font-bold text-slate-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-                    >
-                        Abbrechen
-                    </Link>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="px-10 py-4 bg-blue-600 text-white rounded-2xl font-black focus:outline-none hover:bg-blue-700 transition flex items-center justify-center gap-2 shadow-xl shadow-blue-200"
-                    >
-                        {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                        Fahrer speichern
-                    </button>
+                    <div className="flex gap-4 w-full md:w-auto">
+                         <Link href={id ? `/admin/drivers/${id}` : "/admin/drivers"} className="flex-1 md:flex-none px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest text-slate-400 hover:text-slate-900 transition">Abbrechen</Link>
+                         <button type="submit" disabled={saving} className="flex-1 md:flex-none px-12 py-5 bg-blue-600 text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-2xl shadow-blue-200 hover:bg-blue-700 transition flex items-center justify-center gap-3 active:scale-95">
+                             {saving ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                             Fahrer Speichern
+                         </button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -638,21 +471,12 @@ function DriverEditorForm() {
 
 export default function DriverEditorPage() {
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-20">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="max-w-6xl mx-auto space-y-12 pb-20 animate-in fade-in duration-700">
+            <header className="flex items-center gap-6">
+                <Link href="/admin/drivers" className="p-4 bg-white border border-slate-100 rounded-[2rem] text-slate-400 hover:text-slate-900 transition shadow-sm active:scale-95"><ArrowLeft size={24} /></Link>
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <button onClick={() => window.history.back()} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 hover:bg-slate-200 transition">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div className="p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-blue-600 dark:text-blue-400">
-                            <Users size={20} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Fahrereditor</span>
-                    </div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Fahrer Details</h1>
-                    <p className="text-slate-500 font-medium">Legen Sie hier alle Details zum Fahrer an oder bearbeiten Sie sie.</p>
+                   <h1 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase leading-none">Fahrereditor</h1>
+                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2 ml-1">Zentrale Personalverwaltung</p>
                 </div>
             </header>
 

@@ -32,6 +32,19 @@ const driverSchema = z.object({
     placeOfBirth: z.string().optional().nullable(),
     religion: z.string().optional().nullable(),
     maritalStatus: z.string().optional().nullable(),
+    imageUrl: z.string().optional().nullable(),
+    workLocation: z.string().optional().nullable(),
+    employmentModel: z.string().optional().nullable(),
+    address: z.string().optional().nullable(),
+    citizenship: z.string().optional().nullable(),
+    jobTitle: z.string().optional().nullable(),
+    employmentStart: z.string().optional().nullable(),
+    employmentEnd: z.string().optional().nullable(),
+    signatureStatus: z.string().optional().nullable(),
+    visaExpiry: z.string().optional().nullable(),
+    orderFee: z.number().optional().nullable(),
+    hourlyWage: z.number().optional().nullable(),
+    hasWorkPermit: z.boolean().optional().nullable(),
 });
 
 // GET all drivers
@@ -199,6 +212,20 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 workStyle: validatedData.workStyle,
                 payPerOrder: validatedData.payPerOrder || 0,
                 payPerKm: validatedData.payPerKm || 0,
+                imageUrl: validatedData.imageUrl,
+                workLocation: validatedData.workLocation,
+                employmentModel: validatedData.employmentModel,
+                employmentType: validatedData.employmentType,
+                address: validatedData.address,
+                citizenship: validatedData.citizenship,
+                jobTitle: validatedData.jobTitle,
+                employmentStart: validatedData.employmentStart ? new Date(validatedData.employmentStart) : null,
+                employmentEnd: validatedData.employmentEnd ? new Date(validatedData.employmentEnd) : null,
+                signatureStatus: validatedData.signatureStatus,
+                visaExpiry: validatedData.visaExpiry ? new Date(validatedData.visaExpiry) : null,
+                orderFee: validatedData.orderFee || 0,
+                hourlyWage: validatedData.hourlyWage || 0,
+                hasWorkPermit: validatedData.hasWorkPermit || false,
                 tenantId: tenantId as string,
                 userId: user.id
             },
@@ -226,7 +253,11 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
 
     try {
         const validatedData = driverSchema.partial().parse(req.body);
-        const { password, email, employmentType, gisaNumber, driverNumber, workStyle, payPerOrder, payPerKm, birthday, workPermitUntil, ...driverData } = validatedData;
+        const { 
+            password, email, employmentType, gisaNumber, driverNumber, 
+            workStyle, payPerOrder, payPerKm, birthday, workPermitUntil,
+            employmentStart, employmentEnd, visaExpiry, ...driverData 
+        } = validatedData;
 
         const driver = await prisma.driver.findFirst({
             where: { id, tenantId: tenantId as string },
@@ -252,6 +283,9 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
                 payPerKm: payPerKm,
                 birthday: birthday ? new Date(birthday) : undefined,
                 workPermitUntil: workPermitUntil ? new Date(workPermitUntil) : undefined,
+                employmentStart: employmentStart ? new Date(employmentStart) : undefined,
+                employmentEnd: employmentEnd ? new Date(employmentEnd) : undefined,
+                visaExpiry: visaExpiry ? new Date(visaExpiry) : undefined,
             }
         });
 
