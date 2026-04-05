@@ -26,7 +26,8 @@ import {
     Building2,
     Banknote,
     ScrollText,
-    UserPlus
+    UserPlus,
+    Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,6 +46,7 @@ const operationsLinks = [
     { name: "Rider Analyse (KPI)", icon: LineChart, href: "/admin/drivers/kpi" },
     { name: "Bewerbungen", icon: UserPlus, href: "/admin/drivers/applications" },
     { name: "Schichten", icon: Calendar, href: "/admin/shifts" },
+    { name: "Arbeitszeit-Aufz.", icon: Clock, href: "/admin/drivers/reports" },
     { name: "Verträge", icon: ScrollText, href: "/admin/contracts" },
     { name: "Dokumente", icon: FileText, href: "/admin/documents" },
 ];
@@ -62,6 +64,7 @@ const communicationLinks = [
 const analyticLinks = [
     { name: "KPI Dashboard", icon: LineChart, href: "/admin/analytics" },
     { name: "Reklamationen", icon: AlertCircle, href: "/admin/complaints" },
+    { name: "Unternehmensdaten", icon: Building2, href: "/admin/settings" },
     { name: "Einstellungen", icon: Settings, href: "/admin/settings" },
 ];
 
