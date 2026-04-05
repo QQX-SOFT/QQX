@@ -60,6 +60,16 @@ const translations: any = {
         check: "Prüfen",
         iban: "IBAN",
         bic: "BIC",
+        docs: {
+            idCardUrl: "Lichtbildausweis / Reisepass",
+            licenseUrl: "Führerschein (Klasse B)",
+            meldezettelUrl: "Meldezettel",
+            eCardUrl: "E-Card Kopie",
+            greyCardUrl: "Zulassungsschein (Graue Karte)",
+            svsConfirmationUrl: "SVS Bestätigung",
+            businessRegUrl: "Gewerbeschein",
+            gisaExtractUrl: "GISA-Auszug"
+        },
         upload: "Hochladen",
         change: "Ändern",
         loading: "Wird geladen...",
@@ -107,6 +117,16 @@ const translations: any = {
         check: "Check",
         iban: "IBAN",
         bic: "BIC",
+        docs: {
+            idCardUrl: "ID Card / Passport",
+            licenseUrl: "Driver's License (B)",
+            meldezettelUrl: "Residence Registration (Meldezettel)",
+            eCardUrl: "E-Card Copy",
+            greyCardUrl: "Vehicle Registration (Grey Card)",
+            svsConfirmationUrl: "SVS Confirmation",
+            businessRegUrl: "Business License",
+            gisaExtractUrl: "GISA Extract"
+        },
         upload: "Upload",
         change: "Change",
         loading: "Loading...",
@@ -154,6 +174,16 @@ const translations: any = {
         check: "تحقق",
         iban: "رقم الآيبان",
         bic: "رمز الـ BIC",
+        docs: {
+            idCardUrl: "بطاقة الهوية / جواز السفر",
+            licenseUrl: "رخصة القيادة (الفئة B)",
+            meldezettelUrl: "إثبات السكن (Meldezettel)",
+            eCardUrl: "نسخة البطاقة الإلكترونية E-Card",
+            greyCardUrl: "ملكية السيارة (البطاقة الرمادية)",
+            svsConfirmationUrl: "تأكيد التأمين SVS",
+            businessRegUrl: "الرخصة التجارية",
+            gisaExtractUrl: "مستخرج GISA"
+        },
         upload: "تحميل",
         change: "تغيير",
         loading: "جارٍ التحميل...",
@@ -348,28 +378,28 @@ export function BecomeADriverForm() {
 
     const docRequirements: any = {
         ECHTER_DIENSTNEHMER: [
-            { id: "idCardUrl", label: "Ausweis / Reisepass", required: true },
-            { id: "licenseUrl", label: "Führerschein B", required: true },
-            { id: "meldezettelUrl", label: "Meldezettel", required: true },
-            { id: "eCardUrl", label: "e-Card", required: true },
+            { id: "idCardUrl", label: t.docs.idCardUrl, required: true },
+            { id: "licenseUrl", label: t.docs.licenseUrl, required: true },
+            { id: "meldezettelUrl", label: t.docs.meldezettelUrl, required: true },
+            { id: "eCardUrl", label: t.docs.eCardUrl, required: true },
         ],
         FREIER_DIENSTNEHMER: [
-            { id: "idCardUrl", label: "Ausweis / Reisepass", required: true },
-            { id: "licenseUrl", label: "Führerschein B", required: true },
-            { id: "meldezettelUrl", label: "Meldezettel", required: true },
-            { id: "eCardUrl", label: "e-Card", required: true },
-            { id: "greyCardUrl", label: "Graue Karte / Zulassung", required: true },
-            { id: "svsConfirmationUrl", label: "SVS Bestätigung", required: true },
+            { id: "idCardUrl", label: t.docs.idCardUrl, required: true },
+            { id: "licenseUrl", label: t.docs.licenseUrl, required: true },
+            { id: "meldezettelUrl", label: t.docs.meldezettelUrl, required: true },
+            { id: "eCardUrl", label: t.docs.eCardUrl, required: true },
+            { id: "greyCardUrl", label: t.docs.greyCardUrl, required: true },
+            { id: "svsConfirmationUrl", label: t.docs.svsConfirmationUrl, required: true },
         ],
         SELBSTSTANDIG: [
-            { id: "idCardUrl", label: "Ausweis / Reisepass", required: true },
-            { id: "licenseUrl", label: "Führerschein B", required: true },
-            { id: "meldezettelUrl", label: "Meldezettel", required: true },
-            { id: "eCardUrl", label: "e-Card", required: true },
-            { id: "greyCardUrl", label: "Graue Karte / Zulassung", required: true },
-            { id: "businessRegUrl", label: "Gewerbeschein", required: true },
-            { id: "gisaExtractUrl", label: "GISA-Auszug", required: true },
-            { id: "svsConfirmationUrl", label: "SVS Bestätigung", required: true },
+            { id: "idCardUrl", label: t.docs.idCardUrl, required: true },
+            { id: "licenseUrl", label: t.docs.licenseUrl, required: true },
+            { id: "meldezettelUrl", label: t.docs.meldezettelUrl, required: true },
+            { id: "eCardUrl", label: t.docs.eCardUrl, required: true },
+            { id: "greyCardUrl", label: t.docs.greyCardUrl, required: true },
+            { id: "businessRegUrl", label: t.docs.businessRegUrl, required: true },
+            { id: "gisaExtractUrl", label: t.docs.gisaExtractUrl, required: true },
+            { id: "svsConfirmationUrl", label: t.docs.svsConfirmationUrl, required: true },
         ]
     };
 
@@ -448,7 +478,28 @@ export function BecomeADriverForm() {
         <div className="min-h-screen bg-slate-50 py-20 px-6 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px]" dir={isRtl ? "rtl" : "ltr"}>
             <div className="max-w-4xl mx-auto space-y-12">
                 {/* Language Switcher */}
-                {/* Language switcher removed for German-only enforcement */}
+                <div className="flex justify-center gap-2">
+                    {[
+                        { code: "DE", label: "Deutsch", flag: "🇩🇪" },
+                        { code: "EN", label: "English", flag: "🇬🇧" },
+                        { code: "AR", label: "العربية", flag: "🇦🇪" }
+                    ].map((l: any) => (
+                        <button
+                            key={l.code}
+                            type="button"
+                            onClick={() => setLang(l.code)}
+                            className={cn(
+                                "flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all",
+                                lang === l.code 
+                                    ? "bg-slate-900 text-white shadow-xl shadow-slate-900/20 scale-105" 
+                                    : "bg-white text-slate-400 hover:bg-slate-50 border border-slate-100"
+                            )}
+                        >
+                            <span className="text-sm">{l.flag}</span>
+                            {l.label}
+                        </button>
+                    ))}
+                </div>
 
                 {/* Header */}
                 <header className="text-center space-y-4">
