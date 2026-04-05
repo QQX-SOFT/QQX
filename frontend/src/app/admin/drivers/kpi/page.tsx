@@ -243,12 +243,19 @@ export default function AdminKpiPage() {
                                             {visibleColumns.includes("riderName") && (
                                                 <td className="px-8 py-6">
                                                     <div className="flex flex-col">
-                                                        <span className="font-black text-slate-900">{k.riderName}</span>
-                                                        {k.driver ? (
-                                                            <span className="text-[8px] font-black text-green-600 uppercase">Verknüpft ✅</span>
-                                                        ) : (
-                                                            <span className="text-[8px] font-black text-amber-600 uppercase">Unbekannt ❓</span>
-                                                        )}
+                                                        <span className="font-black text-slate-900">
+                                                            {k.driver ? `${k.driver.firstName} ${k.driver.lastName}` : k.riderName}
+                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            {k.driver ? (
+                                                                <span className="text-[8px] font-black text-green-600 uppercase flex items-center gap-1">
+                                                                    Verknüpft <CheckCircle2 size={8} />
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-[8px] font-black text-amber-600 uppercase">Unbekannt ❓</span>
+                                                            )}
+                                                            <span className="text-[8px] font-medium text-slate-400 italic">({k.riderName})</span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             )}
