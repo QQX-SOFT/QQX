@@ -15,7 +15,7 @@ if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL && window.
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     if (typeof window !== "undefined") {
         const hostname = window.location.hostname;
-        const mainDomains = ['localhost', 'fastroute.qqxsoft.com', 'qqx-sgxb.vercel.app', 'qqx-eight.vercel.app', 'qqx.de', 'qqxsoft.com', 'www.qqxsoft.com'];
+        const mainDomains = ['localhost', 'qqx-sgxb.vercel.app', 'qqx-eight.vercel.app', 'qqx.de', 'qqxsoft.com', 'www.qqxsoft.com'];
 
         // Simple logic: if subdomain exists (e.g. tenant1.localhost or tenant1.qqx-app.de)
         const parts = hostname.split(".");

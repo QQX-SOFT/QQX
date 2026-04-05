@@ -16,43 +16,38 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
 
     console.log(`[TenantMiddleware] Path: ${path}, Subdomain: ${subdomain}`);
 
-    // Skip tenant check for tenant creation/listing, health checks, or explicit bypass
+    // Define special paths
     const isGlobalAPI = path.includes('/api/tenants') || path.includes('/api/superadmin');
     const isHealthOrAuth = path.includes('/health') || path.includes('/auth') || path.includes('/api/upload');
-    
-    // NEW: Public applications can be submitted without a tenant context (they become global)
-    // But LISTING them (GET) should still try to identify the tenant context if possible
     const isPublicApplicationSubmit = (path === '/api/applications' || path === '/api/applications/') && req.method === 'POST';
+    const isBypassed = isGlobalAPI || isHealthOrAuth || isPublicApplicationSubmit;
 
-    if (isGlobalAPI || isHealthOrAuth || isPublicApplicationSubmit) {
-        console.log(`[TenantMiddleware] Bypassing check for ${path}.`);
-        return next();
-    }
-
-    if (!subdomain) {
-        console.log(`[TenantMiddleware] No subdomain for ${path}. Proceeding...`);
-        return next();
-    }
-
-    try {
-        const tenant = await prisma.tenant.findUnique({
-            where: { subdomain }
-        });
-
-        if (!tenant) {
-            console.warn(`[TenantMiddleware] Tenant NOT FOUND for subdomain: ${subdomain}`);
-            return res.status(404).json({
-                error: 'Mandant (Tenant) nicht gefunden.',
-                debug: { subdomain, path }
+    // 1. Try to identify tenant if subdomain provided
+    if (subdomain) {
+        try {
+            const tenant = await prisma.tenant.findUnique({
+                where: { subdomain }
             });
-        }
 
-        // Attach tenantId and subdomain to request for use in routes
-        req.tenantId = tenant.id;
-        req.subdomain = subdomain;
-        next();
-    } catch (error) {
-        console.error('Tenant Middleware Error:', error);
-        res.status(500).json({ error: 'Interner Serverfehler bei der Mandantenprüfung.' });
+            if (tenant) {
+                req.tenantId = tenant.id;
+                req.subdomain = subdomain;
+                console.log(`[TenantMiddleware] Identified tenant: ${subdomain} (${tenant.id})`);
+            } else if (!isBypassed) {
+                // If subdomain provided but invalid, and it's NOT a bypassed path, block it
+                return res.status(404).json({ error: 'Mandant (Tenant) nicht gefunden.' });
+            }
+        } catch (error) {
+            console.error('Tenant Middleware identification error:', error);
+            if (!isBypassed) return res.status(500).json({ error: 'Fehler bei der Mandantenprüfung.' });
+        }
     }
+
+    // 2. Enforce tenant context for non-bypassed paths
+    if (!req.tenantId && !isBypassed) {
+        console.warn(`[TenantMiddleware] Denying access to protected path ${path} - No tenant context.`);
+        return res.status(400).json({ error: 'Mandantenkontext fehlt für diese Anfrage.' });
+    }
+
+    next();
 };
