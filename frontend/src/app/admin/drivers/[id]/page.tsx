@@ -141,6 +141,42 @@ export default function DriverProfilePage() {
         }
     };
 
+    const generateArbeitszeitnachweis = () => {
+        if (!driver || !driver.riderKpis || driver.riderKpis.length === 0) return;
+
+        const kpis = driver.riderKpis;
+        const totalHours = kpis.reduce((acc, k) => acc + (k.hoursWorked || 0), 0);
+        const reportDate = new Date().toISOString().split('T')[0];
+        const rows = kpis.map(k => `
+            <tr>
+                <td>${driver.firstName} ${driver.lastName}</td>
+                <td>${new Date(k.dateLocal).toLocaleDateString('de-DE')}</td>
+                <td class="num">${(k.hoursWorked || 0).toFixed(2).replace('.', ',')} h</td>
+                <td class="num">0,00 h</td>
+            </tr>
+        `).join('');
+
+        const htmlContent = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><style>
+            body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #111; }
+            h1 { font-size: 14pt; margin: 0 0 8px 0; }
+            .meta { font-size: 9pt; margin-bottom: 14px; line-height: 1.4; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            th, td { border: 1px solid #94a3b8; padding: 5px 6px; }
+            th { background: #f1f5f9; font-size: 9pt; }
+            .num { text-align: right; }
+            .footer { margin-top: 16px; font-size: 9pt; }
+            .hinweis { margin-top: 14px; font-size: 8pt; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 8px; }
+            </style></head><body><h1>Arbeitszeitnachweis</h1><div class="meta"><strong>Arbeitnehmer / Rider:</strong> ${driver.firstName} ${driver.lastName} <br><strong>Berichtsdatum:</strong> ${reportDate}<br><strong>Aussteller:</strong> Firma Volkan Meral</div><table><thead><tr><th>Name</th><th>Datum</th><th class="num">Stunden</th><th class="num">Pause (h)</th></tr></thead><tbody>${rows}</tbody></table><div class="footer"><strong>Summe Stunden:</strong> ${totalHours.toFixed(2).replace('.', ',')} h · <strong>Summe Pause:</strong> 0,00 h</div><div class="hinweis">Hinweis: Vorlage zur Dokumentation der Arbeitszeit. Aufbewahrung gemäß betrieblicher Vorgaben (mind. 1 Jahr). Keine Rechtsberatung.</div></body></html>`;
+
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Arbeitszeitnachweis_${driver.lastName}_${reportDate}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={48} /></div>;
 
     if (!driver) {
@@ -351,6 +387,13 @@ export default function DriverProfilePage() {
                                     </>
                                 );
                             })()}
+                            
+                            <button 
+                                onClick={generateArbeitszeitnachweis}
+                                className="w-full py-4 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2"
+                            >
+                                <FileText size={16} className="text-blue-600" /> ARBEITSZEITNACHWEIS GENERIEREN
+                            </button>
                         </div>
                     )}
                 </div>
