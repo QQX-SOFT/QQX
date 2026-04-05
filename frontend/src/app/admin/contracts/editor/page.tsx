@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
     ScrollText,
@@ -10,7 +10,10 @@ import {
     Type,
     FileText,
     ChevronDown,
-    Wand2
+    Wand2,
+    Sparkles,
+    UserCheck,
+    CalendarDays
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -44,6 +47,9 @@ function ContractEditorForm() {
         fileUrl: "",
         templateId: ""
     });
+
+    // Track if content has been manually edited by the user
+    const [isManuallyEdited, setIsManuallyEdited] = useState(false);
 
     useEffect(() => {
         fetchDependencies();
@@ -80,18 +86,19 @@ function ContractEditorForm() {
                 fileUrl: data.fileUrl || "",
                 templateId: data.templateId || ""
             });
+            // If editing existing, assume it was manual or finalized
+            setIsManuallyEdited(true);
         } catch (error) { console.error(error); } finally { setLoading(false); }
     };
 
-    const handleTemplateSelection = (templateId: string) => {
-        const t = templates.find(temp => temp.id === templateId);
-        if (!t) return;
+    const fillPlaceholders = useCallback((templateContent: string, driverId: string, startDate: string) => {
+        if (!templateContent) return "";
+        
+        let filled = templateContent;
+        const driver = drivers.find(d => d.id === driverId);
 
-        let newContent = t.content;
-        const driver = drivers.find(d => d.id === formData.driverId);
-
-        if (formData.type === "DRIVER" && driver) {
-            newContent = newContent
+        if (driver) {
+            filled = filled
                 .replace(/{{driver_firstName}}/g, driver.firstName || "")
                 .replace(/{{driver_lastName}}/g, driver.lastName || "")
                 .replace(/{{driver_address}}/g, driver.address || "")
@@ -99,8 +106,31 @@ function ContractEditorForm() {
                 .replace(/{{driver_svNumber}}/g, driver.svNumber || "")
                 .replace(/{{driver_phone}}/g, driver.phone || "")
                 .replace(/{{current_date}}/g, new Date().toLocaleDateString('de-DE'))
-                .replace(/{{contract_startDate}}/g, formData.startDate ? new Date(formData.startDate).toLocaleDateString('de-DE') : "");
+                .replace(/{{contract_startDate}}/g, startDate ? new Date(startDate).toLocaleDateString('de-DE') : new Date().toLocaleDateString('de-DE'));
         }
+        return filled;
+    }, [drivers]);
+
+    // Re-fill when driver or template changes, but only if not manually edited yet OR if specifically requested
+    useEffect(() => {
+        if (!id && formData.templateId && formData.driverId && !isManuallyEdited) {
+            const template = templates.find(t => t.id === formData.templateId);
+            if (template) {
+                const newContent = fillPlaceholders(template.content, formData.driverId, formData.startDate);
+                setFormData(prev => ({ ...prev, content: newContent }));
+            }
+        }
+    }, [formData.driverId, formData.templateId, formData.startDate, templates, fillPlaceholders, isManuallyEdited, id]);
+
+    const handleTemplateSelection = (templateId: string) => {
+        const t = templates.find(temp => temp.id === templateId);
+        if (!t) {
+            setFormData(prev => ({ ...prev, templateId: "", content: "" }));
+            return;
+        }
+
+        const newContent = fillPlaceholders(t.content, formData.driverId, formData.startDate);
+        setIsManuallyEdited(false); // Reset manual edit flag when template is changed to allow auto-fill
 
         setFormData(prev => ({
             ...prev,
@@ -136,9 +166,25 @@ function ContractEditorForm() {
                 {/* Meta Settings */}
                 <div className="lg:col-span-1 space-y-8">
                     <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-10 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/20 space-y-10">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-xl"><Wand2 size={20} /></div>
-                            <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Konfiguration</h3>
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-xl"><Wand2 size={20} /></div>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Konfiguration</h3>
+                            </div>
+                            {formData.templateId && (
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        const t = templates.find(temp => temp.id === formData.templateId);
+                                        if (t) setFormData(prev => ({ ...prev, content: fillPlaceholders(t.content, formData.driverId, formData.startDate) }));
+                                        setIsManuallyEdited(false);
+                                    }}
+                                    className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-xl transition"
+                                    title="Auto-Fill zurücksetzen"
+                                >
+                                    <Sparkles size={18} />
+                                </button>
+                            )}
                         </div>
 
                         <div className="space-y-6">
@@ -155,18 +201,24 @@ function ContractEditorForm() {
                             {formData.type === "DRIVER" && (
                                 <div>
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Fahrer</label>
-                                    <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-bold text-xs appearance-none">
-                                        <option value="">Wählen...</option>
-                                        {drivers.map(d => (<option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>))}
-                                    </select>
+                                    <div className="relative">
+                                        <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-bold text-xs appearance-none pr-12">
+                                            <option value="">Wählen...</option>
+                                            {drivers.map(d => (<option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>))}
+                                        </select>
+                                        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none"><UserCheck size={18} /></div>
+                                    </div>
                                 </div>
                             )}
 
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Vorlage laden</label>
-                                <select value={formData.templateId} onChange={(e) => handleTemplateSelection(e.target.value)} className="w-full bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-100 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs text-blue-600 appearance-none">
+                                <select value={formData.templateId} onChange={(e) => handleTemplateSelection(e.target.value)} className={cn("w-full border-2 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs appearance-none", 
+                                    formData.templateId ? "bg-blue-50 border-blue-100 text-blue-600" : "bg-slate-50 border-slate-50 text-slate-500")}>
                                     <option value="">Keine Vorlage</option>
-                                    {templates.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                                    {templates
+                                        .filter(t => t.type === formData.type)
+                                        .map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
                                 </select>
                             </div>
 
@@ -183,16 +235,17 @@ function ContractEditorForm() {
                         </div>
                     </div>
 
-                    <button type="submit" disabled={saving} className="w-full bg-slate-900 text-white rounded-[2rem] py-8 font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-black transition flex items-center justify-center gap-4">
+                    <button type="submit" disabled={saving} className="w-full bg-slate-900 text-white rounded-[2rem] py-8 font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200/50 hover:bg-black transition flex items-center justify-center gap-4">
                         {saving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                         Vertrag speichern
                     </button>
+                    <p className="text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">Sicher & Zertifiziert</p>
                 </div>
 
                 {/* Content Editor */}
                 <div className="lg:col-span-2 space-y-8">
-                    <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] p-12 border border-slate-100 dark:border-slate-800 shadow-2xl space-y-12 min-h-[800px]">
-                        <div className="space-y-4">
+                    <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] p-12 border border-slate-100 dark:border-slate-800 shadow-2xl space-y-12 min-h-[800px] relative overflow-hidden">
+                        <div className="space-y-4 relative z-10">
                             <input
                                 placeholder="Vertragstitel eingeben..."
                                 value={formData.title}
@@ -204,22 +257,36 @@ function ContractEditorForm() {
                                     formData.status === 'ACTIVE' ? "bg-green-50 text-green-600 border-green-100" : "bg-orange-50 text-orange-600 border-orange-100")}>
                                     {formData.status}
                                 </span>
-                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Zuletzt aktualisiert: {new Date().toLocaleDateString('de-DE')}</span>
+                                <div className="flex items-center gap-2 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                                    <CalendarDays size={14} />
+                                    Erstellt am: {new Date().toLocaleDateString('de-DE')}
+                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">
-                                <FileText size={14} />
-                                Vertragsinhalt (Volltext)
-                            </label>
+                        <div className="space-y-4 relative z-10">
+                            <div className="flex justify-between items-center ml-4">
+                                <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                                    <FileText size={14} />
+                                    Vertragsinhalt (Volltext)
+                                </label>
+                                {isManuallyEdited && !id && (
+                                    <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-1">
+                                        <Sparkles size={10} /> Manueller Modus aktiv
+                                    </span>
+                                )}
+                            </div>
                             <textarea
                                 value={formData.content}
-                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                onChange={(e) => {
+                                    setFormData({ ...formData, content: e.target.value });
+                                    setIsManuallyEdited(true);
+                                }}
                                 className="w-full min-h-[600px] bg-slate-50 dark:bg-slate-800/50 rounded-[2.5rem] p-10 font-mono text-sm leading-relaxed text-slate-700 dark:text-slate-300 outline-none border-2 border-transparent focus:border-indigo-500/20 transition-all shadow-inner"
                                 placeholder="Fügen Sie hier den Vertragstext ein veya bir Vorlage seçin..."
                             />
                         </div>
+                        <FileText className="absolute bottom-[-100px] right-[-100px] text-slate-50 opacity-5 pointer-events-none" size={500} />
                     </div>
                 </div>
             </div>
