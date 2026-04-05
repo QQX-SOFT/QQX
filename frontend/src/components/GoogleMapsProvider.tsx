@@ -27,7 +27,11 @@ export default function GoogleMapsProvider({ children }: { children: React.React
 
     return (
         <GoogleMapsContext.Provider value={{ isLoaded }}>
-            {children}
+            {isLoaded ? children : (
+                <div className="flex items-center justify-center min-h-[100px]">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+            )}
         </GoogleMapsContext.Provider>
     );
 }
