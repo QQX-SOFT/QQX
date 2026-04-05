@@ -46,135 +46,131 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
             select: { id: true, driverNumber: true, secondaryDriverNumber: true, firstName: true, lastName: true }
         });
 
-        await prisma.$transaction(async (tx) => {
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                try {
-                    // Normalize keys
-                    const normalizedRow: any = {};
-                    Object.keys(row).forEach(key => {
-                        normalizedRow[String(key).toLowerCase().replace(/[^a-z0-9]/g, '_')] = row[key];
-                    });
+        // Process rows individually to avoid long-running transaction timeouts
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            try {
+                // Normalize keys
+                const normalizedRow: any = {};
+                Object.keys(row).forEach(key => {
+                    normalizedRow[String(key).toLowerCase().replace(/[^a-z0-9]/g, '_')] = row[key];
+                });
 
-                    // Flexible Column Mapping
-                    const riderId = String(
-                        normalizedRow['rider_id'] || 
-                        normalizedRow['id'] || 
-                        normalizedRow['fahrer_nr'] || 
-                        normalizedRow['riderid'] || 
-                        normalizedRow['id_rider'] || ''
-                    ).trim();
+                // Flexible Column Mapping
+                const riderId = String(
+                    normalizedRow['rider_id'] || 
+                    normalizedRow['id'] || 
+                    normalizedRow['fahrer_nr'] || 
+                    normalizedRow['riderid'] || 
+                    normalizedRow['id_rider'] || ''
+                ).trim();
 
-                    const riderName = String(
-                        normalizedRow['rider_name'] || 
-                        normalizedRow['name'] || 
-                        normalizedRow['fahrer_name'] || 
-                        normalizedRow['full_name'] || ''
-                    ).trim();
+                const riderName = String(
+                    normalizedRow['rider_name'] || 
+                    normalizedRow['name'] || 
+                    normalizedRow['fahrer_name'] || 
+                    normalizedRow['full_name'] || ''
+                ).trim();
 
-                    const delivered = safeInt(
-                        normalizedRow['actual_delivered_orders'] || 
-                        normalizedRow['delivered_orders'] || 
-                        normalizedRow['orders'] || 
-                        normalizedRow['zustellungen'] || 
-                        normalizedRow['bestellungen']
+                const delivered = safeInt(
+                    normalizedRow['actual_delivered_orders'] || 
+                    normalizedRow['delivered_orders'] || 
+                    normalizedRow['orders'] || 
+                    normalizedRow['zustellungen'] || 
+                    normalizedRow['bestellungen']
+                );
+
+                const total = safeInt(normalizedRow['total_orders'] || normalizedRow['total'] || delivered);
+                
+                const hours = safeFloat(
+                    normalizedRow['hours_worked'] || 
+                    normalizedRow['online_hours'] || 
+                    normalizedRow['hours'] || 
+                    normalizedRow['stunden'] || 
+                    normalizedRow['arbeitszeit']
+                );
+
+                const week = safeInt(
+                    normalizedRow['isoweek'] || 
+                    normalizedRow['week'] || 
+                    normalizedRow['kw'] || 
+                    normalizedRow['kalenderwoche']
+                );
+                
+                if (week > 0) mainIsoweek = week;
+                if (!riderId && !riderName) continue;
+
+                // IN-MEMORY LOOKUP (Extremely fast)
+                let driver = null;
+                if (riderId) {
+                    driver = allDrivers.find(d => 
+                        d.driverNumber === riderId || 
+                        d.secondaryDriverNumber === riderId
                     );
+                }
 
-                    const total = safeInt(normalizedRow['total_orders'] || normalizedRow['total'] || delivered);
+                if (!driver && riderName) {
+                    const nameParts = riderName.split(' ');
+                    const lastName = (nameParts[nameParts.length - 1] || '').toLowerCase();
+                    const firstName = (nameParts[0] || '').toLowerCase();
                     
-                    const hours = safeFloat(
-                        normalizedRow['hours_worked'] || 
-                        normalizedRow['online_hours'] || 
-                        normalizedRow['hours'] || 
-                        normalizedRow['stunden'] || 
-                        normalizedRow['arbeitszeit']
+                    driver = allDrivers.find(d => 
+                        (d.lastName?.toLowerCase().includes(lastName)) ||
+                        (d.firstName?.toLowerCase().includes(firstName))
                     );
+                }
 
-                    const week = safeInt(
-                        normalizedRow['isoweek'] || 
-                        normalizedRow['week'] || 
-                        normalizedRow['kw'] || 
-                        normalizedRow['kalenderwoche']
-                    );
-                    
-                    if (week > 0) mainIsoweek = week;
-                    if (!riderId && !riderName) continue;
+                const finalRiderId = riderId || `anon-${Date.now()}-${i}`;
 
-                    // IN-MEMORY LOOKUP (Extremely fast)
-                    let driver = null;
-                    if (riderId) {
-                        driver = allDrivers.find(d => 
-                            d.driverNumber === riderId || 
-                            d.secondaryDriverNumber === riderId
-                        );
-                    }
-
-                    if (!driver && riderName) {
-                        const nameParts = riderName.split(' ');
-                        const lastName = (nameParts[nameParts.length - 1] || '').toLowerCase();
-                        const firstName = (nameParts[0] || '').toLowerCase();
-                        
-                        driver = allDrivers.find(d => 
-                            (d.lastName?.toLowerCase().includes(lastName)) ||
-                            (d.firstName?.toLowerCase().includes(firstName))
-                        );
-                    }
-
-                    const finalRiderId = riderId || `anon-${Date.now()}-${i}`;
-
-                    await tx.riderKpi.upsert({
-                        where: {
-                            tenantId_riderId_isoweek: {
-                                tenantId: req.tenantId!,
-                                riderId: finalRiderId,
-                                isoweek: week
-                            }
-                        },
-                        create: {
+                await prisma.riderKpi.upsert({
+                    where: {
+                        tenantId_riderId_isoweek: {
                             tenantId: req.tenantId!,
                             riderId: finalRiderId,
-                            riderName,
-                            deliveredOrders: delivered,
-                            totalOrders: total,
-                            hoursWorked: hours,
-                            isoweek: week,
-                            driverId: driver?.id,
-                            acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
-                            utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
-                            avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
-                        },
-                        update: {
-                            deliveredOrders: delivered,
-                            totalOrders: total,
-                            hoursWorked: hours,
-                            driverId: driver?.id ?? undefined,
-                            riderName,
-                            acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
-                            utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
-                            avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
+                            isoweek: week
                         }
-                    });
-                    recordCount++;
-                } catch (rowError) {
-                    console.error(`[KPI-Upload] Error in row ${i + 1}:`, rowError);
-                    throw new Error(`Excell tablosundaki ${i + 1}. satırda hata oluştu: ${(rowError as Error).message}`);
-                }
+                    },
+                    create: {
+                        tenantId: req.tenantId!,
+                        riderId: finalRiderId,
+                        riderName,
+                        deliveredOrders: delivered,
+                        totalOrders: total,
+                        hoursWorked: hours,
+                        isoweek: week,
+                        driverId: driver?.id,
+                        acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
+                        utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
+                        avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
+                    },
+                    update: {
+                        deliveredOrders: delivered,
+                        totalOrders: total,
+                        hoursWorked: hours,
+                        driverId: driver?.id ?? undefined,
+                        riderName,
+                        acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
+                        utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
+                        avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
+                    }
+                });
+                recordCount++;
+            } catch (rowError) {
+                console.error(`[KPI-Upload] Error in row ${i + 1}:`, rowError);
+                throw new Error(`Excell tablosundaki ${i + 1}. satırda hata oluştu: ${(rowError as Error).message}`);
             }
+        }
 
-            console.log(`[KPI-Upload] Upserted ${recordCount} KPIs. Main ISO Week: ${mainIsoweek}`);
+        console.log(`[KPI-Upload] Upserted ${recordCount} KPIs. Main ISO Week: ${mainIsoweek}`);
 
-            await tx.kpiUpload.create({
-                data: {
-                    tenantId: req.tenantId!,
-                    filename: req.file!.originalname,
-                    isoweek: mainIsoweek,
-                    recordCount,
-                    status: 'SUCCESS'
-                }
-            });
-        }, {
-            maxWait: 60000,
-            timeout: 60000
+        await prisma.kpiUpload.create({
+            data: {
+                tenantId: req.tenantId!,
+                filename: req.file!.originalname,
+                isoweek: mainIsoweek,
+                recordCount,
+                status: 'SUCCESS'
+            }
         });
 
         res.json({ success: true, recordCount, isoweek: mainIsoweek });
