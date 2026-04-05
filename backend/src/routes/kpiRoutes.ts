@@ -178,9 +178,19 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
                         avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
                         distanceTotal: (() => {
-                            const pickup = safeFloat(normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance'] || 0) / 1000;
-                            const dropoff = safeFloat(normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance'] || 0) / 1000;
-                            return (pickup + dropoff) * delivered;
+                            // If there is already a total KM column, use it
+                            const directTotal = safeFloat(normalizedRow['total_km'] || normalizedRow['total_distance'] || normalizedRow['distance'] || normalizedRow['gesamt_km'] || normalizedRow['km_gesamt']);
+                            if (directTotal > 0) return directTotal;
+
+                            // Fallback to calculation from O and P (Pickup/Dropoff)
+                            const pickup = safeFloat(normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance'] || normalizedRow['pickup_km'] || normalizedRow['pickup_distance'] || 0);
+                            const dropoff = safeFloat(normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance'] || normalizedRow['dropoff_km'] || normalizedRow['dropoff_distance'] || 0);
+                            
+                            // If the column names contain "meters", we divide by 1000. Otherwise we assume KM as per user's "Pickup-km" wording.
+                            const pScale = (normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance']) ? 1000 : 1;
+                            const dScale = (normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance']) ? 1000 : 1;
+
+                            return ((pickup / pScale) + (dropoff / dScale)) * delivered;
                         })()
                     },
                     update: {
@@ -196,9 +206,19 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
                         avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
                         distanceTotal: (() => {
-                            const pickup = safeFloat(normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance'] || 0) / 1000;
-                            const dropoff = safeFloat(normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance'] || 0) / 1000;
-                            return (pickup + dropoff) * delivered;
+                            // If there is already a total KM column, use it
+                            const directTotal = safeFloat(normalizedRow['total_km'] || normalizedRow['total_distance'] || normalizedRow['distance'] || normalizedRow['gesamt_km'] || normalizedRow['km_gesamt']);
+                            if (directTotal > 0) return directTotal;
+
+                            // Fallback to calculation from O and P (Pickup/Dropoff)
+                            const pickup = safeFloat(normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance'] || normalizedRow['pickup_km'] || normalizedRow['pickup_distance'] || 0);
+                            const dropoff = safeFloat(normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance'] || normalizedRow['dropoff_km'] || normalizedRow['dropoff_distance'] || 0);
+                            
+                            // If the column names contain "meters", we divide by 1000. Otherwise we assume KM as per user's "Pickup-km" wording.
+                            const pScale = (normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance']) ? 1000 : 1;
+                            const dScale = (normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance']) ? 1000 : 1;
+
+                            return ((pickup / pScale) + (dropoff / dScale)) * delivered;
                         })()
                     }
                 });
