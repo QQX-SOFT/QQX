@@ -38,14 +38,19 @@ async function main() {
     const driversToUpdate: any[] = [];
     
     fs.createReadStream(CSV_PATH)
-        .pipe(csv())
+        .pipe(csv({
+            mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').replace(/"/g, '').trim()
+        }))
         .on('data', (row: any) => {
             const riderId = row['rider_id'];
             if (!riderId) return;
 
+            const statusVal = row['Status'] || '';
+            const mappedStatus = mapStatus(statusVal);
+
             driversToUpdate.push({
                 riderId: riderId.toString(),
-                status: mapStatus(row['Status'] || ''),
+                status: mappedStatus,
                 imageUrl: row['Bild'] || null,
                 firstName: row['Vorname'] || '',
                 lastName: row['Familienname'] || '',
