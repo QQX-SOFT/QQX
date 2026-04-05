@@ -19,7 +19,8 @@ import {
     List,
     X,
     Navigation,
-    Compass
+    Compass,
+    Check
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
