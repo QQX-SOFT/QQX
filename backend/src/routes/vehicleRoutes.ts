@@ -12,6 +12,7 @@ const vehicleSchema = z.object({
     milage: z.number().int().nonnegative().default(0),
     nextMaintenance: z.string().optional().nullable(), // ISO String
     dailyRate: z.number().min(0).default(35),
+    imageUrl: z.string().optional().nullable(),
 });
 
 // GET all vehicles for a specific tenant
@@ -67,6 +68,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 ...validatedData,
                 nextMaintenance: validatedData.nextMaintenance ? new Date(validatedData.nextMaintenance) : null,
                 dailyRate: validatedData.dailyRate,
+                imageUrl: validatedData.imageUrl,
                 tenantId: tenantId!,
             }
         });

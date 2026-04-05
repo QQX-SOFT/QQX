@@ -219,6 +219,7 @@ model Vehicle {
   availableFrom   DateTime? // Estimated return from repair
   status          VehicleStatus @default(AVAILABLE)
   dailyRate       Float    @default(35.0)
+  imageUrl        String?
   rentals         Rental[]
 
   createdAt       DateTime @default(now())
