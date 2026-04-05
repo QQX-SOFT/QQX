@@ -195,6 +195,7 @@ export default function AccountingPage() {
                             <tr className="bg-slate-50/50">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fahrer Name</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rider ID</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Vertragsmodell</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Orders</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">KM Gesamt</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Gehalt (Netto)</th>
@@ -239,6 +240,14 @@ export default function AccountingPage() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
+                                            <td className="px-8 py-6">
+                                                <span className={cn(
+                                                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
+                                                    (g.payPerOrder > 0 || g.payPerKm > 0) ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"
+                                                )}>
+                                                    {(g.payPerOrder > 0 || g.payPerKm > 0) ? "Bestellung + KM" : "Stundenbasiert"}
+                                                </span>
+                                            </td>
                                             <td className="px-8 py-6 text-center">
                                                 <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
                                             </td>
