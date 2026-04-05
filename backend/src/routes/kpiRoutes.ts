@@ -229,6 +229,20 @@ router.delete('/uploads/:id', async (req: TenantRequest, res: Response) => {
     }
 });
 
+router.delete('/clear', async (req: TenantRequest, res: Response) => {
+    try {
+        await prisma.riderKpi.deleteMany({
+            where: { tenantId: req.tenantId! }
+        });
+        await prisma.kpiUpload.deleteMany({
+            where: { tenantId: req.tenantId! }
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to clear data' });
+    }
+});
+
 router.post('/validate', upload.single('file'), async (req: TenantRequest, res: Response) => {
     try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });

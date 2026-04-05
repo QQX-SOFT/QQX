@@ -176,6 +176,18 @@ export default function AdminKpiPage() {
                                 ))}
                             </div>
                         </div>
+
+                        <button 
+                            onClick={async () => {
+                                if (confirm("ACHTUNG: ALLE KPI-Daten für diesen Mandanten werden unwiderruflich gelöscht. Fortfahren?")) {
+                                    await api.delete('/kpis/clear');
+                                    fetchKpis();
+                                }
+                            }}
+                            className="w-full mt-6 py-4 border-2 border-dashed border-red-100 text-red-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-50 hover:border-red-200 transition-all"
+                        >
+                            DATEN ZURÜCKSETZEN
+                        </button>
                     </div>
                 </aside>
 
