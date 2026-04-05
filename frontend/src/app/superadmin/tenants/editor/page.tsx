@@ -21,6 +21,7 @@ import AddressPicker from "@/components/AddressPicker";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import GoogleMapsProvider from "@/components/GoogleMapsProvider";
+import { cn } from "@/lib/utils";
 
 const INITIAL_FORM = {
     name: "",
@@ -55,6 +56,12 @@ function TenantEditorForm() {
     const [newAdminEmail, setNewAdminEmail] = useState("");
     const [newAdminPassword, setNewAdminPassword] = useState("");
     const [addingAdmin, setAddingAdmin] = useState(false);
+
+    // Validation states
+    const [checkingVat, setCheckingVat] = useState(false);
+    const [vatResult, setVatResult] = useState<any>(null);
+    const [checkingGisa, setCheckingGisa] = useState(false);
+    const [gisaResult, setGisaResult] = useState<any>(null);
 
     // Fetch existing data
     useEffect(() => {
@@ -95,6 +102,35 @@ function TenantEditorForm() {
             fetchData();
         }
     }, [id]);
+
+    const checkVat = async () => {
+        if (!formData.uidNumber) return alert("UID-Nummer fehlt!");
+        setCheckingVat(true);
+        try {
+            const { data } = await api.post("/vat/validate", { vatNumber: formData.uidNumber });
+            setVatResult(data);
+        } catch (e) {
+            setVatResult({ valid: false });
+        } finally {
+            setCheckingVat(false);
+        }
+    };
+
+    const checkGisa = async () => {
+        if (!formData.gisaNumber) return alert("GISA-Zahl fehlt!");
+        setCheckingGisa(true);
+        try {
+            const { data } = await api.post("/gisa/validate", { 
+                gisaNumber: formData.gisaNumber,
+                name: formData.ownerName || formData.name 
+            });
+            setGisaResult(data);
+        } catch (e) {
+            setGisaResult({ valid: false });
+        } finally {
+            setCheckingGisa(false);
+        }
+    };
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -284,16 +320,26 @@ function TenantEditorForm() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                     <div>
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">UID-Nummer</label>
-                        <div className="relative">
-                            <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                            <input
-                                type="text"
-                                placeholder="ATU12345678"
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
-                                value={formData.uidNumber}
-                                onChange={e => setFormData({ ...formData, uidNumber: e.target.value })}
-                            />
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="ATU12345678"
+                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                    value={formData.uidNumber}
+                                    onChange={e => setFormData({ ...formData, uidNumber: e.target.value.toUpperCase() })}
+                                />
+                            </div>
+                            <button type="button" onClick={checkVat} disabled={checkingVat} className="px-6 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition">
+                                {checkingVat ? <Loader2 className="animate-spin" size={16} /> : "Prüfen"}
+                            </button>
                         </div>
+                        {vatResult && (
+                            <div className={cn("mt-2 p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest", vatResult.valid ? "bg-green-50 text-green-700 border-green-200" : "bg-red-50 text-red-700 border-red-200")}>
+                                {vatResult.valid ? `✓ Gültig: ${vatResult.name}` : "✗ Ungültig"}
+                            </div>
+                        )}
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Steuernummer</label>
@@ -323,16 +369,26 @@ function TenantEditorForm() {
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">GISA Nummer</label>
-                        <div className="relative">
-                            <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
-                            <input
-                                type="text"
-                                placeholder="GISA 12345678"
-                                className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
-                                value={formData.gisaNumber}
-                                onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })}
-                            />
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <FileText className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="GISA 12345678"
+                                    className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-white/10 rounded-2xl pl-14 pr-6 py-4 outline-none focus:border-indigo-500 transition text-slate-900 dark:text-white font-bold"
+                                    value={formData.gisaNumber}
+                                    onChange={e => setFormData({ ...formData, gisaNumber: e.target.value })}
+                                />
+                            </div>
+                            <button type="button" onClick={checkGisa} disabled={checkingGisa} className="px-6 bg-indigo-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-700 transition">
+                                {checkingGisa ? <Loader2 className="animate-spin" size={16} /> : "Prüfen"}
+                            </button>
                         </div>
+                        {gisaResult && (
+                            <div className={cn("mt-2 p-4 rounded-2xl border text-[10px] font-black uppercase tracking-widest", gisaResult.valid ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-red-50 text-red-700 border-red-200")}>
+                                {gisaResult.valid ? `✓ Aktiv: ${gisaResult.name}` : "✗ Nicht gefunden"}
+                            </div>
+                        )}
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Zuständiges Gericht (Gerichtsstand)</label>
