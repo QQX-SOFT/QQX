@@ -63,15 +63,17 @@ interface Document {
 
 export default function DriversPage() {
     const [searchTerm, setSearchTerm] = useState("");
-    const [statusFilter, setStatusFilter] = useState<string>("ALL");
-    const [cityFilter, setCityFilter] = useState<string>("ALL");
-    
     const [drivers, setDrivers] = useState<Driver[]>([]);
     const [loading, setLoading] = useState(true);
-
     const [viewingDocs, setViewingDocs] = useState<Driver | null>(null);
     const [docs, setDocs] = useState<Document[]>([]);
     const [loadingDocs, setLoadingDocs] = useState(false);
+    
+    // Detailed Filter States
+    const [showFiltersModal, setShowFiltersModal] = useState(false);
+    const [selectedCities, setSelectedCities] = useState<string[]>([]);
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
     useEffect(() => {
         fetchDrivers();
@@ -139,13 +141,26 @@ export default function DriversPage() {
             d.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             d.driverNumber?.toLowerCase().includes(searchTerm.toLowerCase());
         
-        const matchesStatus = statusFilter === "ALL" || d.status === statusFilter;
+        const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(d.status);
+        
         const driverCity = d.workLocation || d.city || "";
-        const matchesCity = cityFilter === "ALL" || 
-            driverCity.split(",").map((s: string) => s.trim()).includes(cityFilter);
+        const driverLocs = driverCity.split(",").map((s: string) => s.trim());
+        const matchesCity = selectedCities.length === 0 || driverLocs.some(loc => selectedCities.includes(loc));
 
-        return matchesSearch && matchesStatus && matchesCity;
+        const matchesType = selectedTypes.length === 0 || selectedTypes.includes(d.type);
+
+        return matchesSearch && matchesStatus && matchesCity && matchesType;
     });
+
+    const toggleFilter = (list: string[], setList: (val: string[]) => void, item: string) => {
+        if (list.includes(item)) {
+            setList(list.filter(i => i !== item));
+        } else {
+            setList([...list, item]);
+        }
+    };
+
+    const activeFilterCount = selectedCities.length + selectedStatuses.length + selectedTypes.length;
 
     return (
         <div className="space-y-12 pb-20">
@@ -180,37 +195,38 @@ export default function DriversPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                    {/* Status Filter */}
-                    <div className="relative group">
-                        <select 
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="appearance-none pl-6 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-[11px] uppercase tracking-widest text-slate-600 outline-none focus:border-blue-500 transition-all cursor-pointer"
-                        >
-                            <option value="ALL">Alle Status</option>
-                            <option value="ACTIVE">Aktiv</option>
-                            <option value="PASSIV">Passiv</option>
-                            <option value="GEKUENDIGT">Gekündigt</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                    </div>
+                    <button 
+                        onClick={() => setShowFiltersModal(true)}
+                        className={cn(
+                            "flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-sm border",
+                            activeFilterCount > 0 
+                                ? "bg-blue-600 text-white border-blue-500" 
+                                : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-200"
+                        )}
+                    >
+                        <Filter size={18} />
+                        Filter
+                        {activeFilterCount > 0 && (
+                            <span className="bg-white text-blue-600 w-5 h-5 rounded-full flex items-center justify-center text-[9px]">
+                                {activeFilterCount}
+                            </span>
+                        )}
+                    </button>
 
-                    {/* City Filter */}
-                    <div className="relative group">
-                        <select 
-                            value={cityFilter}
-                            onChange={(e) => setCityFilter(e.target.value)}
-                            className="appearance-none pl-6 pr-12 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-[11px] uppercase tracking-widest text-slate-600 outline-none focus:border-blue-500 transition-all cursor-pointer max-w-[200px]"
+                    {activeFilterCount > 0 && (
+                        <button 
+                            onClick={() => {
+                                setSelectedCities([]);
+                                setSelectedStatuses([]);
+                                setSelectedTypes([]);
+                            }}
+                            className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-red-500 transition-colors"
                         >
-                            <option value="ALL">Alle Orte</option>
-                            {cities.filter(c => c !== "ALL").map(c => (
-                                <option key={c} value={c}>{c}</option>
-                            ))}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                    </div>
+                            Reset
+                        </button>
+                    )}
 
-                    <button className="p-4 bg-slate-900 text-white rounded-2xl hover:bg-black transition shadow-lg active:scale-95">
+                    <button className="p-4 bg-slate-900 text-white rounded-2xl hover:bg-black transition shadow-lg active:scale-95 ml-2">
                         <Download size={20} />
                     </button>
                 </div>
@@ -335,6 +351,7 @@ export default function DriversPage() {
                 ) }
             </div>
 
+
             {/* Document View Modal */}
             <AnimatePresence>
                 {viewingDocs && (
@@ -389,6 +406,136 @@ export default function DriversPage() {
                                         ))}
                                     </div>
                                 )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Advanced Filters Modal */}
+            <AnimatePresence>
+                {showFiltersModal && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/40 backdrop-blur-md">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            className="bg-white rounded-[4rem] p-12 w-full max-w-4xl shadow-2xl relative max-h-[85vh] flex flex-col"
+                        >
+                            <button onClick={() => setShowFiltersModal(false)} className="absolute top-10 right-10 p-3 bg-slate-50 rounded-full text-slate-400 hover:text-slate-900 transition">
+                                <X size={24} />
+                            </button>
+
+                            <div className="mb-10">
+                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-3 block italic">Advanced Search</span>
+                                <h2 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase">Filters</h2>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-6 custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-12">
+                                {/* City Column */}
+                                <div className="space-y-6">
+                                    <h4 className="flex items-center gap-3 text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-4">
+                                        <MapPin size={16} className="text-blue-500" />
+                                        Arbeitsort
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {cities.filter(c => c !== "ALL").map(city => (
+                                            <button 
+                                                key={city}
+                                                onClick={() => toggleFilter(selectedCities, setSelectedCities, city)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left",
+                                                    selectedCities.includes(city)
+                                                        ? "bg-blue-50 border-blue-200 text-blue-600 ring-2 ring-blue-500/10"
+                                                        : "bg-white border-slate-100 text-slate-500 hover:border-blue-100"
+                                                )}
+                                            >
+                                                <span className="text-[11px] font-black uppercase tracking-tight">{city}</span>
+                                                {selectedCities.includes(city) && <CheckCircle size={16} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Status Column */}
+                                <div className="space-y-6">
+                                    <h4 className="flex items-center gap-3 text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-4">
+                                        <Hash size={16} className="text-blue-500" />
+                                        Status
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {[
+                                            { id: 'ACTIVE', label: 'Aktiv', color: 'bg-green-500' },
+                                            { id: 'PASSIV', label: 'Passiv', color: 'bg-slate-300' },
+                                            { id: 'GEKUENDIGT', label: 'Gekündigt', color: 'bg-red-500' }
+                                        ].map(s => (
+                                            <button 
+                                                key={s.id}
+                                                onClick={() => toggleFilter(selectedStatuses, setSelectedStatuses, s.id)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left",
+                                                    selectedStatuses.includes(s.id)
+                                                        ? "bg-blue-50 border-blue-200 text-blue-600 ring-2 ring-blue-500/10"
+                                                        : "bg-white border-slate-100 text-slate-500 hover:border-blue-100"
+                                                )}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={cn("w-2 h-2 rounded-full", s.color)} />
+                                                    <span className="text-[11px] font-black uppercase tracking-tight">{s.label}</span>
+                                                </div>
+                                                {selectedStatuses.includes(s.id) && <CheckCircle size={16} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Vertrag Column */}
+                                <div className="space-y-6">
+                                    <h4 className="flex items-center gap-3 text-xs font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-4">
+                                        <Briefcase size={16} className="text-blue-500" />
+                                        Vertrag
+                                    </h4>
+                                    <div className="space-y-3">
+                                        {[
+                                            { id: 'EMPLOYED', label: 'Dienstnehmer' },
+                                            { id: 'FREELANCE', label: 'Freier DN' },
+                                            { id: 'COMMERCIAL', label: 'SFU (Gewerbe)' }
+                                        ].map(t => (
+                                            <button 
+                                                key={t.id}
+                                                onClick={() => toggleFilter(selectedTypes, setSelectedTypes, t.id)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left",
+                                                    selectedTypes.includes(t.id)
+                                                        ? "bg-blue-50 border-blue-200 text-blue-600 ring-2 ring-blue-500/10"
+                                                        : "bg-white border-slate-100 text-slate-500 hover:border-blue-100"
+                                                )}
+                                            >
+                                                <span className="text-[11px] font-black uppercase tracking-tight">{t.label}</span>
+                                                {selectedTypes.includes(t.id) && <CheckCircle size={16} />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-12 pt-8 border-t border-slate-50 flex justify-between items-center">
+                                <button 
+                                    onClick={() => {
+                                        setSelectedCities([]);
+                                        setSelectedStatuses([]);
+                                        setSelectedTypes([]);
+                                    }}
+                                    className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-500 transition-colors"
+                                >
+                                    Filtreleri Sıfırla
+                                </button>
+                                <button 
+                                    onClick={() => setShowFiltersModal(false)}
+                                    className="px-12 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] hover:bg-black transition-all shadow-2xl active:scale-95"
+                                >
+                                    Sonuçları Göster
+                                </button>
                             </div>
                         </motion.div>
                     </div>
