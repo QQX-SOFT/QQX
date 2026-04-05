@@ -45,6 +45,8 @@ interface Driver {
     driverNumber: string | null;
     workStyle: string | null;
     workLocation: string | null;
+    employmentModel: string | null;
+    employmentType: string | null;
     city: string | null;
     zip: string | null;
     street: string | null;
@@ -124,7 +126,13 @@ export default function DriversPage() {
         }
     };
 
-    const cities = ["ALL", ...Array.from(new Set(drivers.map(d => d.workLocation || d.city).filter(Boolean))) as string[]];
+    // Modified to split comma-separated locations
+    const cities = ["ALL", ...Array.from(new Set(
+        drivers.flatMap(d => {
+            const loc = d.workLocation || d.city || "";
+            return loc.split(",").map((s: string) => s.trim());
+        })
+    )).filter(Boolean).sort() as string[]];
 
     const filteredDrivers = drivers.filter(d => {
         const matchesSearch = `${d.firstName} ${d.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,8 +140,9 @@ export default function DriversPage() {
             d.driverNumber?.toLowerCase().includes(searchTerm.toLowerCase());
         
         const matchesStatus = statusFilter === "ALL" || d.status === statusFilter;
-        const driverCity = d.workLocation || d.city;
-        const matchesCity = cityFilter === "ALL" || driverCity === cityFilter;
+        const driverCity = d.workLocation || d.city || "";
+        const matchesCity = cityFilter === "ALL" || 
+            driverCity.split(",").map((s: string) => s.trim()).includes(cityFilter);
 
         return matchesSearch && matchesStatus && matchesCity;
     });
@@ -248,7 +257,13 @@ export default function DriversPage() {
                                         <div className="flex flex-wrap items-center gap-2">
                                             <span className="px-3 py-1 bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500 rounded-full">{driver.driverNumber || "NEW"}</span>
                                             <span className="text-slate-300">•</span>
-                                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400 italic"><MapPin size={12} /> {driver.workLocation || driver.city || "Unbekannt"}</span>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {(driver.workLocation || driver.city || "Unbekannt").split(",").map((loc: string, idx: number) => (
+                                                    <span key={idx} className="flex items-center gap-1 text-[10px] font-black text-slate-500 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 uppercase tracking-tighter hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                                        <MapPin size={10} /> {loc.trim()}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -266,11 +281,15 @@ export default function DriversPage() {
                                         </p>
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Vertrag</p>
-                                        <p className="font-black text-xs text-slate-900 uppercase tracking-tighter">
-                                            {driver.type === "COMMERCIAL" ? "SFU" : 
-                                             driver.type === "FREELANCE" ? "Freier DN" : "Dienstnehmer"}
-                                        </p>
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Vertrag & Modell</p>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-black text-[10px] text-blue-600 uppercase tracking-tighter">
+                                                {driver.employmentType || (driver.type === "COMMERCIAL" ? "Gewerbe" : driver.type === "FREELANCE" ? "Freier DN" : "Dienstnehmer")}
+                                            </span>
+                                            <span className="font-bold text-[9px] text-slate-400 uppercase italic">
+                                                {driver.employmentModel || "Nicht angegeben"}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Kontakt</p>
