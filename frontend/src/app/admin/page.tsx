@@ -12,7 +12,8 @@ import {
     ChevronRight,
     Loader2,
     Calendar,
-    Activity
+    Activity,
+    ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -271,24 +272,26 @@ export default function Dashboard() {
                 {/* Sidebar Activity */}
                 <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm p-10 flex flex-col">
                     <h3 className="text-xl font-black text-slate-900 mb-10 flex items-center justify-between">
-                        Aktivitätsfeed
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        Visa & Dokumente
+                        <div className="w-2 h-2 bg-blue-500 rounded-full" />
                     </h3>
                     <div className="space-y-12 flex-1">
                         {activities.length === 0 && !loading && (
                             <div className="text-center py-20 opacity-30">
-                                <Activity className="mx-auto mb-4" />
-                                <p className="text-xs font-black uppercase tracking-widest">Keine aktuellen Daten</p>
+                                <ShieldCheck className="mx-auto mb-4" />
+                                <p className="text-xs font-black uppercase tracking-widest">Alle Dokumente gültig</p>
                             </div>
                         )}
                         {activities.map((item, i) => (
                             <div key={item.id} className="relative pl-10 group">
                                 <div className={cn(
                                     "absolute left-0 top-1 w-3 h-3 rounded-full border-2 border-white shadow-xl transition-all duration-300 group-hover:scale-150",
-                                    item.type === "alert" ? "bg-red-500 ring-4 ring-red-50" : item.type === "success" ? "bg-green-500 ring-4 ring-green-50" : "bg-blue-500 ring-4 ring-blue-50"
+                                    item.type === "alert" ? "bg-red-500 ring-4 ring-red-50" : "bg-blue-500 ring-4 ring-blue-50"
                                 )}></div>
                                 {(i < activities.length - 1) && <div className="absolute left-[5.5px] top-8 bottom-[-40px] w-1 bg-slate-50 rounded-full"></div>}
-                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">{new Date(item.date).toLocaleTimeString("de-DE", { hour: '2-digit', minute: '2-digit' })} Uhr</p>
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">
+                                    Ablauf: {new Date(item.date).toLocaleDateString("de-DE")}
+                                </p>
                                 <h4 className="font-black text-slate-900 mb-1 flex items-center gap-2 group-hover:text-blue-600 transition">
                                     {item.title}
                                     <ChevronRight size={14} className="opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />

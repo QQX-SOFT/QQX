@@ -230,49 +230,45 @@ router.get('/alerts', async (req: TenantRequest, res: Response) => {
 
 router.get('/activities', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
-
-    if (!tenantId) {
-        return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
-    }
+    if (!tenantId) return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
 
     try {
-        // Fetch recent orders as activity
-        const recentOrders = await prisma.order.findMany({
-            where: { tenantId },
-            orderBy: { createdAt: 'desc' },
-            take: 4,
-            include: { driver: true }
+        const now = new Date();
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(now.getDate() + 30);
+
+        const expiringDrivers = await prisma.driver.findMany({
+            where: {
+                tenantId,
+                OR: [
+                    { visaExpiry: { not: null, lt: thirtyDaysFromNow } },
+                    { workPermitUntil: { not: null, lt: thirtyDaysFromNow } }
+                ]
+            },
+            take: 10,
+            orderBy: [{ visaExpiry: 'asc' }, { workPermitUntil: 'asc' }]
         });
 
-        const activities = [];
+        const activities = expiringDrivers.map(driver => {
+            const visaExp = driver.visaExpiry;
+            const permitExp = driver.workPermitUntil;
+            const closestExp = (visaExp && permitExp) ? (visaExp < permitExp ? visaExp : permitExp) : (visaExp || permitExp);
+            const daysLeft = closestExp ? Math.ceil((closestExp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+            const isVisa = closestExp === visaExp;
 
-        // Mix orders
-        for (const order of recentOrders) {
-            let type = "notif";
-            let desc = `Bestellung von ${order.customerName} über €${order.amount.toFixed(2)}`;
-            if (order.status === 'DELIVERED') {
-                type = "success";
-                desc = `erfolgreich zugestellt!`;
-            } else if (order.status === 'PROBLEMATIC') {
-                type = "alert";
-                desc = `hatte ein Problem.`;
-            }
+            return {
+                id: driver.id,
+                title: `${driver.firstName} ${driver.lastName}`,
+                desc: `${isVisa ? 'Visum' : 'Arbeitspapiere'} läuft ${daysLeft < 0 ? 'abgelaufen!' : `in ${daysLeft} Tagen ab`}`,
+                type: daysLeft < 0 ? "alert" : (daysLeft < 7 ? "alert" : "notif"),
+                date: closestExp
+            };
+        });
 
-            activities.push({
-                id: "o" + order.id,
-                title: `Auftrag #${order.id.slice(0, 6)} - ${order.status}`,
-                desc: desc,
-                type: type,
-                date: order.createdAt
-            });
-        }
-
-        // Sort combined to simulated feed
-        activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-        res.json(activities.slice(0, 5));
+        res.json(activities);
     } catch (error) {
-        res.status(500).json({ error: 'Aktivitäten konnten nicht geladen werden' });
+        console.error(error);
+        res.status(500).json({ error: 'Visa-Daten konnten nicht geladen werden' });
     }
 });
 
