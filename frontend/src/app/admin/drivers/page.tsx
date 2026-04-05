@@ -48,10 +48,12 @@ interface Driver {
     employmentModel: string | null;
     employmentType: string | null;
     city: string | null;
-    zip: string | null;
     street: string | null;
     employmentStart: string | null;
     employmentEnd: string | null;
+    orderFee: number | null;
+    hourlyWage: number | null;
+    payPerKm: number | null;
 }
 
 interface Document {
@@ -286,7 +288,7 @@ export default function DriversPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-5 gap-6 flex-1">
+                                <div className="grid grid-cols-2 lg:grid-cols-6 gap-6 flex-1 w-full mt-6 lg:mt-0 lg:ml-4 border-t lg:border-t-0 lg:border-l border-slate-50 pt-6 lg:pt-0 lg:pl-6">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Status</p>
                                         <p className={cn(
@@ -324,6 +326,29 @@ export default function DriversPage() {
                                                     <span className={cn("mr-1", driver.status === "GEKUENDIGT" ? "text-red-400" : "text-slate-400")}>Ende:</span>
                                                     {driver.employmentEnd ? new Date(driver.employmentEnd).toLocaleDateString('de-DE') : "-"}
                                                 </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Lohn & Spesen</p>
+                                        <div className="flex flex-col gap-1">
+                                            {driver.hourlyWage ? (
+                                                <span className="font-bold text-[10px] text-slate-700">
+                                                    Stundenlohn: <span className="text-slate-900">{driver.hourlyWage}€/h</span>
+                                                </span>
+                                            ) : null}
+                                            {driver.orderFee ? (
+                                                <span className="font-bold text-[10px] text-slate-700">
+                                                    Pro Drop: <span className="text-slate-900">{driver.orderFee}€</span>
+                                                </span>
+                                            ) : null}
+                                            {driver.payPerKm ? (
+                                                <span className="font-bold text-[10px] text-slate-700">
+                                                    Spesen: <span className="text-slate-900">{driver.payPerKm}€/km</span>
+                                                </span>
+                                            ) : null}
+                                            {!driver.hourlyWage && !driver.orderFee && !driver.payPerKm && (
+                                                <span className="font-bold text-[10px] text-slate-400 italic">Nicht definiert</span>
                                             )}
                                         </div>
                                     </div>
