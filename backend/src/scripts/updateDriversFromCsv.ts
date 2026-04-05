@@ -1,5 +1,6 @@
 import { PrismaClient, DriverStatus, DriverType } from '@prisma/client';
 import fs from 'fs';
+// @ts-ignore
 import csv from 'csv-parser';
 import path from 'path';
 
@@ -38,7 +39,7 @@ async function main() {
     
     fs.createReadStream(CSV_PATH)
         .pipe(csv())
-        .on('data', (row) => {
+        .on('data', (row: any) => {
             const riderId = row['rider_id'];
             if (!riderId) return;
 
