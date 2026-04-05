@@ -219,7 +219,7 @@ export default function AccountingPage() {
                                             riderName: k.riderName,
                                             totalOrders: 0,
                                             totalKm: 0,
-                                            payPerOrder: k.driver?.payPerOrder || 0,
+                                            payPerOrder: k.driver?.payPerOrder || k.driver?.orderFee || 0,
                                             payPerKm: k.driver?.payPerKm || 0,
                                         };
                                     }
@@ -229,6 +229,7 @@ export default function AccountingPage() {
 
                                 return Object.values(grouped).map((g: any, i) => {
                                     const totalWage = (g.totalOrders * g.payPerOrder) + (g.totalKm * g.payPerKm);
+                                    const hasContract = g.payPerOrder > 0 || g.payPerKm > 0;
                                     return (
                                         <tr key={i} className="hover:bg-blue-50/20 transition group border-l-4 border-l-transparent hover:border-l-blue-600">
                                             <td className="px-8 py-6">
@@ -243,16 +244,17 @@ export default function AccountingPage() {
                                             <td className="px-8 py-6">
                                                 <span className={cn(
                                                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                    (g.payPerOrder > 0 || g.payPerKm > 0) ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"
+                                                    hasContract ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"
                                                 )}>
-                                                    {(g.payPerOrder > 0 || g.payPerKm > 0) ? "Bestellung + KM" : "Stundenbasiert"}
+                                                    {hasContract ? "Bestellung + KM" : "Stundenbasiert"}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-center">
                                                 <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
                                             </td>
                                             <td className="px-8 py-6 text-center">
-                                                <span className="text-sm font-bold text-slate-600">{g.totalKm.toFixed(1)} km</span>
+                                                <span className="text-sm font-extrabold text-slate-950">{g.totalKm.toFixed(1)} km</span>
+                                                {g.totalKm === 0 && g.totalOrders > 0 && <p className="text-[7px] text-red-500 font-black uppercase mt-1">Re-upload nötig</p>}
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {totalWage.toFixed(2)}</span>
