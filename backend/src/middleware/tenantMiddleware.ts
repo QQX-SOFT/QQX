@@ -17,8 +17,8 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
     console.log(`[TenantMiddleware] Path: ${path}, Subdomain: ${subdomain}`);
 
     // Skip tenant check for tenant creation/listing, health checks, or explicit bypass
-    const isTenantAPI = path.includes('/api/tenants') || path.includes('/api/superadmin');
-    const isHealthOrAuth = path.includes('/health') || path.includes('/auth');
+    const isTenantAPI = path.includes('/api/tenants') || path.includes('/api/superadmin') || path.includes('/api/applications');
+    const isHealthOrAuth = path.includes('/health') || path.includes('/auth') || path.includes('/api/upload');
 
     if (isTenantAPI || isHealthOrAuth) {
         console.log(`[TenantMiddleware] Bypassing check for ${path}. Subdomain header ignored.`);
