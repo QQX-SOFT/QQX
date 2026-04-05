@@ -101,6 +101,7 @@ model Driver {
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
   driverNumber  String?   // Custom Fahrer-ID manually entered by admin
+  secondaryDriverNumber String? // Zweite Fahrer ID when driver has multiple IDs
   firstName     String
   lastName      String
   phone         String?

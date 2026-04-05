@@ -43,6 +43,7 @@ interface Driver {
     };
     status: string;
     driverNumber: string | null;
+    secondaryDriverNumber: string | null;
     workStyle: string | null;
     workLocation: string | null;
     employmentModel: string | null;
@@ -275,7 +276,12 @@ export default function DriversPage() {
                                     <div className="space-y-1">
                                         <h3 className="text-2xl font-black text-slate-900 group-hover:text-blue-600 transition tracking-tight">{driver.firstName} {driver.lastName}</h3>
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="px-3 py-1 bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500 rounded-full">{driver.driverNumber || "NEW"}</span>
+                                            <div className="flex gap-1">
+                                                <span className="px-3 py-1 bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500 rounded-full">{driver.driverNumber || "NEW"}</span>
+                                                {driver.secondaryDriverNumber && (
+                                                    <span className="px-3 py-1 bg-indigo-50 border border-indigo-100 text-[9px] font-black uppercase tracking-widest text-indigo-500 rounded-full">{driver.secondaryDriverNumber}</span>
+                                                )}
+                                            </div>
                                             <span className="text-slate-300">•</span>
                                             <div className="flex flex-wrap items-center gap-2">
                                                 {(driver.workLocation || driver.city || "Unbekannt").split(",").map((loc: string, idx: number) => (

@@ -99,10 +99,16 @@ async function main() {
             // Handle special characters
             email = email.replace(/[öÖ]/g, 'oe').replace(/[üÜ]/g, 'ue').replace(/[äÄ]/g, 'ae').replace(/[ß]/g, 'ss');
 
+            const rawRiderId = row['rider_id'] ? row['rider_id'].toString().trim() : "";
+            const idParts = rawRiderId.split(/[-,\s]+/).filter((id: string) => id.trim().length > 0);
+            const driverNumber = idParts.length > 0 ? idParts[0] : null;
+            const secondaryDriverNumber = idParts.length > 1 ? idParts[1] : null;
+
             const addrParsed = parseAddress(row['Adresse'] || '');
 
             driversToImport.push({
-                riderId: row['rider_id'] ? row['rider_id'].toString().trim() : "",
+                riderId: driverNumber,
+                secondaryDriverNumber: secondaryDriverNumber,
                 status: mapStatus(row['Status'] || ''),
                 imageUrl: row['Bild'] || null,
                 firstName: firstName,
@@ -171,6 +177,7 @@ async function main() {
                             userId: user.id,
                             tenantId: FASTROUTE_TENANT_ID,
                             driverNumber: data.riderId || null,
+                            secondaryDriverNumber: data.secondaryDriverNumber || null,
                             firstName: data.firstName,
                             lastName: data.lastName,
                             phone: data.phone,
