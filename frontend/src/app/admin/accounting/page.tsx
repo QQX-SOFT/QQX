@@ -195,7 +195,8 @@ export default function AccountingPage() {
                             <tr className="bg-slate-50/50">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fahrer Name</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rider ID</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Vertragsmodell</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Anstellung</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Satz/Rate</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Orders</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">KM Gesamt</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Gehalt (Netto)</th>
@@ -204,7 +205,7 @@ export default function AccountingPage() {
                         <tbody className="divide-y divide-slate-100">
                             {kpis.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                    <td colSpan={7} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
                                         Keine Report-Daten für diesen Monat gefunden.
                                     </td>
                                 </tr>
@@ -221,6 +222,7 @@ export default function AccountingPage() {
                                             totalKm: 0,
                                             payPerOrder: k.driver?.payPerOrder || k.driver?.orderFee || 0,
                                             payPerKm: k.driver?.payPerKm || 0,
+                                            type: k.driver?.type || 'EMPLOYED'
                                         };
                                     }
                                     grouped[id].totalOrders += k.deliveredOrders || 0;
@@ -229,38 +231,45 @@ export default function AccountingPage() {
 
                                 return Object.values(grouped).map((g: any, i) => {
                                     const totalWage = (g.totalOrders * g.payPerOrder) + (g.totalKm * g.payPerKm);
-                                    const hasContract = g.payPerOrder > 0 || g.payPerKm > 0;
+                                    const employmentLabel = {
+                                        'EMPLOYED': 'Angestellt',
+                                        'FREELANCE': 'Freier Dienstnehmer',
+                                        'COMMERCIAL': 'Gewerbe'
+                                    }[g.type as string] || 'Angestellt';
+
                                     return (
                                         <tr key={i} className="hover:bg-blue-50/20 transition group border-l-4 border-l-transparent hover:border-l-blue-600">
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col">
-                                                    <span className="font-black text-slate-900 group-hover:text-blue-600 transition">
+                                                    <span className="font-black text-slate-900 group-hover:text-blue-600 transition truncate max-w-[150px]">
                                                         {g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName}
                                                     </span>
-                                                    {g.driver && <span className="text-[8px] font-black text-slate-400 uppercase">Systembestätigt</span>}
+                                                    {g.driver && <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Systembestätigt</span>}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
                                             <td className="px-8 py-6">
-                                                <span className={cn(
-                                                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                    hasContract ? "bg-blue-50 text-blue-600" : "bg-slate-50 text-slate-400"
-                                                )}>
-                                                    {hasContract ? "Bestellung + KM" : "Stundenbasiert"}
+                                                <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest leading-none">
+                                                    {employmentLabel}
                                                 </span>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Ord</span>
+                                                    {g.payPerKm > 0 && <span className="text-[10px] font-black text-slate-400">€{g.payPerKm.toFixed(2)} / KM</span>}
+                                                </div>
                                             </td>
                                             <td className="px-8 py-6 text-center">
                                                 <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
                                             </td>
                                             <td className="px-8 py-6 text-center">
-                                                <span className="text-sm font-extrabold text-slate-950">{g.totalKm.toFixed(1)} km</span>
-                                                {g.totalKm === 0 && g.totalOrders > 0 && <p className="text-[7px] text-red-500 font-black uppercase mt-1">Re-upload nötig</p>}
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-sm font-extrabold text-slate-950">{g.totalKm.toFixed(1)} km</span>
+                                                    {g.totalKm === 0 && g.totalOrders > 0 && <p className="text-[7px] text-red-500 font-black uppercase mt-1 animate-pulse italic">Re-upload nötig</p>}
+                                                </div>
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {totalWage.toFixed(2)}</span>
-                                                <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                                    €{g.payPerOrder}/Ord · €{g.payPerKm}/KM
-                                                </div>
                                             </td>
                                         </tr>
                                     );
