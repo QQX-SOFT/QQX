@@ -40,6 +40,12 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
             return isNaN(parsed) ? 0 : parsed;
         };
 
+        // Optimized: Fetch all drivers for this tenant once to match in-memory
+        const allDrivers = await prisma.driver.findMany({
+            where: { tenantId: req.tenantId! },
+            select: { id: true, driverNumber: true, secondaryDriverNumber: true, firstName: true, lastName: true }
+        });
+
         await prisma.$transaction(async (tx) => {
             for (let i = 0; i < data.length; i++) {
                 const row = data[i];
@@ -94,26 +100,24 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                     if (week > 0) mainIsoweek = week;
                     if (!riderId && !riderName) continue;
 
-                    // Driver Lookup
+                    // IN-MEMORY LOOKUP (Extremely fast)
                     let driver = null;
                     if (riderId) {
-                        driver = await tx.driver.findFirst({
-                            where: { tenantId: req.tenantId!, OR: [{ driverNumber: riderId }, { secondaryDriverNumber: riderId }] }
-                        });
+                        driver = allDrivers.find(d => 
+                            d.driverNumber === riderId || 
+                            d.secondaryDriverNumber === riderId
+                        );
                     }
 
                     if (!driver && riderName) {
                         const nameParts = riderName.split(' ');
-                        const lastName = nameParts[nameParts.length - 1];
-                        driver = await tx.driver.findFirst({
-                            where: {
-                                tenantId: req.tenantId!,
-                                OR: [
-                                    { lastName: { contains: lastName, mode: 'insensitive' } },
-                                    { firstName: { contains: nameParts[0], mode: 'insensitive' } }
-                                ]
-                            }
-                        });
+                        const lastName = (nameParts[nameParts.length - 1] || '').toLowerCase();
+                        const firstName = (nameParts[0] || '').toLowerCase();
+                        
+                        driver = allDrivers.find(d => 
+                            (d.lastName?.toLowerCase().includes(lastName)) ||
+                            (d.firstName?.toLowerCase().includes(firstName))
+                        );
                     }
 
                     const finalRiderId = riderId || `anon-${Date.now()}-${i}`;
