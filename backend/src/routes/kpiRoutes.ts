@@ -23,92 +23,138 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
         let recordCount = 0;
         let mainIsoweek = 0;
 
+        const safeFloat = (val: any) => {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return val;
+            // Handle European decimals (commas)
+            const clean = String(val).replace(',', '.').replace(/[^0-9.]/g, '');
+            const parsed = parseFloat(clean);
+            return isNaN(parsed) ? 0 : parsed;
+        };
+
+        const safeInt = (val: any) => {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return Math.round(val);
+            const clean = String(val).replace(/[^0-9]/g, '');
+            const parsed = parseInt(clean, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        };
+
         await prisma.$transaction(async (tx) => {
-            for (const row of data) {
-                // Normalize keys to lowercase for easier matching
-                const normalizedRow: any = {};
-                Object.keys(row).forEach(key => {
-                    normalizedRow[String(key).toLowerCase().replace(/[^a-z0-9]/g, '_')] = row[key];
-                });
-
-                // Pick values based on various possible column names
-                const riderId = String(normalizedRow['rider_id'] || normalizedRow['id'] || '');
-                const riderName = String(normalizedRow['rider_name'] || normalizedRow['name'] || '');
-                const delivered = Number(normalizedRow['actual_delivered_orders'] || normalizedRow['delivered_orders'] || normalizedRow['orders'] || 0);
-                const total = Number(normalizedRow['total_orders'] || 0);
-                const hours = Number(normalizedRow['hours_worked'] || normalizedRow['online_hours'] || normalizedRow['hours'] || 0);
-                const week = Number(normalizedRow['isoweek'] || normalizedRow['week'] || 0);
-                
-                if (week > 0) mainIsoweek = week;
-                if (!riderId && !riderName) continue;
-
-                // Try to find driver by driverNumber first (requested by user previously)
-                let driver = null;
-                if (riderId) {
-                    driver = await tx.driver.findFirst({
-                        where: {
-                            tenantId: req.tenantId!,
-                            driverNumber: riderId
-                        }
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                try {
+                    // Normalize keys
+                    const normalizedRow: any = {};
+                    Object.keys(row).forEach(key => {
+                        normalizedRow[String(key).toLowerCase().replace(/[^a-z0-9]/g, '_')] = row[key];
                     });
-                }
 
-                // Fallback to fuzzy name matching if not found by ID
-                if (!driver && riderName) {
-                    const nameParts = riderName.split(' ');
-                    const lastName = nameParts[nameParts.length - 1];
-                    driver = await tx.driver.findFirst({
+                    // Flexible Column Mapping
+                    const riderId = String(
+                        normalizedRow['rider_id'] || 
+                        normalizedRow['id'] || 
+                        normalizedRow['fahrer_nr'] || 
+                        normalizedRow['riderid'] || 
+                        normalizedRow['id_rider'] || ''
+                    ).trim();
+
+                    const riderName = String(
+                        normalizedRow['rider_name'] || 
+                        normalizedRow['name'] || 
+                        normalizedRow['fahrer_name'] || 
+                        normalizedRow['full_name'] || ''
+                    ).trim();
+
+                    const delivered = safeInt(
+                        normalizedRow['actual_delivered_orders'] || 
+                        normalizedRow['delivered_orders'] || 
+                        normalizedRow['orders'] || 
+                        normalizedRow['zustellungen'] || 
+                        normalizedRow['bestellungen']
+                    );
+
+                    const total = safeInt(normalizedRow['total_orders'] || normalizedRow['total'] || delivered);
+                    
+                    const hours = safeFloat(
+                        normalizedRow['hours_worked'] || 
+                        normalizedRow['online_hours'] || 
+                        normalizedRow['hours'] || 
+                        normalizedRow['stunden'] || 
+                        normalizedRow['arbeitszeit']
+                    );
+
+                    const week = safeInt(
+                        normalizedRow['isoweek'] || 
+                        normalizedRow['week'] || 
+                        normalizedRow['kw'] || 
+                        normalizedRow['kalenderwoche']
+                    );
+                    
+                    if (week > 0) mainIsoweek = week;
+                    if (!riderId && !riderName) continue;
+
+                    // Driver Lookup
+                    let driver = null;
+                    if (riderId) {
+                        driver = await tx.driver.findFirst({
+                            where: { tenantId: req.tenantId!, OR: [{ driverNumber: riderId }, { secondaryDriverNumber: riderId }] }
+                        });
+                    }
+
+                    if (!driver && riderName) {
+                        const nameParts = riderName.split(' ');
+                        const lastName = nameParts[nameParts.length - 1];
+                        driver = await tx.driver.findFirst({
+                            where: {
+                                tenantId: req.tenantId!,
+                                OR: [
+                                    { lastName: { contains: lastName, mode: 'insensitive' } },
+                                    { firstName: { contains: nameParts[0], mode: 'insensitive' } }
+                                ]
+                            }
+                        });
+                    }
+
+                    const finalRiderId = riderId || `anon-${Date.now()}-${i}`;
+
+                    await tx.riderKpi.upsert({
                         where: {
-                            tenantId: req.tenantId!,
-                            OR: [
-                                { lastName: { contains: lastName, mode: 'insensitive' } },
-                                { firstName: { contains: nameParts[0], mode: 'insensitive' } }
-                            ]
-                        }
-                    });
-                }
-
-                // Ensure riderId is not null for the unique constraint
-                const finalRiderId = riderId || `unknown-${Date.now()}-${recordCount}`;
-
-                const safeFloat = (val: any) => {
-                    const parsed = parseFloat(val);
-                    return isNaN(parsed) ? 0 : parsed;
-                };
-
-                await tx.riderKpi.upsert({
-                    where: {
-                        tenantId_riderId_isoweek: {
+                            tenantId_riderId_isoweek: {
+                                tenantId: req.tenantId!,
+                                riderId: finalRiderId,
+                                isoweek: week
+                            }
+                        },
+                        create: {
                             tenantId: req.tenantId!,
                             riderId: finalRiderId,
-                            isoweek: week
+                            riderName,
+                            deliveredOrders: delivered,
+                            totalOrders: total,
+                            hoursWorked: hours,
+                            isoweek: week,
+                            driverId: driver?.id,
+                            acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
+                            utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
+                            avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
+                        },
+                        update: {
+                            deliveredOrders: delivered,
+                            totalOrders: total,
+                            hoursWorked: hours,
+                            driverId: driver?.id ?? undefined,
+                            riderName,
+                            acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
+                            utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
+                            avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
                         }
-                    },
-                    create: {
-                        tenantId: req.tenantId!,
-                        riderId: finalRiderId,
-                        riderName,
-                        deliveredOrders: delivered,
-                        totalOrders: total || delivered,
-                        hoursWorked: hours,
-                        isoweek: week,
-                        driverId: driver?.id,
-                        acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate']),
-                        utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
-                        avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time']),
-                    },
-                    update: {
-                        deliveredOrders: delivered,
-                        totalOrders: total || delivered,
-                        hoursWorked: hours,
-                        driverId: driver?.id ?? undefined,
-                        riderName,
-                        acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate']),
-                        utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
-                        avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time']),
-                    }
-                });
-                recordCount++;
+                    });
+                    recordCount++;
+                } catch (rowError) {
+                    console.error(`[KPI-Upload] Error in row ${i + 1}:`, rowError);
+                    throw new Error(`Excell tablosundaki ${i + 1}. satırda hata oluştu: ${(rowError as Error).message}`);
+                }
             }
 
             console.log(`[KPI-Upload] Upserted ${recordCount} KPIs. Main ISO Week: ${mainIsoweek}`);
@@ -126,8 +172,8 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
 
         res.json({ success: true, recordCount, isoweek: mainIsoweek });
     } catch (error) {
-        console.error('[KPI-Upload] Error:', error);
-        res.status(500).json({ error: 'Failed to process excel: ' + (error as Error).message });
+        console.error('[KPI-Upload] Final Error:', error);
+        res.status(500).json({ error: (error as Error).message });
     }
 });
 
