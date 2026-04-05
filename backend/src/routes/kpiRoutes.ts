@@ -319,13 +319,23 @@ router.post('/validate', upload.single('file'), async (req: TenantRequest, res: 
 });
 
 router.get('/', async (req: TenantRequest, res: Response) => {
-    const { week } = req.query;
+    const { week, month, year } = req.query;
     try {
+        const where: any = { tenantId: req.tenantId! };
+        
+        if (week) where.isoweek = Number(week);
+        
+        if (month && year) {
+            const startDate = new Date(Number(year), Number(month) - 1, 1);
+            const endDate = new Date(Number(year), Number(month), 1);
+            where.dateLocal = {
+                gte: startDate,
+                lt: endDate
+            };
+        }
+
         const kpis = await prisma.riderKpi.findMany({
-            where: {
-                tenantId: req.tenantId!,
-                ...(week ? { isoweek: Number(week) } : {})
-            },
+            where,
             include: {
                 driver: true
             },

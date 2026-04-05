@@ -27,6 +27,8 @@ export default function AdminKpiPage() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState<string>("");
+    const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
+    const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [visibleColumns, setVisibleColumns] = useState<string[]>(["riderId", "riderName", "cityName", "dateLocal", "deliveredOrders", "hoursWorked"]);
 
@@ -51,7 +53,14 @@ export default function AdminKpiPage() {
     const fetchKpis = async () => {
         try {
             setLoading(true);
-            const { data } = await api.get(`/kpis${selectedWeek ? `?week=${selectedWeek}` : ''}`);
+            const params = new URLSearchParams();
+            if (selectedWeek) params.append("week", selectedWeek);
+            if (selectedMonth && selectedYear) {
+                params.append("month", selectedMonth);
+                params.append("year", selectedYear);
+            }
+            
+            const { data } = await api.get(`/kpis?${params.toString()}`);
             setKpis(data);
             
             const { data: uploadData } = await api.get('/kpis/uploads');
@@ -65,7 +74,7 @@ export default function AdminKpiPage() {
 
     useEffect(() => {
         fetchKpis();
-    }, [selectedWeek]);
+    }, [selectedWeek, selectedMonth, selectedYear]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -148,12 +157,46 @@ export default function AdminKpiPage() {
                 {/* Sidebar Filter */}
                 <aside className="lg:col-span-1 space-y-8">
                     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-6">
+                        <div className="space-y-4">
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Zeitraum wählen</label>
+                           <div className="grid grid-cols-2 gap-3">
+                                <select 
+                                    className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
+                                    value={selectedMonth}
+                                    onChange={e => {
+                                        setSelectedMonth(e.target.value);
+                                        setSelectedWeek(""); // Clear week if month selected
+                                    }}
+                                >
+                                    {[...Array(12)].map((_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                            {new Date(0, i).toLocaleString('de-DE', { month: 'long' })}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select 
+                                    className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
+                                    value={selectedYear}
+                                    onChange={e => setSelectedYear(e.target.value)}
+                                >
+                                    {[2024, 2025, 2026].map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                           </div>
+                        </div>
+
                         <div className="space-y-2">
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Wochenansicht (ISO Week)</label>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Wochenansicht (Optional)</label>
                            <select 
                             className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
                             value={selectedWeek}
-                            onChange={e => setSelectedWeek(e.target.value)}
+                            onChange={e => {
+                                setSelectedWeek(e.target.value);
+                                if (e.target.value) {
+                                    setSelectedMonth("");
+                                }
+                            }}
                            >
                                 <option value="">Alle Wochen</option>
                                 {[...new Set(uploads.map(u => u.isoweek))].filter(Boolean).sort((a: any, b: any) => b - a).map(w => (
