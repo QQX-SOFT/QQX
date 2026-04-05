@@ -20,7 +20,6 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
     const isGlobalAPI = path.includes('/api/tenants') || path.includes('/api/superadmin');
     const isHealthOrAuth = path.includes('/health') || path.includes('/auth') || path.includes('/api/upload');
     const isPublicApplicationSubmit = (path === '/api/applications' || path === '/api/applications/') && req.method === 'POST';
-    const isBypassed = isGlobalAPI || isHealthOrAuth || isPublicApplicationSubmit;
 
     // 1. Try to identify tenant if subdomain provided
     if (subdomain) {
@@ -33,20 +32,25 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
                 req.tenantId = tenant.id;
                 req.subdomain = subdomain;
                 console.log(`[TenantMiddleware] Identified tenant: ${subdomain} (${tenant.id})`);
-            } else if (!isBypassed) {
-                // If subdomain provided but invalid, and it's NOT a bypassed path, block it
+            } else if (!isGlobalAPI && !isHealthOrAuth) {
+                // If subdomain provided but invalid, and it's NOT a system route, block it
                 return res.status(404).json({ error: 'Mandant (Tenant) nicht gefunden.' });
             }
         } catch (error) {
             console.error('Tenant Middleware identification error:', error);
-            if (!isBypassed) return res.status(500).json({ error: 'Fehler bei der Mandantenprüfung.' });
+            if (!isGlobalAPI && !isHealthOrAuth) return res.status(500).json({ error: 'Fehler bei der Mandantenprüfung.' });
         }
     }
 
-    // 2. Enforce tenant context for non-bypassed paths
-    if (!req.tenantId && !isBypassed) {
+    // 2. Enforce tenant context for protected paths
+    // Global APIs and Health/Auth bypass this check.
+    // Applications (isPublicApplicationSubmit) NO LONGER bypass this check, 
+    // so they MUST have an identified tenantId.
+    const bypassEnforcement = isGlobalAPI || isHealthOrAuth;
+
+    if (!req.tenantId && !bypassEnforcement) {
         console.warn(`[TenantMiddleware] Denying access to protected path ${path} - No tenant context.`);
-        return res.status(400).json({ error: 'Mandantenkontext fehlt für diese Anfrage.' });
+        return res.status(400).json({ error: 'Mandantenkontext fehlt. Bitte über eine gültige Kunden-URL zugreifen.' });
     }
 
     next();
