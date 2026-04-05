@@ -124,6 +124,7 @@ router.get('/:id', async (req: TenantRequest, res: Response) => {
             include: {
                 user: true,
                 documents: true,
+                tenant: true,
                 ratings: {
                     take: 5,
                     orderBy: { createdAt: 'desc' }

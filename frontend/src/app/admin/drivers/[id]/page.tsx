@@ -144,6 +144,15 @@ export default function DriverProfilePage() {
     const generateArbeitszeitnachweis = () => {
         if (!driver || !driver.riderKpis || driver.riderKpis.length === 0) return;
 
+        const tenant = (driver as any).tenant || {};
+        const companyName = tenant.name || "Firma Volkan Meral";
+        const companyOwner = tenant.ownerName || "";
+        const companyAddress = `${tenant.address || ""}, ${tenant.zipCode || ""} ${tenant.city || ""}`;
+        const gisaNr = tenant.gisaNumber || "";
+        const taxNr = tenant.taxNumber || "";
+        const companyMail = tenant.email || "";
+        const companyPhone = tenant.phone || "";
+
         const kpis = driver.riderKpis;
         const totalHours = kpis.reduce((acc, k) => acc + (k.hoursWorked || 0), 0);
         const reportDate = new Date().toISOString().split('T')[0];
@@ -166,7 +175,21 @@ export default function DriverProfilePage() {
             .num { text-align: right; }
             .footer { margin-top: 16px; font-size: 9pt; }
             .hinweis { margin-top: 14px; font-size: 8pt; color: #475569; border-top: 1px solid #e2e8f0; padding-top: 8px; }
-            </style></head><body><h1>Arbeitszeitnachweis</h1><div class="meta"><strong>Arbeitnehmer / Rider:</strong> ${driver.firstName} ${driver.lastName} <br><strong>Berichtsdatum:</strong> ${reportDate}<br><strong>Aussteller:</strong> Firma Volkan Meral</div><table><thead><tr><th>Name</th><th>Datum</th><th class="num">Stunden</th><th class="num">Pause (h)</th></tr></thead><tbody>${rows}</tbody></table><div class="footer"><strong>Summe Stunden:</strong> ${totalHours.toFixed(2).replace('.', ',')} h · <strong>Summe Pause:</strong> 0,00 h</div><div class="hinweis">Hinweis: Vorlage zur Dokumentation der Arbeitszeit. Aufbewahrung gemäß betrieblicher Vorgaben (mind. 1 Jahr). Keine Rechtsberatung.</div></body></html>`;
+            </style></head><body>
+            <h1>Arbeitszeitnachweis</h1>
+            <div class="meta">
+                <strong>Unternehmen:</strong> ${companyName} (${companyOwner})<br>
+                <strong>GISA NR:</strong> ${gisaNr} | <strong>Steuernummer:</strong> ${taxNr}<br>
+                <strong>Adresse:</strong> ${companyAddress}<br>
+                <strong>Kontakt:</strong> ${companyMail} | ${companyPhone}<br>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 8px 0;">
+                <strong>Arbeitnehmer / Rider:</strong> ${driver.firstName} ${driver.lastName} <br>
+                <strong>Berichtsdatum:</strong> ${reportDate}
+            </div>
+            <table><thead><tr><th>Name</th><th>Datum</th><th class="num">Stunden</th><th class="num">Pause (h)</th></tr></thead><tbody>${rows}</tbody></table>
+            <div class="footer"><strong>Summe Stunden:</strong> ${totalHours.toFixed(2).replace('.', ',')} h · <strong>Summe Pause:</strong> 0,00 h</div>
+            <div class="hinweis">Hinweis: Vorlage zur Dokumentation der Arbeitszeit. Aufbewahrung gemäß betrieblicher Vorgaben (mind. 1 Jahr). Keine Rechtsberatung.</div>
+            </body></html>`;
 
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);

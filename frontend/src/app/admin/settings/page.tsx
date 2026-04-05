@@ -28,6 +28,18 @@ type TenantSettings = {
     name: string;
     subdomain: string;
     createdAt: string;
+    address: string;
+    zipCode: string;
+    city: string;
+    uidNumber: string;
+    companyRegister: string;
+    legalForm: string;
+    commercialCourt: string;
+    ownerName: string;
+    gisaNumber: string;
+    taxNumber: string;
+    email: string;
+    phone: string;
     autoAssignDrivers: boolean;
     pushNotificationsEnabled: boolean;
     orderAlarmsEnabled: boolean;
@@ -44,6 +56,18 @@ export default function SettingsPage() {
 
     const [formData, setFormData] = useState({
         name: "",
+        address: "",
+        zipCode: "",
+        city: "",
+        uidNumber: "",
+        companyRegister: "",
+        legalForm: "",
+        commercialCourt: "",
+        ownerName: "",
+        gisaNumber: "",
+        taxNumber: "",
+        email: "",
+        phone: "",
         notificationsEnabled: false,
         autoAssignDrivers: false,
         pushNotificationsEnabled: false,
@@ -67,7 +91,19 @@ export default function SettingsPage() {
                 const { data } = await api.get("/settings");
                 setSettings(data);
                 setFormData({
-                    name: data.name,
+                    name: data.name || "",
+                    address: data.address || "",
+                    zipCode: data.zipCode || "",
+                    city: data.city || "",
+                    uidNumber: data.uidNumber || "",
+                    companyRegister: data.companyRegister || "",
+                    legalForm: data.legalForm || "",
+                    commercialCourt: data.commercialCourt || "",
+                    ownerName: data.ownerName || "",
+                    gisaNumber: data.gisaNumber || "",
+                    taxNumber: data.taxNumber || "",
+                    email: data.email || "",
+                    phone: data.phone || "",
                     notificationsEnabled: data.notificationsEnabled,
                     autoAssignDrivers: data.autoAssignDrivers,
                     pushNotificationsEnabled: data.pushNotificationsEnabled,
@@ -245,17 +281,112 @@ export default function SettingsPage() {
                                     </h3>
                                     <div className="space-y-8">
                                         <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Anzeigename</label>
-                                            <input
-                                                type="text"
-                                                className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
-                                                value={formData.name}
-                                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                                placeholder="z.B. QQX Logistik GmbH"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Workplace (Subdomain)</label>
+                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Anzeigename</label>
+                                             <input
+                                                 type="text"
+                                                 className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                 value={formData.name}
+                                                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                 placeholder="z.B. QQX Logistik GmbH"
+                                             />
+                                         </div>
+
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Firmeninhaber</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.ownerName}
+                                                     onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">GISA NR</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.gisaNumber}
+                                                     onChange={(e) => setFormData({ ...formData, gisaNumber: e.target.value })}
+                                                 />
+                                             </div>
+                                         </div>
+
+                                         <div>
+                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Adresse</label>
+                                             <input
+                                                 type="text"
+                                                 className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                 value={formData.address}
+                                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                                             />
+                                         </div>
+
+                                         <div className="grid grid-cols-2 gap-8">
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">PLZ</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.zipCode}
+                                                     onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Stadt</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.city}
+                                                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                                 />
+                                             </div>
+                                         </div>
+
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Steuernummer</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.taxNumber}
+                                                     onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">UID Nummer</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.uidNumber}
+                                                     onChange={(e) => setFormData({ ...formData, uidNumber: e.target.value })}
+                                                 />
+                                             </div>
+                                         </div>
+
+                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Email</label>
+                                                 <input
+                                                     type="email"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.email}
+                                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Telefon</label>
+                                                 <input
+                                                     type="text"
+                                                     className="w-full bg-slate-50 border-2 border-transparent rounded-[1.5rem] px-6 py-5 outline-none focus:border-blue-500/20 focus:bg-white transition text-slate-900 font-bold"
+                                                     value={formData.phone}
+                                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                                 />
+                                             </div>
+                                         </div>
+
+                                         <div>
+                                             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 px-2">Workplace (Subdomain)</label>
                                             <div className="flex items-center">
                                                 <input
                                                     type="text"

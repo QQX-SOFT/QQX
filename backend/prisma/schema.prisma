@@ -27,6 +27,11 @@ model Tenant {
   companyRegister      String?  // Firmenbuchnummer
   legalForm            String?  // Rechtsform
   commercialCourt      String?  // Gerichtsstand
+  ownerName            String?  // Firmeninhaber
+  gisaNumber           String?  // GISA-Zahl
+  taxNumber            String?  // Steuernummer
+  email                String?  // Firmen-Email
+  phone                String?  // Firmen-Telefon
 
   // Settings & Preferences
   notificationsEnabled     Boolean  @default(true)
