@@ -1,11 +1,41 @@
 import { Router, Response } from 'express';
 import multer from 'multer';
 import * as XLSX from 'xlsx';
-import prisma from '../lib/prisma';
+import { prisma } from '../lib/prisma';
 import { TenantRequest } from '../middleware/tenantMiddleware';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+const safeFloat = (val: any) => {
+    if (val === undefined || val === null || val === '') return 0;
+    if (typeof val === 'number') return val;
+    const clean = String(val).replace(',', '.').replace(/[^0-9.]/g, '');
+    const parsed = parseFloat(clean);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
+const safeInt = (val: any) => {
+    if (val === undefined || val === null || val === '') return 0;
+    if (typeof val === 'number') return Math.round(val);
+    const clean = String(val).replace(/[^0-9]/g, '');
+    const parsed = parseInt(clean, 10);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
+const safeDate = (val: any) => {
+    if (!val) return null;
+    try {
+        if (typeof val === 'number') {
+            return new Date(Math.round((val - 25569) * 86400 * 1000));
+        }
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return null;
+        return d;
+    } catch {
+        return null;
+    }
+};
 
 router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Response) => {
     console.log(`[KPI-Upload] Received file: ${req.file?.originalname} for tenant: ${req.tenantId}`);
@@ -22,23 +52,6 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
 
         let recordCount = 0;
         let mainIsoweek = 0;
-
-        const safeFloat = (val: any) => {
-            if (val === undefined || val === null || val === '') return 0;
-            if (typeof val === 'number') return val;
-            // Handle European decimals (commas)
-            const clean = String(val).replace(',', '.').replace(/[^0-9.]/g, '');
-            const parsed = parseFloat(clean);
-            return isNaN(parsed) ? 0 : parsed;
-        };
-
-        const safeInt = (val: any) => {
-            if (val === undefined || val === null || val === '') return 0;
-            if (typeof val === 'number') return Math.round(val);
-            const clean = String(val).replace(/[^0-9]/g, '');
-            const parsed = parseInt(clean, 10);
-            return isNaN(parsed) ? 0 : parsed;
-        };
 
         // Optimized: Fetch all drivers for this tenant once to match in-memory
         const allDrivers = await prisma.driver.findMany({
@@ -98,6 +111,10 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                 );
                 
                 if (week > 0) mainIsoweek = week;
+
+                const cityName = String(normalizedRow['city_name'] || normalizedRow['city'] || normalizedRow['stadt'] || '').trim();
+                const dateLocal = safeDate(normalizedRow['created_date_local'] || normalizedRow['date'] || normalizedRow['datum']);
+
                 if (!riderId && !riderName) continue;
 
                 // IN-MEMORY LOOKUP (Extremely fast)
@@ -121,13 +138,18 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                 }
 
                 const finalRiderId = riderId || `anon-${Date.now()}-${i}`;
+                
+                // FALLBACK DATE: If no dateLocal is provided, use Monday of that isoweek or epoch to ensure unique constraint is deterministic.
+                // This prevents issues with multiple NULLs in Postgres unique constraints.
+                const uniqueDate = dateLocal || new Date(2000, 0, week); 
 
-                await prisma.riderKpi.upsert({
+                await (prisma as any).riderKpi.upsert({
                     where: {
-                        tenantId_riderId_isoweek: {
+                        tenantId_riderId_isoweek_dateLocal: {
                             tenantId: req.tenantId!,
                             riderId: finalRiderId,
-                            isoweek: week
+                            isoweek: week,
+                            dateLocal: uniqueDate
                         }
                     },
                     create: {
@@ -138,6 +160,8 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         totalOrders: total,
                         hoursWorked: hours,
                         isoweek: week,
+                        cityName,
+                        dateLocal: uniqueDate,
                         driverId: driver?.id,
                         acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
@@ -149,6 +173,8 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         hoursWorked: hours,
                         driverId: driver?.id ?? undefined,
                         riderName,
+                        cityName,
+                        dateLocal: uniqueDate,
                         acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
                         avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
@@ -235,10 +261,15 @@ router.post('/validate', upload.single('file'), async (req: TenantRequest, res: 
                 if (driver) matchType = 'FUZZY_NAME';
             }
 
+            const cityName = String(normalizedRow['city_name'] || normalizedRow['city'] || normalizedRow['stadt'] || '').trim();
+            const dateLocal = safeDate(normalizedRow['created_date_local'] || normalizedRow['date'] || normalizedRow['datum']);
+
             results.push({
                 excelRow: row,
                 riderId,
                 riderName,
+                cityName,
+                dateLocal,
                 matchType,
                 matchedDriver: driver ? `${driver.firstName} ${driver.lastName} (#${driver.driverNumber})` : null
             });
@@ -267,7 +298,8 @@ router.get('/', async (req: TenantRequest, res: Response) => {
         });
         res.json(kpis);
     } catch (e) {
-        res.status(500).json({ error: 'Failed' });
+        console.error("[KPI-List] Error:", e);
+        res.status(500).json({ error: (e as Error).message });
     }
 });
 
@@ -279,7 +311,8 @@ router.get('/uploads', async (req: TenantRequest, res: Response) => {
         });
         res.json(uploads);
     } catch (e) {
-        res.status(500).json({ error: 'Failed' });
+        console.error("[KPI-Uploads-List] Error:", e);
+        res.status(500).json({ error: (e as Error).message });
     }
 });
 

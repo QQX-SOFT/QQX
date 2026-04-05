@@ -160,6 +160,8 @@ export default function KpiValidationPage() {
                                         <thead>
                                             <tr className="bg-slate-50/50 border-b border-slate-50">
                                                 <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Excel Daten (Rider ID/Name)</th>
+                                                <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Stadt</th>
+                                                <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Datum</th>
                                                 <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Eşleşme Tipi</th>
                                                 <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Gefundener Fahrer (DB)</th>
                                                 <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
@@ -173,6 +175,10 @@ export default function KpiValidationPage() {
                                                             <span className="font-black text-slate-900 group-hover:text-blue-600 transition">{row.riderName || "Unbekannt"}</span>
                                                             <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">ID: {row.riderId || "KEINE"}</span>
                                                         </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-xs font-black text-slate-500 uppercase">{row.cityName || "-"}</td>
+                                                    <td className="px-8 py-6 text-[10px] font-bold text-slate-400">
+                                                        {row.dateLocal ? new Date(row.dateLocal).toLocaleDateString('de-DE') : "-"}
                                                     </td>
                                                     <td className="px-8 py-6">
                                                         {row.matchType !== 'NONE' ? (

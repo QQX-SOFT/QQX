@@ -157,12 +157,12 @@ export default function AdminKpiPage() {
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50/50">
                                     <tr>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Woche</th>
+                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider ID</th>
+                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider Name</th>
+                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stadt</th>
+                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Datum</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Best.</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">h (Online)</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">UTR</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Acc %</th>
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aktion</th>
                                     </tr>
                                 </thead>
@@ -181,33 +181,25 @@ export default function AdminKpiPage() {
                                         </tr>
                                     ) : kpis.map((k) => (
                                         <tr key={k.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="px-8 py-6 text-sm font-black text-slate-900">{k.riderId}</td>
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-slate-900">{k.riderName}</span>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">ID: {k.riderId}</span>
-                                                        {k.driver ? (
-                                                            <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded-full text-[8px] font-black uppercase">Verknüpft ✅</span>
-                                                        ) : (
-                                                            <span className="px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[8px] font-black uppercase">Unbekannt ❓</span>
-                                                        )}
-                                                    </div>
+                                                    {k.driver ? (
+                                                        <span className="text-[8px] font-black text-green-600 uppercase">Verknüpft ✅</span>
+                                                    ) : (
+                                                        <span className="text-[8px] font-black text-amber-600 uppercase">Unbekannt ❓</span>
+                                                    )}
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6 text-sm font-bold text-slate-600">Woche {k.isoweek}</td>
+                                            <td className="px-8 py-6 text-sm font-bold text-slate-600 uppercase">{k.cityName || "-"}</td>
+                                            <td className="px-8 py-6 text-sm font-bold text-slate-400">
+                                                {k.dateLocal ? new Date(k.dateLocal).toLocaleDateString('de-DE') : `Woche ${k.isoweek}`}
+                                            </td>
                                             <td className="px-8 py-6">
                                                 <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-black text-xs">{k.deliveredOrders}</span>
                                             </td>
                                             <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.hoursWorked.toFixed(1)}h</td>
-                                            <td className="px-8 py-6">
-                                                <div className={cn(
-                                                    "text-sm font-black tabular-nums",
-                                                    (k.utr || 0) < 1.5 ? "text-red-500" : (k.utr || 0) < 2.5 ? "text-amber-500" : "text-green-600"
-                                                )}>
-                                                    {(k.utr || 0).toFixed(2)}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-sm font-black text-slate-600">{(k.acceptanceRate || 0).toFixed(0)}%</td>
                                             <td className="px-8 py-6 text-right">
                                                 <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition shadow-sm group-hover:scale-110">
                                                     <Coins size={16} />
