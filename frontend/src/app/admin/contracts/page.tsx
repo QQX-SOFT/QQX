@@ -179,7 +179,11 @@ export default function ContractsPage() {
                                     : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                             )}
                         >
-                            {type === "ALL" ? "Alle" : type}
+                            {type === "ALL" ? "Alle" : 
+                             type === "GENERAL" ? "Allgemein" :
+                             type === "CUSTOMER" ? "Kunde" :
+                             type === "DRIVER" ? "Fahrer" :
+                             type === "VEHICLE" ? "Fahrzeug" : type}
                         </button>
                     ))}
                 </div>
@@ -225,7 +229,10 @@ export default function ContractsPage() {
                             <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
                                 <span className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
                                     {getTypeIcon(contract.type)}
-                                    {contract.type}
+                                    {contract.type === "GENERAL" ? "Allgemein" :
+                                     contract.type === "DRIVER" ? "Fahrer" :
+                                     contract.type === "CUSTOMER" ? "Kunde" :
+                                     contract.type === "VEHICLE" ? "Fahrzeug" : contract.type}
                                 </span>
                             </div>
                         </div>

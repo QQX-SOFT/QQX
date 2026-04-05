@@ -160,15 +160,16 @@ function ContractEditorForm() {
 
     const renderPreview = () => {
         let text = formData.content;
-        // Highlighting placeholders visually
         const segments = text.split(/({{.*?}})/g);
         return segments.map((seg, i) => {
             if (seg.startsWith("{{") && seg.endsWith("}}")) {
-                return <span key={i} className="bg-indigo-100 text-indigo-700 px-1 inline-block mx-0.5 rounded italic font-bold border border-indigo-200">{seg}</span>;
+                return <span key={i} className="bg-blue-100 text-blue-700 px-1 inline-block mx-0.5 rounded italic font-bold border border-blue-200">{seg}</span>;
             }
-            return <span key={i}>{seg}</span>;
+            return <span key={i} className="whitespace-pre-wrap">{seg}</span>;
         });
     };
+
+    const driver = drivers.find(d => d.id === formData.driverId);
 
     if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>;
 
@@ -180,61 +181,61 @@ function ContractEditorForm() {
                     <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-10 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/20 space-y-10 sticky top-10">
                         <div className="flex justify-between items-center px-2">
                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-xl"><Wand2 size={20} /></div>
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 italic">Sözleşme Ayarları</h3>
+                                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl"><Wand2 size={20} /></div>
+                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Konfiguration</h3>
                             </div>
                         </div>
 
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Vertragsart</label>
-                                <select required value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractType })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs appearance-none">
-                                    <option value="GENERAL">Allgemein (Genel)</option>
-                                    <option value="CUSTOMER">Kunde (Müşteri)</option>
-                                    <option value="DRIVER">Fahrer (Şoför)</option>
-                                    <option value="VEHICLE">Fahrzeug (Araç)</option>
+                                <select required value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractType })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-black text-xs appearance-none">
+                                    <option value="GENERAL">Allgemein</option>
+                                    <option value="CUSTOMER">Kunde</option>
+                                    <option value="DRIVER">Fahrer</option>
+                                    <option value="VEHICLE">Fahrzeug</option>
                                 </select>
                             </div>
 
                             {formData.type === "DRIVER" && (
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Şoför Seçimi</label>
-                                    <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs appearance-none">
-                                        <option value="">Lütfen şoför seçiniz...</option>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Fahrer auswählen</label>
+                                    <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-black text-xs appearance-none">
+                                        <option value="">Bitte Fahrer wählen...</option>
                                         {drivers.map(d => (<option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>))}
                                     </select>
                                 </div>
                             )}
 
                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Vorlage (Şablon)</label>
-                                <select value={formData.templateId} onChange={(e) => handleTemplateSelection(e.target.value)} className={cn("w-full border-2 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs appearance-none", 
-                                    formData.templateId ? "bg-indigo-600 text-white border-transparent shadow-lg shadow-indigo-100" : "bg-slate-50 border-slate-50 text-slate-500")}>
-                                    <option value="">Şablon Kullanma...</option>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Vertragsvorlage</label>
+                                <select value={formData.templateId} onChange={(e) => handleTemplateSelection(e.target.value)} className={cn("w-full border-2 rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-black text-xs appearance-none", 
+                                    formData.templateId ? "bg-blue-600 text-white border-transparent shadow-lg shadow-blue-100" : "bg-slate-50 border-slate-50 text-slate-500")}>
+                                    <option value="">Keine Vorlage verwenden...</option>
                                     {templates.filter(t => t.type === formData.type).map(t => (<option key={t.id} value={t.id} className="text-slate-900">{t.name}</option>))}
                                 </select>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Beginn</label>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Gültig ab</label>
                                     <input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-4 py-4 outline-none text-xs font-black uppercase" />
                                 </div>
                                 <div>
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Ende</label>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Gültig bis</label>
                                     <input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-4 py-4 outline-none text-xs font-black uppercase" />
                                 </div>
                             </div>
                         </div>
 
                         <div className="pt-6 border-t border-slate-50 space-y-4">
-                             <button type="submit" disabled={saving} className="w-full bg-indigo-600 text-white rounded-[2rem] py-8 font-black uppercase tracking-[0.2em] shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition flex items-center justify-center gap-4 active:scale-95">
+                             <button type="submit" disabled={saving} className="w-full bg-blue-600 text-white rounded-[2rem] py-8 font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-200 hover:bg-blue-700 transition flex items-center justify-center gap-4 active:scale-95">
                                 {saving ? <Loader2 className="animate-spin" size={24} /> : <CheckCircle2 size={24} />}
-                                {id ? "Güncellemeyi Kaydet" : "Sözleşmeyi Kaydet"}
+                                {id ? "Vertrag aktualisieren" : "Vertrag speichern"}
                             </button>
                              <button type="button" onClick={() => window.print()} className="w-full bg-white border-2 border-slate-100 text-slate-400 rounded-[2rem] py-6 font-black uppercase tracking-[0.2em] hover:bg-slate-50 transition flex items-center justify-center gap-4">
                                 <Printer size={20} />
-                                Çıktı Al (PDF)
+                                Drucken / PDF export
                             </button>
                         </div>
                     </div>
@@ -244,8 +245,8 @@ function ContractEditorForm() {
                 <div className="lg:col-span-8 flex flex-col gap-8">
                     {/* Mode Tabs */}
                     <div className="flex bg-white dark:bg-slate-900 p-2 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm self-start">
-                        <button type="button" onClick={() => setActiveTab("EDIT")} className={cn("px-10 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition flex items-center gap-3", activeTab === "EDIT" ? "bg-slate-900 text-white shadow-xl" : "text-slate-400 hover:text-slate-600")}><Edit3 size={16} /> Düzenle</button>
-                        <button type="button" onClick={() => setActiveTab("PREVIEW")} className={cn("px-10 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition flex items-center gap-3", activeTab === "PREVIEW" ? "bg-slate-900 text-white shadow-xl" : "text-slate-400 hover:text-slate-600")}><Eye size={16} /> Önizleme</button>
+                        <button type="button" onClick={() => setActiveTab("EDIT")} className={cn("px-10 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition flex items-center gap-3", activeTab === "EDIT" ? "bg-slate-900 text-white shadow-xl" : "text-slate-400 hover:text-slate-600")}><Edit3 size={16} /> Bearbeiten</button>
+                        <button type="button" onClick={() => setActiveTab("PREVIEW")} className={cn("px-10 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest transition flex items-center gap-3", activeTab === "PREVIEW" ? "bg-slate-900 text-white shadow-xl" : "text-slate-400 hover:text-slate-600")}><Eye size={16} /> Vorschau</button>
                     </div>
 
                     <AnimatePresence mode="wait">
@@ -254,21 +255,21 @@ function ContractEditorForm() {
                                 <div className="bg-white dark:bg-slate-900 rounded-[4rem] p-16 border border-slate-100 dark:border-slate-800 shadow-2xl relative">
                                     <div className="mb-12">
                                         <input 
-                                            placeholder="Sözleşme Adı (Örn: Mart 2024 Freelance Sözleşmesi)"
+                                            placeholder="Vertragstitel (z.B. Rahmenvertrag 2024)"
                                             value={formData.title}
                                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                            className="w-full text-5xl font-black text-slate-900 dark:text-white bg-transparent outline-none border-b-8 border-slate-50 focus:border-indigo-600/10 pb-6 transition tracking-tight uppercase italic"
+                                            className="w-full text-5xl font-black text-slate-900 dark:text-white bg-transparent outline-none border-b-8 border-slate-50 focus:border-blue-600/10 pb-6 transition tracking-tight uppercase italic"
                                         />
                                     </div>
 
                                     <div className="space-y-6">
                                         <div className="flex justify-between items-center ml-6">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 italic"><FileText size={16} /> Sözleşme Metni (Maden Dosyası)</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 italic"><FileText size={16} /> Vertragstext (Inhalt)</label>
                                             {isManuallyEdited && (
                                                 <div className="flex items-center gap-4">
-                                                    <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-1 border border-orange-100 bg-orange-50 px-3 py-1 rounded-full animate-pulse shadow-sm"><Wand2 size={10} /> Manuel Mod Aktif</span>
+                                                    <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest flex items-center gap-1 border border-orange-100 bg-orange-50 px-3 py-1 rounded-full animate-pulse shadow-sm"><Wand2 size={10} /> Manueller Modus aktiv</span>
                                                      {formData.templateId && (
-                                                    <button type="button" onClick={() => { const t = templates.find(temp => temp.id === formData.templateId); if (t) setFormData(prev => ({ ...prev, content: fillPlaceholders(t.content, formData.driverId, formData.startDate) })); setIsManuallyEdited(false); }} className="text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:underline flex items-center gap-1"><Sparkles size={10} /> Veriyi Sıfırla</button>
+                                                    <button type="button" onClick={() => { const t = templates.find(temp => temp.id === formData.templateId); if (t) setFormData(prev => ({ ...prev, content: fillPlaceholders(t.content, formData.driverId, formData.startDate) })); setIsManuallyEdited(false); }} className="text-[9px] font-black text-blue-500 uppercase tracking-widest hover:underline flex items-center gap-1"><Sparkles size={10} /> Zurücksetzen</button>
                                                 )}
                                                 </div>
                                             )}
@@ -276,8 +277,8 @@ function ContractEditorForm() {
                                         <textarea
                                             value={formData.content}
                                             onChange={(e) => { setFormData({ ...formData, content: e.target.value }); setIsManuallyEdited(true); }}
-                                            className="w-full min-h-[900px] bg-slate-50 dark:bg-slate-800/20 rounded-[3rem] p-12 font-mono text-sm leading-relaxed text-slate-800 dark:text-slate-300 outline-none border-4 border-transparent focus:border-indigo-600/5 transition shadow-inner"
-                                            placeholder="Sözleşme metnini buraya girin veya soldan bir şablon seçin..."
+                                            className="w-full min-h-[900px] bg-slate-50 dark:bg-slate-800/20 rounded-[3rem] p-12 font-mono text-sm leading-relaxed text-slate-800 dark:text-slate-300 outline-none border-4 border-transparent focus:border-blue-600/5 transition shadow-inner"
+                                            placeholder="Geben Sie hier den Inhalt ein oder wählen Sie eine Vorlage..."
                                         />
                                     </div>
                                     <ScrollText className="absolute bottom-[-100px] right-[-100px] text-slate-50 opacity-10 pointer-events-none" size={600} />
@@ -289,16 +290,16 @@ function ContractEditorForm() {
                                 <div className="bg-white text-slate-900 border border-slate-200 shadow-[0_30px_100px_rgba(0,0,0,0.15)] w-full max-w-[800px] p-[80px] min-h-[1130px] rounded-[1rem] relative overflow-hidden" id="contract-preview">
                                     <header className="flex justify-between items-start mb-20 border-b-2 border-slate-100 pb-12">
                                         <div className="flex flex-col gap-2">
-                                            <h2 className="text-3xl font-black italic uppercase tracking-tighter text-indigo-600">FastRoute GmbH</h2>
+                                            <h2 className="text-3xl font-black italic uppercase tracking-tighter text-blue-600">FastRoute GmbH</h2>
                                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Achstraße 42, 6922 Wolfurt • Österreich</p>
                                         </div>
                                         <div className="text-right">
-                                            <div className="flex items-center gap-2 justify-end mb-1 text-[10px] font-black text-slate-300 uppercase italic">Dokument-ID</div>
-                                            <div className="font-mono text-xs">{id || "NEW-DRAFT"}</div>
+                                            <div className="flex items-center gap-2 justify-end mb-1 text-[10px] font-black text-slate-300 uppercase italic">Dokumenten-ID</div>
+                                            <div className="font-mono text-xs">{id || "ENTWURF"}</div>
                                         </div>
                                     </header>
 
-                                    <div className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-justify mb-20">
+                                    <div className="whitespace-pre-wrap font-serif text-[15px] leading-relaxed text-justify mb-20 text-slate-800">
                                         {renderPreview()}
                                     </div>
 
@@ -309,16 +310,16 @@ function ContractEditorForm() {
                                         </div>
                                         <div className="flex-1 space-y-12">
                                             <div className="h-px w-full bg-slate-200" />
-                                            <div className="text-[10px] font-black uppercase text-slate-400 text-center tracking-widest">Auftragnehmer ({formData.driverId ? drivers.find(d => d.id === formData.driverId).lastName : 'Unterschrift'})</div>
+                                            <div className="text-[10px] font-black uppercase text-slate-400 text-center tracking-widest">Auftragnehmer ({driver ? `${driver.firstName} ${driver.lastName}` : 'Unterschrift'})</div>
                                         </div>
                                     </footer>
                                     
                                     <div className="absolute top-0 right-0 p-8">
-                                        <Sparkles className="text-indigo-50" size={100} />
+                                        <Sparkles className="text-blue-50" size={100} />
                                     </div>
                                 </div>
                                 <p className="mt-8 text-xs font-bold text-slate-400 uppercase tracking-[0.5em] flex items-center gap-3">
-                                    <Download size={14} /> PDF Olarak İndirilebilir Mod
+                                    <Download size={14} /> PDF-Export bereit
                                 </p>
                             </motion.div>
                         )}
@@ -336,7 +337,7 @@ export default function ContractEditorPage() {
                 <Link href="/admin/contracts" className="p-4 bg-white dark:bg-slate-800 border border-slate-100 rounded-[2rem] text-slate-400 hover:text-slate-900 transition shadow-sm active:scale-95"><ArrowLeft size={24} /></Link>
                 <div>
                    <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase leading-none">Vertrags-Designer</h1>
-                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2 ml-1">Akıllı Belge Yönetim Paneli</p>
+                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2 ml-1">Intelligentes Dokumenten-Management</p>
                 </div>
             </header>
 
