@@ -914,6 +914,9 @@ model RiderKpi {
   
   driverId         String?
   driver           Driver?   @relation(fields: [driverId], references: [id])
+
+  uploadId         String?
+  upload           KpiUpload? @relation(fields: [uploadId], references: [id], onDelete: Cascade)
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -934,6 +937,8 @@ model KpiUpload {
   recordCount Int?
   status      String   @default("SUCCESS")
   createdAt   DateTime @default(now())
+  
+  riderKpis   RiderKpi[]
   
   @@index([tenantId])
 }

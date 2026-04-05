@@ -53,6 +53,17 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
         let recordCount = 0;
         let mainIsoweek = 0;
 
+        // Create the upload record FIRST to get its ID
+        const uploadRecord = await prisma.kpiUpload.create({
+            data: {
+                tenantId: req.tenantId!,
+                filename: req.file!.originalname,
+                isoweek: mainIsoweek,
+                recordCount: 0, // Will update after loop
+                status: 'PROCESSING'
+            }
+        });
+
         // Optimized: Fetch all drivers for this tenant once to match in-memory
         const allDrivers = await prisma.driver.findMany({
             where: { tenantId: req.tenantId! },
@@ -110,7 +121,7 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                     normalizedRow['kalenderwoche']
                 );
                 
-                if (week > 0) mainIsoweek = week;
+                if (week > 0 && !mainIsoweek) mainIsoweek = week;
 
                 const cityName = String(normalizedRow['city_name'] || normalizedRow['city'] || normalizedRow['stadt'] || '').trim();
                 const dateLocal = safeDate(normalizedRow['created_date_local'] || normalizedRow['date'] || normalizedRow['datum']);
@@ -139,8 +150,6 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
 
                 const finalRiderId = riderId || `anon-${Date.now()}-${i}`;
                 
-                // FALLBACK DATE: If no dateLocal is provided, use Monday of that isoweek or epoch to ensure unique constraint is deterministic.
-                // This prevents issues with multiple NULLs in Postgres unique constraints.
                 const uniqueDate = dateLocal || new Date(2000, 0, week); 
 
                 await (prisma as any).riderKpi.upsert({
@@ -162,6 +171,7 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         isoweek: week,
                         cityName,
                         dateLocal: uniqueDate,
+                        uploadId: uploadRecord.id,
                         driverId: driver?.id,
                         acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
@@ -175,6 +185,7 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         riderName,
                         cityName,
                         dateLocal: uniqueDate,
+                        uploadId: uploadRecord.id,
                         acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
                         avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
@@ -189,12 +200,12 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
 
         console.log(`[KPI-Upload] Upserted ${recordCount} KPIs. Main ISO Week: ${mainIsoweek}`);
 
-        await prisma.kpiUpload.create({
+        // Update the upload record with final count
+        await prisma.kpiUpload.update({
+            where: { id: uploadRecord.id },
             data: {
-                tenantId: req.tenantId!,
-                filename: req.file!.originalname,
-                isoweek: mainIsoweek,
                 recordCount,
+                isoweek: mainIsoweek,
                 status: 'SUCCESS'
             }
         });
@@ -203,6 +214,17 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
     } catch (error) {
         console.error('[KPI-Upload] Final Error:', error);
         res.status(500).json({ error: (error as Error).message });
+    }
+});
+
+router.delete('/uploads/:id', async (req: TenantRequest, res: Response) => {
+    try {
+        await prisma.kpiUpload.delete({
+            where: { id: req.params.id, tenantId: req.tenantId! }
+        });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to delete' });
     }
 });
 

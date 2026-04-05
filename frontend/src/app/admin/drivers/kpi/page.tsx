@@ -14,7 +14,8 @@ import {
     Filter,
     ArrowUpRight,
     Coins,
-    BarChart3
+    BarChart3,
+    Trash2
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -66,11 +67,19 @@ export default function AdminKpiPage() {
             console.error("Upload error", e);
         } finally {
             setUploading(false);
-            e.target.value = "";
+            if (e.target) e.target.value = "";
         }
     };
 
-    // Calculate totals
+    const handleDeleteUpload = async (id: string) => {
+        if (!confirm("Bu upload'u ve bu upload ile gelen TÜM verileri silmek istediğinize emin misiniz?")) return;
+        try {
+            await api.delete(`/kpis/uploads/${id}`);
+            fetchKpis();
+        } catch (e) {
+            alert("Silme işlemi başarısız.");
+        }
+    };
     const totalOrders = kpis.reduce((acc, curr) => acc + curr.deliveredOrders, 0);
     const totalHours = kpis.reduce((acc, curr) => acc + curr.hoursWorked, 0);
     const avgUtr = kpis.length ? (kpis.reduce((acc, curr) => acc + (curr.utr || 0), 0) / kpis.length).toFixed(2) : 0;
@@ -129,9 +138,17 @@ export default function AdminKpiPage() {
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-2">Letzte Uploads</h4>
                             <div className="space-y-3">
-                                {uploads.slice(0, 5).map(u => (
-                                    <div key={u.id} className="flex flex-col p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                        <p className="text-[10px] font-bold text-slate-900 truncate">{u.filename}</p>
+                                {uploads.slice(0, 10).map(u => (
+                                    <div key={u.id} className="flex flex-col p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
+                                        <div className="flex justify-between items-start gap-2">
+                                            <p className="text-[10px] font-bold text-slate-900 truncate flex-1">{u.filename}</p>
+                                            <button 
+                                                onClick={() => handleDeleteUpload(u.id)}
+                                                className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
                                         <div className="flex justify-between items-center mt-2">
                                             <span className="text-[8px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-1 rounded-md">Woche {u.isoweek}</span>
                                             <span className="text-[8px] font-medium text-slate-400">{new Date(u.createdAt).toLocaleDateString()}</span>
