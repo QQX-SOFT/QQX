@@ -73,15 +73,16 @@ router.post('/', async (req: Request, res: Response) => {
 // ADMIN: Get all applications for tenant
 router.get('/', async (req: TenantRequest, res: Response) => {
   const { tenantId } = req;
-  if (!tenantId) return res.status(400).json({ error: 'Context missing' });
-
+  
   try {
     const applications = await (prisma as any).driverApplication.findMany({
-      where: { 
+      where: tenantId ? { 
         OR: [
           { tenantId: tenantId as string },
-          { tenantId: null } // Also show global applications maybe?
+          { tenantId: null }
         ]
+      } : {
+        tenantId: null // If no tenant selected, show global ones
       },
       orderBy: { createdAt: 'desc' }
     });

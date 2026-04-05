@@ -17,11 +17,15 @@ export const tenantMiddleware = async (req: TenantRequest, res: Response, next: 
     console.log(`[TenantMiddleware] Path: ${path}, Subdomain: ${subdomain}`);
 
     // Skip tenant check for tenant creation/listing, health checks, or explicit bypass
-    const isTenantAPI = path.includes('/api/tenants') || path.includes('/api/superadmin') || path.includes('/api/applications');
+    const isGlobalAPI = path.includes('/api/tenants') || path.includes('/api/superadmin');
     const isHealthOrAuth = path.includes('/health') || path.includes('/auth') || path.includes('/api/upload');
+    
+    // NEW: Public applications can be submitted without a tenant context (they become global)
+    // But LISTING them (GET) should still try to identify the tenant context if possible
+    const isPublicApplicationSubmit = (path === '/api/applications' || path === '/api/applications/') && req.method === 'POST';
 
-    if (isTenantAPI || isHealthOrAuth) {
-        console.log(`[TenantMiddleware] Bypassing check for ${path}. Subdomain header ignored.`);
+    if (isGlobalAPI || isHealthOrAuth || isPublicApplicationSubmit) {
+        console.log(`[TenantMiddleware] Bypassing check for ${path}.`);
         return next();
     }
 
