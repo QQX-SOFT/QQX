@@ -88,7 +88,8 @@ router.patch('/:id/status', async (req: TenantRequest, res: Response) => {
             where: { id: req.params.id as string, tenantId: tenantId as string },
             data: {
                 status: status,
-                ...(nextMaintenance && { nextMaintenance: new Date(nextMaintenance) })
+                ...(nextMaintenance && { nextMaintenance: new Date(nextMaintenance) }),
+                ...(req.body.availableFrom && { availableFrom: new Date(req.body.availableFrom) })
             }
         });
         res.json(vehicle);
