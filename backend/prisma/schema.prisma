@@ -616,6 +616,7 @@ model Contract {
   
   title       String
   description String?
+  content     String?
   fileUrl     String?
   
   type        ContractType @default(GENERAL)

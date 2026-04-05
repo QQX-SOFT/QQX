@@ -65,7 +65,9 @@ router.post('/', async (req: TenantRequest, res: Response) => {
             endDate,
             driverId,
             customerId,
-            fileUrl
+            fileUrl,
+            content,
+            templateId
         } = req.body;
 
         const contract = await prisma.contract.create({
@@ -73,13 +75,15 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 tenantId,
                 title,
                 description,
+                content,
                 type,
                 status,
                 startDate: startDate ? new Date(startDate) : null,
                 endDate: endDate ? new Date(endDate) : null,
                 driverId,
                 customerId,
-                fileUrl
+                fileUrl,
+                templateId
             }
         });
 
@@ -106,7 +110,9 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
             endDate,
             driverId,
             customerId,
-            fileUrl
+            fileUrl,
+            content,
+            templateId
         } = req.body;
 
         const contract = await prisma.contract.update({
@@ -114,13 +120,15 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
             data: {
                 title,
                 description,
+                content,
                 type,
                 status,
                 startDate: startDate ? new Date(startDate) : null,
                 endDate: endDate ? new Date(endDate) : null,
                 driverId,
                 customerId,
-                fileUrl
+                fileUrl,
+                templateId
             }
         });
 

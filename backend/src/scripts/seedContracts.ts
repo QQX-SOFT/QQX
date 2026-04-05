@@ -1,0 +1,299 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+const OHNE_KM_CONTENT = `FREIER DIENSTVERTRAG 
+zwischen  FastRoute GmbH Achstraße 42, 6922 Wolfurt (im Folgenden „Auftraggeber“)  und  
+Name: {{driver_firstName}} {{driver_lastName}}
+Adresse: {{driver_address}} 
+Geburtsdatum: {{driver_birthDate}} 
+SV-Nummer: {{driver_svNumber}} 
+Telefonnummer: {{driver_phone}}  
+(im Folgenden „Auftragnehmer“)  
+
+1. Vertragsart 
+Dieser Vertrag stellt ein freies Dienstverhältnis gemäß § 4 Abs. 4 ASVG dar. Ein Arbeitsverhältnis liegt ausdrücklich nicht vor.  
+
+2. Selbstständigkeit und Unabhängigkeit 
+Der Auftragnehmer erbringt seine Leistungen selbstständig und in eigener Verantwortung.  
+Es besteht insbesondere: 
+- keine persönliche Abhängigkeit 
+- keine Eingliederung in die betriebliche Organisation 
+- keine Weisungsgebundenheit hinsichtlich Zeit, Ort und Art der Tätigkeit  
+
+Der Auftragnehmer ist: 
+- an keine festen Arbeitszeiten gebunden 
+- an keinen bestimmten Arbeitsort gebunden 
+- nicht weisungsgebunden 
+Der Auftragnehmer entscheidet selbstständig, ob und wann er Aufträge annimmt. Der Auftragnehmer ist nicht verpflichtet, eine Mindestanzahl an Aufträgen zu übernehmen.  
+
+3. Auftragsprinzip 
+Der Auftraggeber bietet einzelne Aufträge über eine digitale Plattform / Software an. 
+Der Auftragnehmer ist jederzeit berechtigt: 
+- Aufträge anzunehmen oder abzulehnen 
+- seine Tätigkeit jederzeit zu unterbrechen 
+Es besteht kein Anspruch auf: 
+- Zuteilung von Aufträgen 
+- eine Mindestanzahl von Aufträgen 
+- eine Mindestvergütung  
+
+4. Tätigkeit für Dritte 
+Der Auftragnehmer ist ausdrücklich berechtigt, auch für andere Auftraggeber tätig zu sein. Es besteht kein Konkurrenzverbot. 
+
+5. Betriebsmittel und wirtschaftliches Risiko 
+Der Auftragnehmer verwendet ausschließlich eigene Betriebsmittel, insbesondere: 
+- Fahrzeug 
+- Mobiltelefon 
+- Arbeitsmaterialien 
+Alle damit verbundenen Kosten trägt der Auftragnehmer selbst. Der Auftragnehmer trägt das wirtschaftliche Risiko seiner Tätigkeit.  
+
+6. Vertretung
+Der Auftragnehmer ist berechtigt, sich jederzeit und ohne Zustimmung des Auftraggebers durch geeignete Dritte vertreten zu lassen.
+Der Auftragnehmer ist für die Auswahl, Einschulung und Kontrolle der Vertretungsperson selbst verantwortlich.
+Die Vertretung erfolgt im eigenen Namen und auf eigene Rechnung des Auftragnehmers. Eine persönliche Leistungspflicht besteht nicht.  
+
+7. Entgelt 
+Der Auftragnehmer erhält eine Vergütung pro erfolgreich durchgeführte Lieferung brutto: {{payout_per_order}} €
+Die Vergütung versteht sich als Bruttoentgelt, von welchem die gesetzlich vorgesehenen Sozialversicherungsbeiträge durch den Auftraggeber einbehalten werden.  
+Die Abrechnung erfolgt monatlich auf Basis der tatsächlich erbrachten Leistungen. Ein Anspruch auf fortlaufende Beschäftigung besteht nicht.  
+
+8. Sachliche Anforderungen (keine Weisungsbindung) 
+Sachliche Anforderungen, insbesondere in Bezug auf: 
+- gesetzliche Vorschriften 
+- Verkehrssicherheit - Hygiene 
+- Produktsicherheit 
+- Datenschutz 
+- Lieferqualität 
+stellen keine persönliche Weisungsbindung dar.  
+
+9. Datenschutz 
+Personenbezogene Daten von Kunden dürfen ausschließlich zur Durchführung der jeweiligen Aufträge verwendet werden.  
+
+10. Sozialversicherung und Steuern 
+Die Abrechnung erfolgt durch den Auftraggeber. Die Sozialversicherungsbeiträge (ÖGK) werden durch den Auftraggeber berechnet, einbehalten und abgeführt. Der Anteil des Auftragnehmers wird von der Vergütung einbehalten. Der Auftragnehmer ist für seine steuerlichen Verpflichtungen selbst verantwortlich. Soweit gesetzlich vorgesehen, führt der Auftraggeber Beiträge zur betrieblichen Vorsorgekasse (BV-Kasse) ab.  
+
+11. Keine arbeitsrechtlichen Ansprüche 
+Es besteht kein Anspruch auf: 
+- Urlaub 
+- Krankenentgelt 
+- Sonderzahlungen 
+- Überstundenvergütung  
+
+12. Haftung 
+Der Auftragnehmer haftet für Schäden, die durch unsachgemäße Durchführung entstehen, im Rahmen der gesetzlichen Bestimmungen.  
+
+13. Vertragsdauer und Kündigung 
+Der Vertrag wird auf unbestimmte Zeit abgeschlossen. Der Vertrag beginnt am: {{contract_startDate}}
+Er kann von beiden Parteien jederzeit unter Einhaltung einer Frist von 14 Tagen gekündigt werden.  
+
+14. Geheimhaltung 
+Der Auftragnehmer verpflichtet sich, alle Geschäfts- und Kundendaten vertraulich zu behandeln. 
+
+15. Klarstellung zur tatsächlichen Vertragsdurchführung 
+Die Vertragsparteien bestätigen ausdrücklich, dass die tatsächliche Durchführung dieses Vertrags den vereinbarten Bestimmungen entspricht.  
+
+16. Keine persönliche Leistungspflicht 
+Der Auftragnehmer ist nicht verpflichtet, die Leistungen persönlich zu erbringen. 
+
+17. Keine Eingliederung in den Betrieb 
+Der Auftragnehmer ist nicht in die betriebliche Organisation eingegliedert und unterliegt keiner Hierarchie oder Dienstplanung.  
+
+18. Keine arbeitsrechtliche Kontrolle 
+Es erfolgt keine arbeitsrechtliche Kontrolle der Tätigkeit.  
+
+19. Plattformmodell 
+Der Auftraggeber betreibt ausschließlich eine Plattform zur Vermittlung von Aufträgen. Der Auftraggeber hat keinen Einfluss auf die Entscheidung des Auftragnehmers, Aufträge anzunehmen oder abzulehnen.  
+
+20. Keine wirtschaftliche Abhängigkeit 
+Der Auftragnehmer ist wirtschaftlich unabhängig.  
+
+21. Risikoübernahme 
+Der Auftragnehmer trägt das volle unternehmerische Risiko.  
+
+22. Bewusstes Vertragsverhältnis 
+Die Parteien bestätigen, dass sie die Unterschiede zwischen freiem Dienstverhältnis und Arbeitsverhältnis kennen und diesen Vertrag bewusst abschließen.  
+
+23. Form, Teilunwirksamkeit und Schlussbestimmungen 
+Änderungen bedürfen der Schriftform. Unwirksame Bestimmungen berühren den Vertrag nicht. Es gilt österreichisches Recht. Dieser Vertrag begründet ausdrücklich kein Arbeitsverhältnis.
+
+24. Keine Verpflichtung zur Verfügbarkeit 
+Der Auftragnehmer ist nicht verpflichtet, zu bestimmten Zeiten verfügbar zu sein oder Aufträge anzunehmen. Eine Nichtannahme von Aufträgen führt zu keinerlei Nachteilen.
+
+25. Keine Zurverfügungstellung von Betriebsmitteln 
+Der Auftraggeber stellt dem Auftragnehmer keine Arbeitsmittel zur Verfügung.  
+
+Ort, Datum: {{current_date}}
+
+_______________________________/                     __________________________________/ 
+(Unterschrift Auftraggeber)                         (Unterschrift Auftragnehmer) 
+`;
+
+const MIT_KM_CONTENT = `FREIER DIENSTVERTRAG 
+zwischen  FastRoute GmbH Achstraße 42, 6922 Wolfurt (im Folgenden „Auftraggeber“)  und  
+Name: {{driver_firstName}} {{driver_lastName}}
+Adresse: {{driver_address}} 
+Geburtsdatum: {{driver_birthDate}} 
+SV-Nummer: {{driver_svNumber}} 
+Telefonnummer: {{driver_phone}}  
+(im Folgenden „Auftragnehmer“)  
+
+1. Vertragsart 
+Dieser Vertrag stellt ein freies Dienstverhältnis gemäß § 4 Abs. 4 ASVG dar. Ein Arbeitsverhältnis liegt ausdrücklich nicht vor.  
+
+2. Selbstständigkeit und Unabhängigkeit 
+Der Auftragnehmer erbringt seine Leistungen selbstständig und in eigener Verantwortung.  
+Es besteht insbesondere: 
+- keine persönliche Abhängigkeit 
+- keine Eingliederung in die betriebliche Organisation 
+- keine Weisungsgebundenheit hinsichtlich Zeit, Ort und Art der Tätigkeit  
+
+Der Auftragnehmer ist: 
+- an keine festen Arbeitszeiten gebunden 
+- an keinen bestimmten Arbeitsort gebunden 
+- nicht weisungsgebunden 
+Der Auftragnehmer entscheidet selbstständig, ob und wann er Aufträge annimmt. Der Auftragnehmer ist nicht verpflichtet, eine Mindestanzahl an Aufträgen zu übernehmen.  
+
+3. Auftragsprinzip 
+Der Auftraggeber bietet einzelne Aufträge über eine digitale Plattform / Software an. 
+Der Auftragnehmer ist jederzeit berechtigt: 
+- Aufträge anzunehmen oder abzulehnen 
+- seine Tätigkeit jederzeit zu unterbrechen 
+Es besteht kein Anspruch auf: 
+- Zuteilung von Aufträgen 
+- eine Mindestanzahl von Aufträgen 
+- eine Mindestvergütung  
+
+4. Tätigkeit für Dritte 
+Der Auftragnehmer ist ausdrücklich berechtigt, auch für andere Auftraggeber tätig zu sein. Es besteht kein Konkurrenzverbot. 
+
+5. Betriebsmittel und wirtschaftliches Risiko 
+Der Auftragnehmer verwendet ausschließlich eigene Betriebsmittel, insbesondere: 
+- Fahrzeug 
+- Mobiltelefon 
+- Arbeitsmaterialien 
+Alle damit verbundenen Kosten trägt der Auftragnehmer selbst. Der Auftragnehmer trägt das wirtschaftliche Risiko seiner Tätigkeit.  
+
+6. Vertretung
+Der Auftragnehmer ist berechtigt, sich jederzeit und ohne Zustimmung des Auftraggebers durch geeignete Dritte vertreten zu lassen.
+Der Auftragnehmer ist für die Auswahl, Einschulung und Kontrolle der Vertretungsperson selbst verantwortlich.
+Die Vertretung erfolgt im eigenen Namen und auf eigene Rechnung des Auftragnehmers. Eine persönliche Leistungspflicht besteht nicht.  
+
+7. Entgelt (Lieferung + Kilometergeld) 
+Der Auftragnehmer erhält: 
+- eine Vergütung pro erfolgreich durchgeführte Lieferung:  € {{payout_per_order}} brutto pro Lieferung 
+und zusätzlich ein Kilometergeld in Höhe von:  € {{km_money}} pro gefahrenem Kilometer 
+
+Das Kilometergeld dient als pauschaler Kostenersatz für die Nutzung des eigenen Fahrzeugs (Treibstoff, Abnutzung, Versicherung etc.). Die Gesamtabrechnung erfolgt monatlich auf Basis der tatsächlich erbrachten Leistungen. Ein Anspruch auf fortlaufende Beschäftigung besteht nicht.  
+
+8. Sachliche Anforderungen (keine Weisungsbindung) 
+Sachliche Anforderungen, insbesondere in Bezug auf: 
+- gesetzliche Vorschriften 
+- Verkehrssicherheit - Hygiene 
+- Produktsicherheit 
+- Datenschutz 
+- Lieferqualität 
+stellen keine persönliche Weisungsbindung dar.  
+
+9. Datenschutz 
+Personenbezogene Daten von Kunden dürfen ausschließlich zur Durchführung der jeweiligen Aufträge verwendet werden.  
+
+10. Sozialversicherung und Steuern 
+Die Abrechnung erfolgt durch den Auftraggeber. Die Sozialversicherungsbeiträge (ÖGK) werden durch den Auftraggeber berechnet, einbehalten und abgeführt. Der Anteil des Auftragnehmers wird von der Vergütung einbehalten. Der Auftragnehmer ist für seine steuerlichen Verpflichtungen selbst verantwortlich. Soweit gesetzlich vorgesehen, führt der Auftraggeber Beiträge zur betrieblichen Vorsorgekasse (BV-Kasse) ab.  
+
+11. Keine arbeitsrechtlichen Ansprüche 
+Es besteht kein Anspruch auf: 
+- Urlaub 
+- Krankenentgelt 
+- Sonderzahlungen 
+- Überstundenvergütung  
+
+12. Haftung 
+Der Auftragnehmer haftet für Schäden, die durch unsachgemäße Durchführung entstehen, im Rahmen der gesetzlichen Bestimmungen.  
+
+13. Vertragsdauer und Kündigung 
+Der Vertrag wird auf unbestimmte Zeit abgeschlossen. Der Vertrag beginnt am: {{contract_startDate}}
+Er kann von beiden Parteien jederzeit unter Einhaltung einer Frist von 14 Tagen gekündigt werden.  
+
+14. Geheimhaltung 
+Der Auftragnehmer verpflichtet sich, alle Geschäfts- und Kundendaten vertraulich zu behandeln. 
+
+15. Klarstellung zur tatsächlichen Vertragsdurchführung 
+Die Vertragsparteien bestätigen ausdrücklich, dass die tatsächliche Durchführung dieses Vertrags den vereinbarten Bestimmungen entspricht.  
+
+16. Keine persönliche Leistungspflicht 
+Der Auftragnehmer ist nicht verpflichtet, die Leistungen persönlich zu erbringen. 
+
+17. Keine Eingliederung in den Betrieb 
+Der Auftragnehmer ist nicht in die betriebliche Organisation eingegliedert und unterliegt keiner Hierarchie oder Dienstplanung.  
+
+18. Keine arbeitsrechtliche Kontrolle 
+Es erfolgt keine arbeitsrechtliche Kontrolle der Tätigkeit.  
+
+19. Plattformmodell 
+Der Auftraggeber betreibt ausschließlich eine Plattform zur Vermittlung von Aufträgen. Der Auftraggeber hat keinen Einfluss auf die Entscheidung des Auftragnehmers, Aufträge anzunehmen oder abzulehnen.  
+
+20. Keine wirtschaftliche Abhängigkeit 
+Der Auftragnehmer ist wirtschaftlich unabhängig.  
+
+21. Risikoübernahme 
+Der Auftragnehmer trägt das volle unternehmerische Risiko.  
+
+22. Bewusstes Vertragsverhältnis 
+Die Parteien bestätigen, dass sie die Unterschiede zwischen freiem Dienstverhältnis und Arbeitsverhältnis kennen und diesen Vertrag bewusst abschließen.  
+
+23. Form, Teilunwirksamkeit und Schlussbestimmungen 
+Änderungen bedürfen der Schriftform. Unwirksame Bestimmungen berühren den Vertrag nicht. Es gilt österreichisches Recht. Dieser Vertrag begründet ausdrücklich kein Arbeitsverhältnis.
+
+24. Keine Verpflichtung zur Verfügbarkeit 
+Der Auftragnehmer ist nicht verpflichtet, zu bestimmten Zeiten verfügbar zu sein oder Aufträge anzunehmen. Eine Nichtannahme von Aufträgen führt zu keinerlei Nachteilen.
+
+25. Keine Zurverfügungstellung von Betriebsmitteln 
+Der Auftraggeber stellt dem Auftragnehmer keine Arbeitsmittel zur Verfügung.  
+
+Ort, Datum: {{current_date}}
+
+_______________________________/                     __________________________________/ 
+(Unterschrift Auftraggeber)                         (Unterschrift Auftragnehmer) 
+`;
+
+async function main() {
+    const tenants = await prisma.tenant.findMany();
+    for (const tenant of tenants) {
+        // Ohne KM
+        const exists1 = await prisma.contractTemplate.findFirst({
+            where: { tenantId: tenant.id, name: 'Freier Dienstvertrag (Ohne KM-Geld)' }
+        });
+        if (!exists1) {
+            await prisma.contractTemplate.create({
+                data: {
+                    tenantId: tenant.id,
+                    name: 'Freier Dienstvertrag (Ohne KM-Geld)',
+                    description: 'Österreichischer Standard-Dienstvertrag für freie Mitarbeiter ohne Kilometergeld.',
+                    content: OHNE_KM_CONTENT,
+                    type: 'DRIVER',
+                    driverType: 'FREELANCE'
+                }
+            });
+        }
+
+        // Mit KM
+        const exists2 = await prisma.contractTemplate.findFirst({
+            where: { tenantId: tenant.id, name: 'Freier Dienstvertrag (Mit KM-Geld)' }
+        });
+        if (!exists2) {
+            await prisma.contractTemplate.create({
+                data: {
+                    tenantId: tenant.id,
+                    name: 'Freier Dienstvertrag (Mit KM-Geld)',
+                    description: 'Österreichischer Standard-Dienstvertrag für freie Mitarbeiter mit Kilometergeld-Abrechnung.',
+                    content: MIT_KM_CONTENT,
+                    type: 'DRIVER',
+                    driverType: 'FREELANCE'
+                }
+            });
+        }
+    }
+    console.log('Templates seeded successfully.');
+}
+
+main().catch(console.error).finally(() => prisma.$disconnect());

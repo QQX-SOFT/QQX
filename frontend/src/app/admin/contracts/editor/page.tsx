@@ -6,11 +6,16 @@ import {
     ScrollText,
     Loader2,
     Save,
-    ArrowLeft
+    ArrowLeft,
+    Type,
+    FileText,
+    ChevronDown,
+    Wand2
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 type ContractType = "GENERAL" | "CUSTOMER" | "DRIVER" | "VEHICLE";
 type ContractStatus = "DRAFT" | "ACTIVE" | "EXPIRED" | "TERMINATED";
@@ -20,10 +25,8 @@ function ContractEditorForm() {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
 
-    // Data states
     const [loading, setLoading] = useState(!!id);
     const [saving, setSaving] = useState(false);
-
     const [drivers, setDrivers] = useState<any[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
     const [templates, setTemplates] = useState<any[]>([]);
@@ -31,20 +34,20 @@ function ContractEditorForm() {
     const [formData, setFormData] = useState({
         title: "",
         description: "",
+        content: "",
         type: "GENERAL" as ContractType,
         status: "ACTIVE" as ContractStatus,
         startDate: "",
         endDate: "",
         driverId: "",
         customerId: "",
-        fileUrl: ""
+        fileUrl: "",
+        templateId: ""
     });
 
     useEffect(() => {
         fetchDependencies();
-        if (id) {
-            fetchContract(id);
-        }
+        if (id) fetchContract(id);
     }, [id]);
 
     const fetchDependencies = async () => {
@@ -57,9 +60,7 @@ function ContractEditorForm() {
             setDrivers(driversRes.data);
             setCustomers(customersRes.data);
             setTemplates(templatesRes.data);
-        } catch (error) {
-            console.error("Failed to load dependencies", error);
-        }
+        } catch (error) { console.error(error); }
     };
 
     const fetchContract = async (contractId: string) => {
@@ -69,19 +70,45 @@ function ContractEditorForm() {
             setFormData({
                 title: data.title,
                 description: data.description || "",
+                content: data.content || "",
                 type: data.type,
                 status: data.status,
                 startDate: data.startDate ? data.startDate.substring(0, 10) : "",
                 endDate: data.endDate ? data.endDate.substring(0, 10) : "",
                 driverId: data.driverId || "",
                 customerId: data.customerId || "",
-                fileUrl: data.fileUrl || ""
+                fileUrl: data.fileUrl || "",
+                templateId: data.templateId || ""
             });
-        } catch (error) {
-            console.error("Failed to load contract", error);
-        } finally {
-            setLoading(false);
+        } catch (error) { console.error(error); } finally { setLoading(false); }
+    };
+
+    const handleTemplateSelection = (templateId: string) => {
+        const t = templates.find(temp => temp.id === templateId);
+        if (!t) return;
+
+        let newContent = t.content;
+        const driver = drivers.find(d => d.id === formData.driverId);
+
+        if (formData.type === "DRIVER" && driver) {
+            newContent = newContent
+                .replace(/{{driver_firstName}}/g, driver.firstName || "")
+                .replace(/{{driver_lastName}}/g, driver.lastName || "")
+                .replace(/{{driver_address}}/g, driver.address || "")
+                .replace(/{{driver_birthDate}}/g, driver.birthDate ? new Date(driver.birthDate).toLocaleDateString('de-DE') : "")
+                .replace(/{{driver_svNumber}}/g, driver.svNumber || "")
+                .replace(/{{driver_phone}}/g, driver.phone || "")
+                .replace(/{{current_date}}/g, new Date().toLocaleDateString('de-DE'))
+                .replace(/{{contract_startDate}}/g, formData.startDate ? new Date(formData.startDate).toLocaleDateString('de-DE') : "");
         }
+
+        setFormData(prev => ({
+            ...prev,
+            templateId: t.id,
+            title: t.name,
+            content: newContent,
+            type: t.type
+        }));
     };
 
     const handleSave = async (e: React.FormEvent) => {
@@ -95,197 +122,105 @@ function ContractEditorForm() {
                 startDate: formData.startDate || null,
                 endDate: formData.endDate || null,
             };
-
-            if (id) {
-                await api.patch(`/contracts/${id}`, payload);
-            } else {
-                await api.post("/contracts", payload);
-            }
-
+            if (id) await api.patch(`/contracts/${id}`, payload);
+            else await api.post("/contracts", payload);
             router.push("/admin/contracts");
-            router.refresh();
-        } catch (error) {
-            console.error("Save error", error);
-        } finally {
-            setSaving(false);
-        }
+        } catch (error) { console.error(error); } finally { setSaving(false); }
     };
 
-    if (loading) {
-        return (
-            <div className="flex h-[50vh] items-center justify-center">
-                <Loader2 className="animate-spin text-blue-500" size={48} />
-            </div>
-        );
-    }
+    if (loading) return <div className="flex h-[50vh] items-center justify-center"><Loader2 className="animate-spin text-blue-500" size={48} /></div>;
 
     return (
-        <form onSubmit={handleSave} className="space-y-6">
-            {!id && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-2xl p-6 mb-6">
-                    <label className="block text-xs font-black text-blue-700 dark:text-blue-300 uppercase tracking-widest mb-2">Aus Vorlage laden (Optional)</label>
-                    <select
-                        onChange={(e) => {
-                            const t = templates.find(temp => temp.id === e.target.value);
-                            if (t) {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    title: t.name,
-                                    description: t.description || "",
-                                    type: t.type
-                                }));
-                            }
-                        }}
-                        className="w-full bg-white dark:bg-slate-800 border-2 border-transparent rounded-xl px-4 py-3 outline-none focus:border-blue-500/20 transition font-bold"
-                    >
-                        <option value="">Keine Vorlage verwenden...</option>
-                        {templates.map(t => (
-                            <option key={t.id} value={t.id}>{t.name} ({t.type})</option>
-                        ))}
-                    </select>
-                    <p className="text-xs text-blue-600/70 dark:text-blue-400 mt-2">Wählen Sie eine Vorlage wie "Freier Dienstnehmer", um Basisdaten automatisch zu laden.</p>
-                </div>
-            )}
-
-            <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="space-y-6">
-                    <div>
-                        <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Vertragstitel</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.title}
-                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold"
-                            placeholder="z.B. Rahmenvertrag 2025"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Vertragsart</label>
-                            <select
-                                required
-                                value={formData.type}
-                                onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractType })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold appearance-none"
-                            >
-                                <option value="GENERAL">Allgemein (General)</option>
-                                <option value="CUSTOMER">Kunde (Customer)</option>
-                                <option value="DRIVER">Fahrer (Driver)</option>
-                                <option value="VEHICLE">Fahrzeug (Vehicle)</option>
-                            </select>
+        <form onSubmit={handleSave} className="space-y-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {/* Meta Settings */}
+                <div className="lg:col-span-1 space-y-8">
+                    <div className="bg-white dark:bg-slate-900 rounded-[3rem] p-10 border border-slate-100 dark:border-slate-800 shadow-xl shadow-slate-200/20 space-y-10">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 rounded-xl"><Wand2 size={20} /></div>
+                            <h3 className="text-sm font-black uppercase tracking-widest text-slate-400">Konfiguration</h3>
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Status</label>
-                            <select
-                                required
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value as ContractStatus })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold appearance-none"
-                            >
-                                <option value="DRAFT">Entwurf (Draft)</option>
-                                <option value="ACTIVE">Aktiv (Active)</option>
-                                <option value="EXPIRED">Abgelaufen (Expired)</option>
-                                <option value="TERMINATED">Gekündigt (Terminated)</option>
-                            </select>
+                        <div className="space-y-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Vertragsart</label>
+                                <select required value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractType })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs appearance-none">
+                                    <option value="GENERAL">Allgemein</option>
+                                    <option value="CUSTOMER">Kunde</option>
+                                    <option value="DRIVER">Fahrer</option>
+                                    <option value="VEHICLE">Fahrzeug</option>
+                                </select>
+                            </div>
+
+                            {formData.type === "DRIVER" && (
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Fahrer</label>
+                                    <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-bold text-xs appearance-none">
+                                        <option value="">Wählen...</option>
+                                        {drivers.map(d => (<option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>))}
+                                    </select>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Vorlage laden</label>
+                                <select value={formData.templateId} onChange={(e) => handleTemplateSelection(e.target.value)} className="w-full bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-100 rounded-2xl px-6 py-4 outline-none focus:border-indigo-500/20 transition font-black text-xs text-blue-600 appearance-none">
+                                    <option value="">Keine Vorlage</option>
+                                    {templates.map(t => (<option key={t.id} value={t.id}>{t.name}</option>))}
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Beginn</label>
+                                    <input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-4 py-4 outline-none text-xs font-bold" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Ende</label>
+                                    <input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-4 py-4 outline-none text-xs font-bold" />
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {formData.type === "DRIVER" && (
-                        <div>
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Fahrer auswählen</label>
-                            <select
-                                required
-                                value={formData.driverId}
-                                onChange={(e) => setFormData({ ...formData, driverId: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold appearance-none"
-                            >
-                                <option value="">Fahrer wählen...</option>
-                                {drivers.map(d => (
-                                    <option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
-                    {formData.type === "CUSTOMER" && (
-                        <div>
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Kunde auswählen</label>
-                            <select
-                                required
-                                value={formData.customerId}
-                                onChange={(e) => setFormData({ ...formData, customerId: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold appearance-none"
-                            >
-                                <option value="">Kunde wählen...</option>
-                                {customers.map(c => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Startdatum</label>
-                            <input
-                                type="date"
-                                value={formData.startDate}
-                                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold text-slate-600 dark:text-slate-300"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Enddatum</label>
-                            <input
-                                type="date"
-                                value={formData.endDate}
-                                onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold text-slate-600 dark:text-slate-300"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Dokument Link (PDF URL)</label>
-                        <input
-                            type="url"
-                            value={formData.fileUrl}
-                            onChange={(e) => setFormData({ ...formData, fileUrl: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-bold text-blue-600"
-                            placeholder="https://..."
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2 px-2">Beschreibung</label>
-                        <textarea
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-medium min-h-[120px] resize-none"
-                            placeholder="Zusätzliche Vereinbarungen..."
-                        />
-                    </div>
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-                    <Link
-                        href="/admin/contracts"
-                        className="px-6 py-3.5 rounded-2xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    >
-                        Abbrechen
-                    </Link>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="px-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition disabled:opacity-50 shadow-lg shadow-blue-500/20"
-                    >
-                        {saving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                    <button type="submit" disabled={saving} className="w-full bg-slate-900 text-white rounded-[2rem] py-8 font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-black transition flex items-center justify-center gap-4">
+                        {saving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
                         Vertrag speichern
                     </button>
+                </div>
+
+                {/* Content Editor */}
+                <div className="lg:col-span-2 space-y-8">
+                    <div className="bg-white dark:bg-slate-900 rounded-[3.5rem] p-12 border border-slate-100 dark:border-slate-800 shadow-2xl space-y-12 min-h-[800px]">
+                        <div className="space-y-4">
+                            <input
+                                placeholder="Vertragstitel eingeben..."
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                className="w-full text-4xl font-black text-slate-900 dark:text-white bg-transparent outline-none border-b-4 border-slate-50 focus:border-indigo-500/20 pb-4 transition tracking-tighter"
+                            />
+                            <div className="flex items-center gap-6">
+                                <span className={cn("px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border", 
+                                    formData.status === 'ACTIVE' ? "bg-green-50 text-green-600 border-green-100" : "bg-orange-50 text-orange-600 border-orange-100")}>
+                                    {formData.status}
+                                </span>
+                                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Zuletzt aktualisiert: {new Date().toLocaleDateString('de-DE')}</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">
+                                <FileText size={14} />
+                                Vertragsinhalt (Volltext)
+                            </label>
+                            <textarea
+                                value={formData.content}
+                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                className="w-full min-h-[600px] bg-slate-50 dark:bg-slate-800/50 rounded-[2.5rem] p-10 font-mono text-sm leading-relaxed text-slate-700 dark:text-slate-300 outline-none border-2 border-transparent focus:border-indigo-500/20 transition-all shadow-inner"
+                                placeholder="Fügen Sie hier den Vertragstext ein veya bir Vorlage seçin..."
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         </form>
@@ -294,21 +229,12 @@ function ContractEditorForm() {
 
 export default function ContractEditorPage() {
     return (
-        <div className="max-w-4xl mx-auto space-y-8 pb-20">
-            {/* Header */}
-            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="max-w-7xl mx-auto space-y-12 pb-20 animate-in fade-in duration-700">
+            <header className="flex items-center gap-6">
+                <Link href="/admin/contracts" className="p-4 bg-white dark:bg-slate-800 border border-slate-100 rounded-[2rem] text-slate-400 hover:text-slate-900 transition shadow-sm"><ArrowLeft size={24} /></Link>
                 <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <Link href="/admin/contracts" className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-500 hover:bg-slate-200 transition">
-                            <ArrowLeft size={20} />
-                        </Link>
-                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg text-indigo-600 dark:text-indigo-400">
-                            <ScrollText size={20} />
-                        </div>
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-slate-500">Vertragseditor</span>
-                    </div>
-                    <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight">Vertrag bearbeiten</h1>
-                    <p className="text-slate-500 font-medium">Legen Sie einen neuen Vertrag an oder bearbeiten Sie einen bestehenden.</p>
+                   <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter italic uppercase leading-none">Vertragseditor</h1>
+                   <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.4em] mt-2 ml-1">Rechtssichere Dokumentenerstellung</p>
                 </div>
             </header>
 
