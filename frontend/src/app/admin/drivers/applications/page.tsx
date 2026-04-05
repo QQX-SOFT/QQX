@@ -26,12 +26,14 @@ import {
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import PersonalStammdatenSheet from "@/components/PersonalStammdatenSheet";
 
 export default function AdminApplicationsPage() {
     const [applications, setApplications] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedApp, setSelectedApp] = useState<any>(null);
     const [processing, setProcessing] = useState(false);
+    const [showStammdaten, setShowStammdaten] = useState(false);
 
     const fetchApplications = async () => {
         try {
@@ -168,6 +170,13 @@ export default function AdminApplicationsPage() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
+                                    <button 
+                                      onClick={() => setShowStammdaten(true)}
+                                      className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-lg shadow-black/20 flex items-center gap-2"
+                                    >
+                                        <FileSearch size={16} />
+                                        Vorschau Stammdaten
+                                    </button>
                                     {selectedApp.status === "PENDING" && (
                                         <>
                                             <button 
@@ -295,6 +304,13 @@ export default function AdminApplicationsPage() {
                     )}
                 </div>
             </div>
+            {/* Stammdaten Modal */}
+            {showStammdaten && selectedApp && (
+                <PersonalStammdatenSheet 
+                    app={selectedApp} 
+                    onClose={() => setShowStammdaten(false)} 
+                />
+            )}
         </div>
     );
 }
