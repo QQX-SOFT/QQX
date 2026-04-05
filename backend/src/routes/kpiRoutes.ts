@@ -168,6 +168,9 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                     status: 'SUCCESS'
                 }
             });
+        }, {
+            maxWait: 60000,
+            timeout: 60000
         });
 
         res.json({ success: true, recordCount, isoweek: mainIsoweek });
