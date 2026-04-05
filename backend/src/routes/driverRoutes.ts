@@ -27,6 +27,11 @@ const driverSchema = z.object({
     workStyle: z.string().optional().nullable(),
     payPerOrder: z.number().optional().nullable(),
     payPerKm: z.number().optional().nullable(),
+    nationality: z.string().optional().nullable(),
+    workPermitUntil: z.string().optional().nullable(),
+    placeOfBirth: z.string().optional().nullable(),
+    religion: z.string().optional().nullable(),
+    maritalStatus: z.string().optional().nullable(),
 });
 
 // GET all drivers
@@ -175,6 +180,11 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 lastName: validatedData.lastName,
                 phone: validatedData.phone,
                 birthday: validatedData.birthday ? new Date(validatedData.birthday) : null,
+                placeOfBirth: validatedData.placeOfBirth,
+                nationality: validatedData.nationality,
+                religion: validatedData.religion,
+                maritalStatus: validatedData.maritalStatus,
+                workPermitUntil: validatedData.workPermitUntil ? new Date(validatedData.workPermitUntil) : null,
                 type: prismaType,
                 street: validatedData.street,
                 zip: validatedData.zip,
@@ -216,7 +226,7 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
 
     try {
         const validatedData = driverSchema.partial().parse(req.body);
-        const { password, email, employmentType, gisaNumber, driverNumber, workStyle, payPerOrder, payPerKm, ...driverData } = validatedData;
+        const { password, email, employmentType, gisaNumber, driverNumber, workStyle, payPerOrder, payPerKm, birthday, workPermitUntil, ...driverData } = validatedData;
 
         const driver = await prisma.driver.findFirst({
             where: { id, tenantId: tenantId as string },
@@ -234,13 +244,14 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
             where: { id },
             data: {
                 ...driverData as any,
-                birthday: driverData.birthday ? new Date(driverData.birthday) : undefined,
                 type: prismaType,
                 gisaNumber: gisaNumber,
                 driverNumber: driverNumber,
                 workStyle: workStyle,
                 payPerOrder: payPerOrder,
                 payPerKm: payPerKm,
+                birthday: birthday ? new Date(birthday) : undefined,
+                workPermitUntil: workPermitUntil ? new Date(workPermitUntil) : undefined,
             }
         });
 

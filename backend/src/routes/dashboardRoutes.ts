@@ -166,6 +166,68 @@ router.get('/stats', async (req: TenantRequest, res: Response) => {
     }
 });
 
+router.get('/alerts', async (req: TenantRequest, res: Response) => {
+    const { tenantId } = req;
+    if (!tenantId) return res.status(400).json({ error: 'Mandanten-Kontext fehlt' });
+
+    try {
+        const now = new Date();
+        const twoWeeksFromNow = new Date();
+        twoWeeksFromNow.setDate(now.getDate() + 14);
+
+        // Expiring work permits
+        const expiringPermits = await prisma.driver.findMany({
+            where: {
+                tenantId,
+                workPermitUntil: {
+                    not: null,
+                    lt: twoWeeksFromNow
+                }
+            },
+            select: { id: true, firstName: true, lastName: true, workPermitUntil: true }
+        });
+
+        const maintenanceDue = await prisma.vehicle.findMany({
+            where: {
+                tenantId,
+                nextMaintenance: {
+                    not: null,
+                    lt: now
+                }
+            },
+            select: { id: true, licensePlate: true, make: true, model: true }
+        });
+
+        const alerts = [];
+
+        for (const permit of expiringPermits) {
+            const daysLeft = Math.ceil((permit.workPermitUntil!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            alerts.push({
+                id: "permit-" + permit.id,
+                title: `Arbeitsbewilligung läuft ab: ${permit.firstName} ${permit.lastName}`,
+                message: daysLeft < 0 ? "Bereits abgelaufen!" : `Läuft in ${daysLeft} Tagen ab (${permit.workPermitUntil!.toLocaleDateString("de-DE")}).`,
+                type: daysLeft < 0 ? "CRITICAL" : (daysLeft < 7 ? "HIGH" : "WARNING"),
+                link: `/admin/drivers/editor?id=${permit.id}`
+            });
+        }
+
+        for (const v of maintenanceDue) {
+            alerts.push({
+                id: "maintenace-" + v.id,
+                title: `Wartung fällig: ${v.licensePlate}`,
+                message: `Die Wartung für dieses Fahrzeug ist überfällig.`,
+                type: "WARNING",
+                link: "/admin/vehicles"
+            });
+        }
+
+        res.json(alerts);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: 'Fehler beim Laden der Warnmeldungen' });
+    }
+});
+
 router.get('/activities', async (req: TenantRequest, res: Response) => {
     const { tenantId } = req;
 
@@ -182,29 +244,7 @@ router.get('/activities', async (req: TenantRequest, res: Response) => {
             include: { driver: true }
         });
 
-        // Fetch recent active tracking updates
-        const recentTracking = await prisma.timeEntry.findMany({
-            where: {
-                driver: { tenantId },
-                status: 'RUNNING',
-            },
-            take: 2,
-            orderBy: { updatedAt: 'desc' },
-            include: { driver: true }
-        });
-
         const activities = [];
-
-        // Mix tracking signals
-        for (const tr of recentTracking) {
-            activities.push({
-                id: "t" + tr.id,
-                title: `Fahrer-Update: ${tr.driver.firstName}`,
-                desc: `Letzter Ping vor einer Weile. Signal aktiv.`,
-                type: "success",
-                date: tr.updatedAt
-            });
-        }
 
         // Mix orders
         for (const order of recentOrders) {

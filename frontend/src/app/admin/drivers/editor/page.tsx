@@ -11,7 +11,9 @@ import {
     CheckCircle,
     Calendar,
     Briefcase,
-    ShieldCheck
+    ShieldCheck,
+    Search,
+    ChevronDown
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -47,10 +49,11 @@ function DriverEditorForm() {
         driverNumber: "",
         workStyle: "PER_ORDER_CUSTOM",
         payPerOrder: 5.5,
-        payPerKm: 0.3
+        payPerKm: 0.3,
+        nationality: "Österreich",
+        workPermitUntil: ""
     });
-
-
+    const [countries, setCountries] = useState<{ code: string, name: string }[]>([]);
 
     const [checkingVat, setCheckingVat] = useState(false);
     const [vatResult, setVatResult] = useState<{ valid: boolean; name?: string; address?: string } | null>(null);
@@ -158,6 +161,16 @@ function DriverEditorForm() {
         }
     };
     useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                const { data } = await api.get('/applications/countries');
+                setCountries(data);
+            } catch (e) {
+                console.error("Failed to fetch countries", e);
+            }
+        };
+        fetchCountries();
+
         if (id) {
             fetchDriver(id);
         }
@@ -191,7 +204,9 @@ function DriverEditorForm() {
                 driverNumber: data.driverNumber || "",
                 workStyle: data.workStyle || "PER_ORDER_CUSTOM",
                 payPerOrder: data.payPerOrder ?? 5.5,
-                payPerKm: data.payPerKm ?? 0.3
+                payPerKm: data.payPerKm ?? 0.3,
+                nationality: data.nationality || "Österreich",
+                workPermitUntil: data.workPermitUntil ? data.workPermitUntil.split('T')[0] : ""
             });
 
             // Set formatted IBAN
@@ -229,6 +244,38 @@ function DriverEditorForm() {
         } finally {
             setSaving(false);
         }
+    };
+
+    const SearchableSelectCountry = ({ label, value, options, onChange }: any) => {
+        const [searchTerm, setSearchTerm] = useState("");
+        const [open, setOpen] = useState(false);
+        const filtered = options.filter((o: any) => o.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        return (
+            <div className="relative">
+                <button type="button" onClick={() => setOpen(!open)} className={cn("w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold flex justify-between items-center transition-all", open && "border-blue-500 ring-4 ring-blue-500/5")}>
+                    <span className={cn(!value && "text-slate-400")}>{value || label}</span>
+                    <ChevronDown size={16} className={cn("transition-transform opacity-30", open && "rotate-180 opacity-100 text-blue-500")} />
+                </button>
+                {open && (
+                    <>
+                        <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                        <div className="absolute z-50 top-[110%] left-0 right-0 bg-white border border-slate-100 rounded-[2rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                            <div className="p-4 border-b border-slate-50 bg-slate-50/50 flex items-center gap-3">
+                                <Search size={14} className="text-slate-300" />
+                                <input className="w-full bg-transparent border-none outline-none text-xs font-bold placeholder:text-slate-300" placeholder="Suchen..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} autoFocus />
+                            </div>
+                            <div className="max-h-64 overflow-y-auto overscroll-contain custom-scrollbar">
+                                {filtered.map((o: any) => (
+                                    <button key={o.code} type="button" onClick={() => { onChange(o.name); setOpen(false); setSearchTerm(""); }} className={cn("w-full p-5 text-left text-xs font-bold transition-colors border-b border-slate-50/50 last:border-0 hover:bg-blue-50 hover:text-blue-600", value === o.name ? "bg-blue-50 text-blue-600" : "text-slate-600")}>
+                                        {o.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
     };
 
     if (loading) {
@@ -307,6 +354,29 @@ function DriverEditorForm() {
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Geburtsdatum *</label>
                                 <input type="date" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-slate-600" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
                             </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Staatsbürgerschaft *</label>
+                                <SearchableSelectCountry 
+                                    label="Staatsbürgerschaft wählen" 
+                                    value={formData.nationality}
+                                    options={countries}
+                                    onChange={(val: string) => setFormData({ ...formData, nationality: val })}
+                                />
+                            </div>
+                            {formData.nationality !== "Österreich" && (
+                                <div className="animate-in slide-in-from-top-4 duration-300">
+                                    <label className="block text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1 ml-2">Aufenthaltserlaubnis vorhanden bis: *</label>
+                                    <input 
+                                        type="date" 
+                                        required 
+                                        className="w-full bg-red-50/30 border border-red-100 rounded-2xl px-5 py-4 focus:border-red-500 outline-none font-bold text-red-600" 
+                                        value={formData.workPermitUntil} 
+                                        onChange={e => setFormData({ ...formData, workPermitUntil: e.target.value })} 
+                                    />
+                                </div>
+                            )}
                         </div>
                         <div>
                             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Passwort {id ? "(leer lassen für keine Änderung)" : "*"}</label>

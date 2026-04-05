@@ -22,6 +22,7 @@ export default function Dashboard() {
     const [statsData, setStatsData] = useState<any>(null);
     const [locations, setLocations] = useState<any[]>([]);
     const [activities, setActivities] = useState<any[]>([]);
+    const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -31,6 +32,8 @@ export default function Dashboard() {
                 setStatsData(data);
                 const actRes = await api.get("/dashboard/activities");
                 setActivities(actRes.data);
+                const alertRes = await api.get("/dashboard/alerts");
+                setAlerts(alertRes.data);
             } catch (e) {
                 console.error("Failed to fetch dashboard stats", e);
             } finally {
@@ -101,6 +104,41 @@ export default function Dashboard() {
                     </button>
                 </div>
             </header>
+            
+            {/* New Alerts Section */}
+            {alerts.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    {alerts.map((alert: any) => (
+                        <div 
+                            key={alert.id} 
+                            onClick={() => alert.link && (window.location.href = alert.link)}
+                            className={cn(
+                                "p-6 rounded-[2rem] border-2 flex items-start gap-5 cursor-pointer transition-all hover:scale-[1.02] shadow-xl shadow-slate-200/50",
+                                alert.type === "CRITICAL" ? "bg-red-600 border-red-700 text-white" :
+                                alert.type === "HIGH" ? "bg-orange-500 border-orange-600 text-white" :
+                                "bg-white border-blue-100 text-slate-900"
+                            )}
+                        >
+                            <div className={cn(
+                                "p-3 rounded-2xl shrink-0",
+                                alert.type === "CRITICAL" ? "bg-white/20" : 
+                                alert.type === "HIGH" ? "bg-white/20" : 
+                                "bg-blue-50 text-blue-600"
+                            )}>
+                                <AlertCircle size={24} />
+                            </div>
+                            <div className="flex-1">
+                                <h4 className="font-black text-sm uppercase tracking-wider mb-1">{alert.title}</h4>
+                                <p className={cn(
+                                    "text-xs font-medium opacity-80",
+                                    (alert.type === "CRITICAL" || alert.type === "HIGH") ? "text-white" : "text-slate-500"
+                                )}>{alert.message}</p>
+                            </div>
+                            <ChevronRight className="shrink-0 opacity-40" />
+                        </div>
+                    ))}
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
