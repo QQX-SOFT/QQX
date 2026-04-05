@@ -68,6 +68,15 @@ export default function AdminRentalsPage() {
     });
     const [submitting, setSubmitting] = useState(false);
 
+    const [showVehicleModal, setShowVehicleModal] = useState(false);
+    const [vehicleForm, setVehicleForm] = useState({
+        licensePlate: "",
+        make: "",
+        model: "",
+        milage: 0,
+        nextMaintenance: ""
+    });
+
     useEffect(() => {
         fetchData();
     }, []);
@@ -99,6 +108,21 @@ export default function AdminRentalsPage() {
             fetchData();
         } catch (e: any) {
             alert(e.response?.data?.error || "Fehler beim Erstellen der Miete");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleCreateVehicle = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            await api.post("/vehicles", vehicleForm);
+            setShowVehicleModal(false);
+            setVehicleForm({ licensePlate: "", make: "", model: "", milage: 0, nextMaintenance: "" });
+            fetchData();
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Fehler beim Erstellen des Fahrzeugs");
         } finally {
             setSubmitting(false);
         }
@@ -162,13 +186,22 @@ export default function AdminRentalsPage() {
                     <h1 className="text-5xl font-black text-slate-900 tracking-tight">Rent-a-Car System</h1>
                     <p className="text-slate-500 font-medium">Fuhrparkmanagement und driver-interne Fahrzeugvermietung.</p>
                 </div>
-                <button 
-                    onClick={() => setShowRentModal(true)}
-                    className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-200 flex items-center gap-3"
-                >
-                    <Plus size={18} />
-                    Auto vermieten
-                </button>
+                <div className="flex gap-4">
+                    <button 
+                        onClick={() => setShowVehicleModal(true)}
+                        className="px-8 py-4 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition flex items-center gap-3"
+                    >
+                        <Car size={18} />
+                        Neues Fahrzeug
+                    </button>
+                    <button 
+                        onClick={() => setShowRentModal(true)}
+                        className="px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-xl shadow-slate-200 flex items-center gap-3"
+                    >
+                        <Plus size={18} />
+                        Auto vermieten
+                    </button>
+                </div>
             </header>
 
             {/* Navigation Tabs */}
@@ -417,6 +450,100 @@ export default function AdminRentalsPage() {
                                         >
                                             {submitting ? <Loader2 className="animate-spin" size={20} /> : <Key size={20} />}
                                             Mietvertrag aktivieren
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Vehicle Creation Modal */}
+            <AnimatePresence>
+                {showVehicleModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" 
+                            onClick={() => setShowVehicleModal(false)}
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative z-10 overflow-hidden"
+                        >
+                            <div className="p-10 space-y-8">
+                                <div className="flex justify-between items-center">
+                                    <h2 className="text-3xl font-black text-slate-900 tracking-tight">Neues Fahrzeug</h2>
+                                    <button onClick={() => setShowVehicleModal(false)} className="p-3 bg-slate-50 rounded-2xl text-slate-400 hover:bg-slate-100 transition"><X size={24} /></button>
+                                </div>
+
+                                <form onSubmit={handleCreateVehicle} className="grid grid-cols-2 gap-8">
+                                    <div className="col-span-2">
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Kennzeichen (License Plate) *</label>
+                                        <input 
+                                            required
+                                            placeholder="W-12345X"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-black text-slate-900 uppercase"
+                                            value={vehicleForm.licensePlate}
+                                            onChange={e => setVehicleForm({...vehicleForm, licensePlate: e.target.value.toUpperCase()})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Marke *</label>
+                                        <input 
+                                            required
+                                            placeholder="Toyota, VW, etc."
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-bold"
+                                            value={vehicleForm.make}
+                                            onChange={e => setVehicleForm({...vehicleForm, make: e.target.value})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Modell *</label>
+                                        <input 
+                                            required
+                                            placeholder="Corolla, Golf, etc."
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-bold"
+                                            value={vehicleForm.model}
+                                            onChange={e => setVehicleForm({...vehicleForm, model: e.target.value})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Kilometerstand *</label>
+                                        <input 
+                                            type="number"
+                                            required
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-black text-blue-600"
+                                            value={vehicleForm.milage}
+                                            onChange={e => setVehicleForm({...vehicleForm, milage: parseInt(e.target.value) || 0})}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Nächste Wartung (Optional)</label>
+                                        <input 
+                                            type="date"
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-bold text-slate-900"
+                                            value={vehicleForm.nextMaintenance}
+                                            onChange={e => setVehicleForm({...vehicleForm, nextMaintenance: e.target.value})}
+                                        />
+                                    </div>
+
+                                    <div className="col-span-2 pt-6">
+                                        <button 
+                                            disabled={submitting}
+                                            className="w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-widest hover:bg-black transition shadow-2xl shadow-slate-200 flex items-center justify-center gap-3"
+                                        >
+                                            {submitting ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+                                            Fahrzeug speichern
                                         </button>
                                     </div>
                                 </form>
