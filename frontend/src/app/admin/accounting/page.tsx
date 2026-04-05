@@ -14,6 +14,8 @@ import {
     Printer,
     Loader2,
     X,
+    Euro,
+    Banknote
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -66,8 +68,6 @@ export default function AccountingPage() {
         }
     };
 
-    // Create logic moved to editor page
-
     const handleUpdateStatus = async (id: string, currentStatus: string) => {
         const nextStatus = currentStatus === "PAID" ? "PENDING" : "PAID";
         try {
@@ -83,7 +83,6 @@ export default function AccountingPage() {
 
     return (
         <div className="space-y-12">
-            {/* Header */}
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">Buchhaltung & Finanzen</h1>
@@ -98,35 +97,25 @@ export default function AccountingPage() {
                 </Link>
             </header>
 
-            {/* Finance Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {[
-                    { label: "Bezahlter Gesamtumsatz", value: `€${totalRevenue.toLocaleString()}`, trend: "Laufendes Jahr", color: "blue", up: null },
-                    { label: "Ausstehende Zahlungen", value: `€${pendingAmount.toLocaleString()}`, trend: `${invoices.filter(i => i.status === 'PENDING').length} Rechnungen`, color: "slate", icon: Clock },
-                    { label: "Rechnungen Gesamt", value: invoices.length.toString(), trend: "Aktueller Stand", color: "indigo", up: null },
+                    { label: "Bezahlter Gesamtumsatz", value: `€${totalRevenue.toLocaleString()}`, trend: "Laufendes Jahr", up: null },
+                    { label: "Ausstehende Zahlungen", value: `€${pendingAmount.toLocaleString()}`, trend: `${invoices.filter(i => i.status === 'PENDING').length} Rechnungen`, up: null },
+                    { label: "Rechnungen Gesamt", value: invoices.length.toString(), trend: "Aktueller Stand", up: null },
                 ].map((stat, i) => (
-                    <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm transition hover:shadow-lg">
+                    <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
                         <div className="flex justify-between items-start mb-4">
                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                            {stat.up !== null && (
-                                <div className={cn(
-                                    "flex items-center gap-1 text-[10px] font-black px-2 py-1 rounded-full",
-                                    stat.up === true ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"
-                                )}>
-                                    {stat.up === true ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                                    {stat.trend}
-                                </div>
-                            )}
                         </div>
                         <h3 className="text-3xl font-black text-slate-900">{stat.value}</h3>
+                        <p className="text-[10px] font-bold text-slate-400 mt-2">{stat.trend}</p>
                     </div>
                 ))}
             </div>
 
-            {/* Invoices Table */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
                 <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                    <h3 className="text-xl font-black text-slate-900">Letzte Abrechnungen</h3>
+                    <h3 className="text-xl font-black text-slate-900">Letzte Abrechnungen (Manuell)</h3>
                     <Receipt className="text-slate-200" size={32} />
                 </div>
                 <div className="overflow-x-auto">
@@ -135,7 +124,7 @@ export default function AccountingPage() {
                             <tr className="bg-slate-50/50">
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Nr.</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fahrer</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Zeitraum/Datum</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Zeitraum</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Betrag</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Aktionen</th>
@@ -143,54 +132,24 @@ export default function AccountingPage() {
                         </thead>
                         <tbody className="divide-y divide-slate-50">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={6} className="py-20 text-center">
-                                        <Loader2 className="animate-spin text-blue-500 mx-auto" size={40} />
-                                    </td>
-                                </tr>
+                                <tr><td colSpan={6} className="py-10 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>
                             ) : invoices.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="py-20 text-center text-slate-500 font-bold uppercase tracking-widest">
-                                        Keine Rechnungen gefunden
-                                    </td>
-                                </tr>
-                            ) : invoices.map((inv, i) => (
-                                <tr key={inv.id} className="hover:bg-slate-50/50 transition">
+                                <tr><td colSpan={6} className="py-10 text-center text-slate-400">Keine Rechnungen</td></tr>
+                            ) : invoices.map((inv) => (
+                                <tr key={inv.id} className="hover:bg-slate-50/50">
+                                    <td className="px-8 py-6 font-bold">{inv.invoiceNumber || inv.id.slice(0,8)}</td>
+                                    <td className="px-8 py-6 font-bold">{inv.driver?.firstName} {inv.driver?.lastName}</td>
+                                    <td className="px-8 py-6 text-sm">{inv.period}</td>
+                                    <td className="px-8 py-6 font-black">€{inv.amount.toFixed(2)}</td>
                                     <td className="px-8 py-6">
-                                        <span className="font-bold text-slate-900">{inv.invoiceNumber || inv.id.slice(0, 8)}</span>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <span className="font-bold text-slate-700">{inv.driver?.firstName} {inv.driver?.lastName}</span>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="text-sm font-bold text-slate-900">{inv.period}</div>
-                                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
-                                            {new Date(inv.createdAt).toLocaleDateString('de-DE')}
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <span className="font-black text-slate-900">€{inv.amount.toLocaleString('de-DE', { minimumFractionDigits: 2 })}</span>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <button
-                                            onClick={() => handleUpdateStatus(inv.id, inv.status)}
-                                            className={cn(
-                                                "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition hover:scale-105 active:scale-95",
-                                                inv.status === "PAID" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600"
-                                            )}
-                                        >
-                                            {inv.status === "PAID" ? <CheckCircle size={14} /> : <Clock size={14} />}
+                                        <button onClick={() => handleUpdateStatus(inv.id, inv.status)} className={cn("px-3 py-1 rounded-xl text-[10px] font-black uppercase", inv.status === "PAID" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600")}>
                                             {inv.status}
                                         </button>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <div className="flex items-center gap-2">
-                                            <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Drucken">
-                                                <Printer size={18} />
-                                            </button>
-                                            <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Download">
-                                                <Download size={18} />
-                                            </button>
+                                        <div className="flex gap-2">
+                                            <Printer size={18} className="text-slate-300" />
+                                            <Download size={18} className="text-slate-300" />
                                         </div>
                                     </td>
                                 </tr>
@@ -300,8 +259,6 @@ export default function AccountingPage() {
                     </table>
                 </div>
             </div>
-
-            {/* Create Invoice Modal removed */}
         </div>
     );
 }
