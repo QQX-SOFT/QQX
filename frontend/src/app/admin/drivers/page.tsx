@@ -300,10 +300,10 @@ export default function DriversPage() {
                                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Vertrag & Modell</p>
                                         <div className="flex flex-col gap-1">
                                             <span className="font-black text-[10px] text-blue-600 uppercase tracking-tighter">
-                                                {driver.employmentType || (driver.type === "COMMERCIAL" ? "Gewerbe" : driver.type === "FREELANCE" ? "Freier DN" : "Dienstnehmer")}
+                                                {driver.type === "COMMERCIAL" ? "SFU (Gewerbe)" : driver.type === "FREELANCE" ? "Freier DN" : "Echter DN"}
                                             </span>
                                             <span className="font-bold text-[9px] text-slate-400 uppercase italic">
-                                                {driver.employmentModel || "Nicht angegeben"}
+                                                {driver.employmentModel || "Standard"}
                                             </span>
                                         </div>
                                     </div>
@@ -427,8 +427,8 @@ export default function DriversPage() {
                             </button>
 
                             <div className="mb-10">
-                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-3 block italic">Advanced Search</span>
-                                <h2 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase">Filters</h2>
+                                <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.4em] mb-3 block italic">Erweiterte Suche</span>
+                                <h2 className="text-5xl font-black text-slate-900 tracking-tighter italic uppercase">Filter</h2>
                             </div>
 
                             <div className="flex-1 overflow-y-auto pr-6 custom-scrollbar grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -528,13 +528,13 @@ export default function DriversPage() {
                                     }}
                                     className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-500 transition-colors"
                                 >
-                                    Filtreleri Sıfırla
+                                    Filter zurücksetzen
                                 </button>
                                 <button 
                                     onClick={() => setShowFiltersModal(false)}
                                     className="px-12 py-5 bg-slate-900 text-white rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] hover:bg-black transition-all shadow-2xl active:scale-95"
                                 >
-                                    Sonuçları Göster
+                                    Ergebnisse anzeigen
                                 </button>
                             </div>
                         </motion.div>

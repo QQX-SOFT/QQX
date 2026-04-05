@@ -51,8 +51,9 @@ const parseAddress = (addrFull: string) => {
 
 const mapEmploymentType = (type: string): DriverType => {
     if (!type) return 'EMPLOYED';
-    if (type.toLowerCase().includes('selbstständig') || type.toLowerCase().includes('freier')) return 'FREELANCE';
-    if (type.toLowerCase().includes('gewerbe')) return 'COMMERCIAL';
+    const t = type.toLowerCase();
+    if (t.includes('gewerbe') || t.includes('selbstständ') || t.includes('sfu')) return 'COMMERCIAL';
+    if (t.includes('frei')) return 'FREELANCE';
     return 'EMPLOYED';
 };
 
@@ -115,7 +116,7 @@ async function main() {
                 hourlyWage: parseFloat((row['Stundenlohn'] || '0').replace(',', '.')),
                 payPerKm: parseFloat((row['KM Geld'] || '0').replace(',', '.')),
                 gisaNumber: row['GISA-Zahl'] || null,
-                type: mapEmploymentType(row['Beschäftigungs modell'] || row['Beschäftigungsart'] || '')
+                type: mapEmploymentType(row['Beschäftigungsart'] || row['Beschäftigungs modell'] || '')
             });
         })
         .on('end', async () => {
