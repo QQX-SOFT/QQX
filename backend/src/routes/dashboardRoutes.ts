@@ -259,7 +259,7 @@ router.get('/activities', async (req: TenantRequest, res: Response) => {
             return {
                 id: driver.id,
                 title: `${driver.firstName} ${driver.lastName}`,
-                desc: `${isVisa ? 'Visum' : 'Arbeitspapiere'} läuft ${daysLeft < 0 ? 'abgelaufen!' : `in ${daysLeft} Tagen ab`}`,
+                desc: `${isVisa ? 'Visum' : 'Arbeitspapiere'} ${daysLeft < 0 ? 'Abgelaufen!' : `läuft in ${daysLeft} Tagen ab`}`,
                 type: daysLeft < 0 ? "alert" : (daysLeft < 7 ? "alert" : "notif"),
                 date: closestExp
             };
