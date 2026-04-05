@@ -24,6 +24,7 @@ const driverSchema = z.object({
     password: z.string().optional().nullable(),
     gisaNumber: z.string().optional().nullable(),
     driverNumber: z.string().optional().nullable(),
+    workStyle: z.string().optional().nullable(),
 });
 
 // GET all drivers
@@ -183,6 +184,7 @@ router.post('/', async (req: TenantRequest, res: Response) => {
                 gisaNumber: validatedData.gisaNumber,
                 driverNumber: validatedData.driverNumber,
                 isKleinunternehmer: validatedData.isKleinunternehmer || false,
+                workStyle: validatedData.workStyle,
                 tenantId: tenantId as string,
                 userId: user.id
             },
@@ -210,7 +212,7 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
 
     try {
         const validatedData = driverSchema.partial().parse(req.body);
-        const { password, email, employmentType, gisaNumber, driverNumber, ...driverData } = validatedData;
+        const { password, email, employmentType, gisaNumber, driverNumber, workStyle, ...driverData } = validatedData;
 
         const driver = await prisma.driver.findFirst({
             where: { id, tenantId: tenantId as string },
@@ -232,6 +234,7 @@ router.patch('/:id', async (req: TenantRequest, res: Response) => {
                 type: prismaType,
                 gisaNumber: gisaNumber,
                 driverNumber: driverNumber,
+                workStyle: workStyle,
             }
         });
 

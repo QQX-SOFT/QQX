@@ -44,11 +44,11 @@ function DriverEditorForm() {
         isKleinunternehmer: false,
         password: "",
         gisaNumber: "",
-        preferredAreaId: "",
-        driverNumber: ""
+        driverNumber: "",
+        workStyle: "PER_ORDER_550"
     });
 
-    const [areas, setAreas] = useState<any[]>([]);
+
 
     const [checkingVat, setCheckingVat] = useState(false);
     const [vatResult, setVatResult] = useState<{ valid: boolean; name?: string; address?: string } | null>(null);
@@ -106,7 +106,7 @@ function DriverEditorForm() {
             "Lichtbildausweis/Reisepass",
             "Führerschein (Klasse B)",
             "Meldezettel",
-            "ÖGK Anmeldung"
+            "E-Card Kopie"
         ],
         FREIER_DIENSTNEHMER: [
             "Lichtbildausweis/Reisepass",
@@ -155,18 +155,7 @@ function DriverEditorForm() {
             }));
         }
     };
-
     useEffect(() => {
-        const fetchAreas = async () => {
-            try {
-                const { data } = await api.get("/shifts/areas");
-                setAreas(data);
-            } catch (e) {
-                console.error("Failed to fetch areas", e);
-            }
-        };
-        fetchAreas();
-
         if (id) {
             fetchDriver(id);
         }
@@ -197,8 +186,8 @@ function DriverEditorForm() {
                 isKleinunternehmer: data.isKleinunternehmer || false,
                 password: "",
                 gisaNumber: data.gisaNumber || "",
-                preferredAreaId: data.preferredAreaId || "",
-                driverNumber: data.driverNumber || ""
+                driverNumber: data.driverNumber || "",
+                workStyle: data.workStyle || "PER_ORDER_550"
             });
 
             // Set formatted IBAN
@@ -447,21 +436,43 @@ function DriverEditorForm() {
                         )}
                     </div>
 
-                    {/* Operational Area */}
+                    {/* Arbeitsstil / Bezahlung */}
                     <div className="space-y-6">
-                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Einsatzgebiet</h3>
-                        <div>
-                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Zugewiesenes Gebiet (z.B. Dornbirn, Bregenz)</label>
-                            <select 
-                                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold"
-                                value={formData.preferredAreaId}
-                                onChange={e => setFormData({ ...formData, preferredAreaId: e.target.value })}
-                            >
-                                <option value="">Alle Gebiete</option>
-                                {areas.map(area => (
-                                    <option key={area.id} value={area.id}>{area.name}</option>
-                                ))}
-                            </select>
+                        <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Arbeitsstil (Bezahlung)</h3>
+                        <div className="space-y-4">
+                            <label className={cn(
+                                "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer hover:bg-slate-50",
+                                formData.workStyle === "PER_ORDER_550" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
+                            )}>
+                                <input 
+                                    type="radio" 
+                                    name="workStyle" 
+                                    className="w-5 h-5 accent-blue-600"
+                                    checked={formData.workStyle === "PER_ORDER_550"}
+                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_550" })}
+                                />
+                                <div className="space-y-0.5">
+                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option A: 5,50 € / Bestellung</p>
+                                    <p className="text-[10px] text-slate-500 font-medium tracking-tight">Pauschalbetrag pro erfolgreicher Zustellung</p>
+                                </div>
+                            </label>
+
+                            <label className={cn(
+                                "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer hover:bg-slate-50",
+                                formData.workStyle === "PER_ORDER_400_KM_030" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
+                            )}>
+                                <input 
+                                    type="radio" 
+                                    name="workStyle" 
+                                    className="w-5 h-5 accent-blue-600"
+                                    checked={formData.workStyle === "PER_ORDER_400_KM_030"}
+                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_400_KM_030" })}
+                                />
+                                <div className="space-y-0.5">
+                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option B: 4,00 € / Bestellung + 0,30 € / km</p>
+                                    <p className="text-[10px] text-slate-500 font-medium tracking-tight">Kombinierte Bezahlung nach Volumen und Distanz</p>
+                                </div>
+                            </label>
                         </div>
                     </div>
 

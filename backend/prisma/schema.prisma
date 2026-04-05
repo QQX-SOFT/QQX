@@ -128,6 +128,7 @@ model Driver {
   type          DriverType @default(EMPLOYED) // Angestellt / Selbstständig
   isKleinunternehmer Boolean @default(false)
   status        DriverStatus @default(INACTIVE)
+  workStyle     String?   // PER_ORDER_550 or PER_ORDER_400_KM_030
   
   walletBalance Float @default(0.0)
 

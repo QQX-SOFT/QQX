@@ -45,6 +45,7 @@ interface Driver {
     };
     status: string;
     driverNumber: string | null;
+    workStyle: string | null;
 }
 
 interface Document {
