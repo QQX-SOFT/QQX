@@ -218,6 +218,7 @@ model Vehicle {
   nextMaintenance DateTime?
   availableFrom   DateTime? // Estimated return from repair
   status          VehicleStatus @default(AVAILABLE)
+  dailyRate       Float    @default(35.0)
   rentals         Rental[]
 
   createdAt       DateTime @default(now())

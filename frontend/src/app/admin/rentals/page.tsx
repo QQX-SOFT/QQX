@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     Key,
     Car,
@@ -18,12 +18,14 @@ import {
     X,
     Euro,
     AlertTriangle,
-    Check
+    Check,
+    ChevronLeft,
+    Layers
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { de } from "date-fns/locale";
 
 type Vehicle = {
@@ -32,6 +34,7 @@ type Vehicle = {
     model: string;
     licensePlate: string;
     milage: number;
+    dailyRate: number;
     status: "AVAILABLE" | "IN_USE" | "MAINTENANCE" | "SERVICE";
     nextMaintenance: string | null;
     availableFrom: string | null;
@@ -55,8 +58,17 @@ export default function AdminRentalsPage() {
     const [rentals, setRentals] = useState<Rental[]>([]);
     const [drivers, setDrivers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"ACTIVE" | "VEHICLES" | "HISTORY">("ACTIVE");
+    const [activeTab, setActiveTab] = useState<"ACTIVE" | "VEHICLES" | "CALENDAR" | "HISTORY">("ACTIVE");
     
+    // Calendar state
+    const [viewDate, setViewDate] = useState(new Date());
+    const daysInMonth = useMemo(() => {
+        return eachDayOfInterval({
+            start: startOfMonth(viewDate),
+            end: endOfMonth(viewDate)
+        });
+    }, [viewDate]);
+
     const [showRentModal, setShowRentModal] = useState(false);
     const [rentForm, setRentForm] = useState({
         vehicleId: "",
@@ -66,7 +78,6 @@ export default function AdminRentalsPage() {
         dailyRate: 35,
         notes: ""
     });
-    const [submitting, setSubmitting] = useState(false);
 
     const [showVehicleModal, setShowVehicleModal] = useState(false);
     const [vehicleForm, setVehicleForm] = useState({
@@ -74,8 +85,17 @@ export default function AdminRentalsPage() {
         make: "",
         model: "",
         milage: 0,
+        dailyRate: 35,
         nextMaintenance: ""
     });
+
+    const [showStatusModal, setShowStatusModal] = useState<string | null>(null);
+    const [statusForm, setStatusForm] = useState({
+        status: "AVAILABLE",
+        availableFrom: ""
+    });
+
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -119,7 +139,7 @@ export default function AdminRentalsPage() {
         try {
             await api.post("/vehicles", vehicleForm);
             setShowVehicleModal(false);
-            setVehicleForm({ licensePlate: "", make: "", model: "", milage: 0, nextMaintenance: "" });
+            setVehicleForm({ licensePlate: "", make: "", model: "", milage: 0, dailyRate: 35, nextMaintenance: "" });
             fetchData();
         } catch (e: any) {
             alert(e.response?.data?.error || "Fehler beim Erstellen des Fahrzeugs");
@@ -138,21 +158,6 @@ export default function AdminRentalsPage() {
         }
     };
 
-    const statusLabels: Record<string, { label: string; color: string; icon: any }> = {
-        AVAILABLE: { label: "Verfügbar", color: "bg-green-50 text-green-600 border-green-100", icon: CheckCircle2 },
-        IN_USE: { label: "Vermietet", color: "bg-blue-50 text-blue-600 border-blue-100", icon: Car },
-        MAINTENANCE: { label: "In Reparatur", color: "bg-red-50 text-red-600 border-red-100", icon: AlertTriangle },
-        SERVICE: { label: "Service", color: "bg-amber-50 text-amber-600 border-amber-100", icon: Clock },
-        ACTIVE: { label: "Aktiv", color: "bg-green-50 text-green-600 border-green-100", icon: Check },
-        COMPLETED: { label: "Abgeschlossen", color: "bg-slate-50 text-slate-400 border-slate-100", icon: XCircle },
-    };
-
-    const [showStatusModal, setShowStatusModal] = useState<string | null>(null);
-    const [statusForm, setStatusForm] = useState({
-        status: "AVAILABLE",
-        availableFrom: ""
-    });
-
     const handleUpdateStatus = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!showStatusModal) return;
@@ -168,7 +173,15 @@ export default function AdminRentalsPage() {
         }
     };
 
-    const filteredVehicles = vehicles;
+    const statusLabels: Record<string, { label: string; color: string; icon: any }> = {
+        AVAILABLE: { label: "Verfügbar", color: "bg-green-50 text-green-600 border-green-100", icon: CheckCircle2 },
+        IN_USE: { label: "Vermietet", color: "bg-blue-50 text-blue-600 border-blue-100", icon: Car },
+        MAINTENANCE: { label: "In Reparatur", color: "bg-red-50 text-red-600 border-red-100", icon: AlertTriangle },
+        SERVICE: { label: "Service", color: "bg-amber-50 text-amber-600 border-amber-100", icon: Clock },
+        ACTIVE: { label: "Aktiv", color: "bg-green-50 text-green-600 border-green-100", icon: Check },
+        COMPLETED: { label: "Abgeschlossen", color: "bg-slate-50 text-slate-400 border-slate-100", icon: XCircle },
+    };
+
     const activeRentals = rentals.filter(r => r.status === "ACTIVE");
     const historyRentals = rentals.filter(r => r.status !== "ACTIVE");
 
@@ -205,10 +218,11 @@ export default function AdminRentalsPage() {
             </header>
 
             {/* Navigation Tabs */}
-            <div className="flex gap-2 p-1 bg-slate-100 rounded-[2rem] w-full max-w-xl">
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-[2rem] w-full max-w-2xl">
                 {[
                     { id: "ACTIVE", label: "Aktive Mieten", count: activeRentals.length },
                     { id: "VEHICLES", label: "Fuhrpark", count: vehicles.length },
+                    { id: "CALENDAR", label: "Takvim (Belegung)", count: 0 },
                     { id: "HISTORY", label: "Historie", count: historyRentals.length }
                 ].map((tab) => (
                     <button
@@ -295,7 +309,13 @@ export default function AdminRentalsPage() {
                                                 </div>
                                             </div>
                                             <div className="space-y-4">
-                                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">{v.make} {v.model}</h3>
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="text-2xl font-black text-slate-900 tracking-tight">{v.make} {v.model}</h3>
+                                                    <div className="text-right">
+                                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Tagessatz</span>
+                                                        <span className="text-md font-black text-blue-600">€{v.dailyRate}</span>
+                                                    </div>
+                                                </div>
                                                 <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                                                     <span className="text-slate-900 px-3 py-1 bg-slate-100 rounded-lg">{v.licensePlate}</span>
                                                     <span>{v.milage.toLocaleString('de-DE')} km</span>
@@ -322,6 +342,88 @@ export default function AdminRentalsPage() {
                                         </div>
                                     );
                                 })}
+                            </div>
+                        )}
+
+                        {activeTab === "CALENDAR" && (
+                            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+                                {/* Calendar Header */}
+                                <div className="flex items-center justify-between p-8 border-b border-slate-50 bg-slate-50/30">
+                                    <div className="flex items-center gap-4">
+                                        <button onClick={() => setViewDate(subMonths(viewDate, 1))} className="p-3 bg-white rounded-2xl text-slate-400 hover:text-blue-600 shadow-sm"><ChevronLeft size={20} /></button>
+                                        <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight w-48 text-center">{format(viewDate, "MMMM yyyy", { locale: de })}</h2>
+                                        <button onClick={() => setViewDate(addMonths(viewDate, 1))} className="p-3 bg-white rounded-2xl text-slate-400 hover:text-blue-600 shadow-sm"><ChevronRight size={20} /></button>
+                                    </div>
+                                    <div className="flex gap-6">
+                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            <div className="w-3 h-3 bg-blue-600 rounded-full" /> Mietvertrag
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                            <div className="w-3 h-3 bg-red-500 rounded-full" /> Reparatur
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Calendar Grid */}
+                                <div className="overflow-x-auto">
+                                    <div className="min-w-[1200px]">
+                                        <div className="grid border-b border-slate-100" style={{ gridTemplateColumns: `250px repeat(${daysInMonth.length}, 1fr)` }}>
+                                            <div className="p-6 text-[10px] font-black text-slate-300 uppercase tracking-widest border-r border-slate-50 flex items-center gap-3">
+                                                <Layers size={14} /> Fuhrpark
+                                            </div>
+                                            {daysInMonth.map(day => (
+                                                <div key={day.toISOString()} className={cn(
+                                                    "p-6 text-center text-[10px] font-black uppercase border-r border-slate-50 last:border-0",
+                                                    (day.getDay() === 0 || day.getDay() === 6) ? "bg-slate-50 text-slate-400" : "text-slate-500"
+                                                )}>
+                                                    {format(day, "d")}
+                                                    <div className="opacity-40">{format(day, "EE", { locale: de })}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {vehicles.map(v => (
+                                            <div key={v.id} className="grid border-b border-slate-100 hover:bg-slate-50/50 transition-colors" style={{ gridTemplateColumns: `250px repeat(${daysInMonth.length}, 1fr)` }}>
+                                                <div className="p-6 border-r border-slate-50">
+                                                    <h4 className="text-xs font-black text-slate-800 uppercase tracking-tight">{v.make} {v.model}</h4>
+                                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{v.licensePlate}</p>
+                                                </div>
+                                                {daysInMonth.map(day => {
+                                                    // Find if there is a rental or maintenance for this day
+                                                    const rental = rentals.find(r => 
+                                                        r.vehicle.id === v.id && 
+                                                        r.status === "ACTIVE" &&
+                                                        isWithinInterval(startOfDay(day), { 
+                                                            start: startOfDay(new Date(r.startDate)), 
+                                                            end: endOfDay(new Date(r.expectedEndDate || Date.now() + 8640000000000)) 
+                                                        })
+                                                    );
+
+                                                    const isRepair = v.status === "MAINTENANCE" && v.availableFrom && 
+                                                                    isWithinInterval(startOfDay(day), {
+                                                                        start: startOfDay(new Date()),
+                                                                        end: endOfDay(new Date(v.availableFrom))
+                                                                    });
+
+                                                    return (
+                                                        <div key={day.toISOString()} className="h-20 border-r border-slate-50 last:border-0 relative flex items-center justify-center">
+                                                            {rental && (
+                                                                <div className="absolute inset-y-4 inset-x-0 bg-blue-600 rounded-sm shadow-lg shadow-blue-200/50 z-10 flex items-center justify-center overflow-hidden">
+                                                                    <div className="text-[7px] text-white font-black rotate-90">{rental.driver.firstName[0]}{rental.driver.lastName[0]}</div>
+                                                                </div>
+                                                            )}
+                                                            {isRepair && (
+                                                                <div className="absolute inset-y-4 inset-x-0 bg-red-500 rounded-sm shadow-lg shadow-red-200/50 z-10 flex items-center justify-center">
+                                                                    <Clock size={12} className="text-white" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         )}
 
@@ -394,11 +496,14 @@ export default function AdminRentalsPage() {
                                             required
                                             className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-bold text-slate-900 appearance-none"
                                             value={rentForm.vehicleId}
-                                            onChange={e => setRentForm({...rentForm, vehicleId: e.target.value})}
+                                            onChange={e => {
+                                                const v = vehicles.find(v => v.id === e.target.value);
+                                                setRentForm({...rentForm, vehicleId: e.target.value, dailyRate: v?.dailyRate || 35});
+                                            }}
                                         >
                                             <option value="">Fahrzeug auswählen...</option>
                                             {vehicles.filter(v => v.status === "AVAILABLE").map(v => (
-                                                <option key={v.id} value={v.id}>{v.make} {v.model} ({v.licensePlate})</option>
+                                                <option key={v.id} value={v.id}>{v.make} {v.model} ({v.licensePlate}) - €{v.dailyRate}/Tag</option>
                                             ))}
                                         </select>
                                     </div>
@@ -528,6 +633,17 @@ export default function AdminRentalsPage() {
                                     </div>
 
                                     <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Standard-Tagessatz (€)</label>
+                                        <input 
+                                            type="number"
+                                            required
+                                            className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-black text-blue-600"
+                                            value={vehicleForm.dailyRate}
+                                            onChange={e => setVehicleForm({...vehicleForm, dailyRate: parseFloat(e.target.value) || 0})}
+                                        />
+                                    </div>
+
+                                    <div className="col-span-2">
                                         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Nächste Wartung (Optional)</label>
                                         <input 
                                             type="date"
