@@ -45,7 +45,9 @@ function DriverEditorForm() {
         password: "",
         gisaNumber: "",
         driverNumber: "",
-        workStyle: "PER_ORDER_550"
+        workStyle: "PER_ORDER_CUSTOM",
+        payPerOrder: 5.5,
+        payPerKm: 0.3
     });
 
 
@@ -187,7 +189,9 @@ function DriverEditorForm() {
                 password: "",
                 gisaNumber: data.gisaNumber || "",
                 driverNumber: data.driverNumber || "",
-                workStyle: data.workStyle || "PER_ORDER_550"
+                workStyle: data.workStyle || "PER_ORDER_CUSTOM",
+                payPerOrder: data.payPerOrder ?? 5.5,
+                payPerKm: data.payPerKm ?? 0.3
             });
 
             // Set formatted IBAN
@@ -442,35 +446,68 @@ function DriverEditorForm() {
                         <div className="space-y-4">
                             <label className={cn(
                                 "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer hover:bg-slate-50",
-                                formData.workStyle === "PER_ORDER_550" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
+                                formData.workStyle === "PER_ORDER_CUSTOM" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
                             )}>
                                 <input 
                                     type="radio" 
                                     name="workStyle" 
                                     className="w-5 h-5 accent-blue-600"
-                                    checked={formData.workStyle === "PER_ORDER_550"}
-                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_550" })}
+                                    checked={formData.workStyle === "PER_ORDER_CUSTOM"}
+                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_CUSTOM" })}
                                 />
-                                <div className="space-y-0.5">
-                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option A: 5,50 € / Bestellung</p>
-                                    <p className="text-[10px] text-slate-500 font-medium tracking-tight">Pauschalbetrag pro erfolgreicher Zustellung</p>
+                                <div className="flex-1 space-y-2">
+                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option A: Pauschal pro Bestellung</p>
+                                    <div className="flex items-center gap-2">
+                                        <input 
+                                            type="number" 
+                                            step="0.01"
+                                            className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-blue-600"
+                                            value={formData.payPerOrder}
+                                            onChange={e => setFormData({...formData, payPerOrder: parseFloat(e.target.value) || 0})}
+                                            onClick={e => e.stopPropagation()}
+                                        />
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase">€ pro Bestellung</span>
+                                    </div>
                                 </div>
                             </label>
 
                             <label className={cn(
                                 "flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer hover:bg-slate-50",
-                                formData.workStyle === "PER_ORDER_400_KM_030" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
+                                formData.workStyle === "PER_ORDER_KM_CUSTOM" ? "border-blue-600 bg-blue-50/30" : "border-slate-100 dark:border-slate-800"
                             )}>
                                 <input 
                                     type="radio" 
                                     name="workStyle" 
                                     className="w-5 h-5 accent-blue-600"
-                                    checked={formData.workStyle === "PER_ORDER_400_KM_030"}
-                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_400_KM_030" })}
+                                    checked={formData.workStyle === "PER_ORDER_KM_CUSTOM"}
+                                    onChange={() => setFormData({ ...formData, workStyle: "PER_ORDER_KM_CUSTOM" })}
                                 />
-                                <div className="space-y-0.5">
-                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option B: 4,00 € / Bestellung + 0,30 € / km</p>
-                                    <p className="text-[10px] text-slate-500 font-medium tracking-tight">Kombinierte Bezahlung nach Volumen und Distanz</p>
+                                <div className="flex-1 space-y-3">
+                                    <p className="text-[11px] font-black text-slate-900 uppercase">Option B: Bestellung + Kilometer</p>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="number" 
+                                                step="0.01"
+                                                className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-blue-600"
+                                                value={formData.payPerOrder}
+                                                onChange={e => setFormData({...formData, payPerOrder: parseFloat(e.target.value) || 0})}
+                                                onClick={e => e.stopPropagation()}
+                                            />
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase">€ / Best.</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <input 
+                                                type="number" 
+                                                step="0.01"
+                                                className="w-20 bg-white border border-slate-200 rounded-lg px-2 py-1 font-bold text-blue-600"
+                                                value={formData.payPerKm}
+                                                onChange={e => setFormData({...formData, payPerKm: parseFloat(e.target.value) || 0})}
+                                                onClick={e => e.stopPropagation()}
+                                            />
+                                            <span className="text-[10px] font-bold text-slate-500 uppercase">€ / km</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </label>
                         </div>
