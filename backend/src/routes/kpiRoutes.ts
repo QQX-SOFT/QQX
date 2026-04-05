@@ -98,6 +98,7 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
 
                 const delivered = safeInt(
                     normalizedRow['actual_delivered_orders'] || 
+                    normalizedRow['completed_orders'] || 
                     normalizedRow['delivered_orders'] || 
                     normalizedRow['orders'] || 
                     normalizedRow['zustellungen'] || 
@@ -194,7 +195,7 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                 recordCount++;
             } catch (rowError) {
                 console.error(`[KPI-Upload] Error in row ${i + 1}:`, rowError);
-                throw new Error(`Excell tablosundaki ${i + 1}. satırda hata oluştu: ${(rowError as Error).message}`);
+                throw new Error(`Fehler in Zeile ${i + 1} der Excel-Datei: ${(rowError as Error).message}`);
             }
         }
 

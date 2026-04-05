@@ -27,6 +27,25 @@ export default function AdminKpiPage() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [selectedWeek, setSelectedWeek] = useState<string>("");
+    const [visibleColumns, setVisibleColumns] = useState<string[]>(["riderId", "riderName", "cityName", "dateLocal", "deliveredOrders", "hoursWorked"]);
+
+    const allColumnOptions = [
+        { id: "riderId", label: "Rider ID" },
+        { id: "riderName", label: "Name" },
+        { id: "cityName", label: "Stadt" },
+        { id: "dateLocal", label: "Datum" },
+        { id: "deliveredOrders", label: "Best." },
+        { id: "hoursWorked", label: "Stunden" },
+        { id: "utr", label: "UTR" },
+        { id: "acceptanceRate", label: "Akzeptanz" },
+        { id: "avgDeliveryTime", label: "Lief. Zeit" }
+    ];
+
+    const toggleColumn = (id: string) => {
+        setVisibleColumns(prev => 
+            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+        );
+    };
 
     const fetchKpis = async () => {
         try {
@@ -72,12 +91,12 @@ export default function AdminKpiPage() {
     };
 
     const handleDeleteUpload = async (id: string) => {
-        if (!confirm("Bu upload'u ve bu upload ile gelen TÜM verileri silmek istediğinize emin misiniz?")) return;
+        if (!confirm("Möchten Sie diesen Upload und ALLE damit verbundenen Daten wirklich löschen?")) return;
         try {
             await api.delete(`/kpis/uploads/${id}`);
             fetchKpis();
         } catch (e) {
-            alert("Silme işlemi başarısız.");
+            alert("Löschvorgang fehlgeschlagen.");
         }
     };
     const totalOrders = kpis.reduce((acc, curr) => acc + curr.deliveredOrders, 0);
@@ -163,60 +182,91 @@ export default function AdminKpiPage() {
                 {/* Main Table */}
                 <div className="lg:col-span-3">
                     <div className="bg-white rounded-[3rem] border border-slate-100 shadow-2xl overflow-hidden">
-                        <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                        <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <h3 className="text-lg font-black text-slate-900 tracking-tight">Rider Performance Liste</h3>
-                            <div className="relative">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                                <input placeholder="Suchen..." className="pl-12 pr-6 py-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-sm" />
+                            <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+                                {/* Column Selector */}
+                                <div className="flex flex-wrap gap-2 mr-4">
+                                    {allColumnOptions.map(col => (
+                                        <button 
+                                            key={col.id}
+                                            onClick={() => toggleColumn(col.id)}
+                                            className={cn(
+                                                "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
+                                                visibleColumns.includes(col.id) 
+                                                    ? "bg-slate-900 text-white border-slate-900 shadow-md" 
+                                                    : "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
+                                            )}
+                                        >
+                                            {col.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="relative flex-1 md:flex-initial">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
+                                    <input placeholder="Suchen..." className="pl-12 pr-6 py-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-sm w-full" />
+                                </div>
                             </div>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50/50">
                                     <tr>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider ID</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider Name</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stadt</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Datum</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Best.</th>
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">h (Online)</th>
+                                        {visibleColumns.includes("riderId") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider ID</th>}
+                                        {visibleColumns.includes("riderName") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider Name</th>}
+                                        {visibleColumns.includes("cityName") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stadt</th>}
+                                        {visibleColumns.includes("dateLocal") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Datum</th>}
+                                        {visibleColumns.includes("deliveredOrders") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Best.</th>}
+                                        {visibleColumns.includes("hoursWorked") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">h (Online)</th>}
+                                        {visibleColumns.includes("utr") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">UTR</th>}
+                                        {visibleColumns.includes("acceptanceRate") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Accept.</th>}
+                                        {visibleColumns.includes("avgDeliveryTime") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ø Zeit</th>}
                                         <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aktion</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {loading ? (
                                         <tr>
-                                            <td colSpan={7} className="py-20 text-center">
+                                            <td colSpan={visibleColumns.length + 1} className="py-20 text-center">
                                                 <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
                                             </td>
                                         </tr>
                                     ) : kpis.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                            <td colSpan={visibleColumns.length + 1} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
                                                 Keine Daten vorhanden. Bitte Report hochladen.
                                             </td>
                                         </tr>
                                     ) : kpis.map((k) => (
                                         <tr key={k.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            <td className="px-8 py-6 text-sm font-black text-slate-900">{k.riderId}</td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex flex-col">
-                                                    <span className="font-black text-slate-900">{k.riderName}</span>
-                                                    {k.driver ? (
-                                                        <span className="text-[8px] font-black text-green-600 uppercase">Verknüpft ✅</span>
-                                                    ) : (
-                                                        <span className="text-[8px] font-black text-amber-600 uppercase">Unbekannt ❓</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-sm font-bold text-slate-600 uppercase">{k.cityName || "-"}</td>
-                                            <td className="px-8 py-6 text-sm font-bold text-slate-400">
-                                                {k.dateLocal ? new Date(k.dateLocal).toLocaleDateString('de-DE') : `Woche ${k.isoweek}`}
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-black text-xs">{k.deliveredOrders}</span>
-                                            </td>
-                                            <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.hoursWorked.toFixed(1)}h</td>
+                                            {visibleColumns.includes("riderId") && <td className="px-8 py-6 text-sm font-black text-slate-900">{k.riderId}</td>}
+                                            {visibleColumns.includes("riderName") && (
+                                                <td className="px-8 py-6">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-black text-slate-900">{k.riderName}</span>
+                                                        {k.driver ? (
+                                                            <span className="text-[8px] font-black text-green-600 uppercase">Verknüpft ✅</span>
+                                                        ) : (
+                                                            <span className="text-[8px] font-black text-amber-600 uppercase">Unbekannt ❓</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            )}
+                                            {visibleColumns.includes("cityName") && <td className="px-8 py-6 text-sm font-bold text-slate-600 uppercase">{k.cityName || "-"}</td>}
+                                            {visibleColumns.includes("dateLocal") && (
+                                                <td className="px-8 py-6 text-sm font-bold text-slate-400">
+                                                    {k.dateLocal ? new Date(k.dateLocal).toLocaleDateString('de-DE') : `Woche ${k.isoweek}`}
+                                                </td>
+                                            )}
+                                            {visibleColumns.includes("deliveredOrders") && (
+                                                <td className="px-8 py-6">
+                                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-black text-xs">{k.deliveredOrders}</span>
+                                                </td>
+                                            )}
+                                            {visibleColumns.includes("hoursWorked") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.hoursWorked.toFixed(1)}h</td>}
+                                            {visibleColumns.includes("utr") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.utr?.toFixed(2) || "-"}</td>}
+                                            {visibleColumns.includes("acceptanceRate") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{(k.acceptanceRate * 100).toFixed(0)}%</td>}
+                                            {visibleColumns.includes("avgDeliveryTime") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.avgDeliveryTime?.toFixed(1) || "-"} min</td>}
                                             <td className="px-8 py-6 text-right">
                                                 <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition shadow-sm group-hover:scale-110">
                                                     <Coins size={16} />
