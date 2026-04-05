@@ -1,6 +1,6 @@
 import express, { Response } from 'express';
 import { z } from 'zod';
-import { TenantRequest } from '../middleware/auth';
+import { TenantRequest } from '../middleware/tenantMiddleware';
 import { prisma } from '../lib/prisma';
 
 const router = express.Router();
