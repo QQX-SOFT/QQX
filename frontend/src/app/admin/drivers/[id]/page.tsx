@@ -41,6 +41,7 @@ interface DriverDetails {
     id: string;
     firstName: string;
     lastName: string;
+    driverNumber: string | null;
     phone: string | null;
     birthday: string | null;
     type: string;
@@ -153,7 +154,7 @@ export default function DriverProfilePage() {
                     </button>
                     <div>
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Fahrerprofil</h1>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">ID: {driver.id.slice(0, 8)}</p>
+                        <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mt-0.5">Fahrer-ID: {driver.driverNumber || "Nicht zugewiesen"}</p>
                     </div>
                 </div>
                 <Link

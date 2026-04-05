@@ -99,6 +99,7 @@ model Driver {
   tenantId      String
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
+  driverNumber  String?   // Custom Fahrer-ID manually entered by admin
   firstName     String
   lastName      String
   phone         String?
@@ -150,6 +151,7 @@ model Driver {
   preferredArea   ShiftArea? @relation(fields: [preferredAreaId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
+  @@index([driverNumber])
 }
 
 enum DriverType {

@@ -44,6 +44,7 @@ interface Driver {
         email: string;
     };
     status: string;
+    driverNumber: string | null;
 }
 
 interface Document {
@@ -150,7 +151,8 @@ export default function DriversPage() {
 
     const filteredDrivers = drivers.filter(d =>
         `${d.firstName} ${d.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.user?.email.toLowerCase().includes(searchTerm.toLowerCase())
+        d.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        d.driverNumber?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     return (
@@ -226,6 +228,8 @@ export default function DriversPage() {
                                             driver.type === "FREELANCE" ? "Freier Dienstnehmer" :
                                                 "Echter Dienstnehmer"}
                                     </div>
+                                    <span>•</span>
+                                    <span className="flex items-center gap-1 truncate max-w-[150px] font-bold text-blue-600"><Hash size={12} /> {driver.driverNumber || "Keine ID"}</span>
                                     <span>•</span>
                                     <span className="flex items-center gap-1 truncate max-w-[150px]"><Mail size={12} /> {driver.user?.email || "-"}</span>
                                 </div>

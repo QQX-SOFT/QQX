@@ -54,14 +54,18 @@ export default function AdminKpiPage() {
         formData.append("file", file);
 
         try {
-            await api.post("/kpis/upload", formData, {
+            const { data } = await api.post("/kpis/upload", formData, {
                 headers: { "Content-Type": "multipart/form-data" }
             });
+            alert(`Erfolgreich importiert: ${data.recordCount} Datensätze für Woche ${data.isoweek}`);
             fetchKpis();
-        } catch (e) {
-            alert("Fehler beim Hochladen");
+        } catch (e: any) {
+            const errorMsg = e.response?.data?.error || "Fehler beim Hochladen";
+            alert(errorMsg);
+            console.error("Upload error", e);
         } finally {
             setUploading(false);
+            e.target.value = "";
         }
     };
 

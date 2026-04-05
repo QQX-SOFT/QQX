@@ -44,7 +44,8 @@ function DriverEditorForm() {
         isKleinunternehmer: false,
         password: "",
         gisaNumber: "",
-        preferredAreaId: ""
+        preferredAreaId: "",
+        driverNumber: ""
     });
 
     const [areas, setAreas] = useState<any[]>([]);
@@ -196,7 +197,8 @@ function DriverEditorForm() {
                 isKleinunternehmer: data.isKleinunternehmer || false,
                 password: "",
                 gisaNumber: data.gisaNumber || "",
-                preferredAreaId: data.preferredAreaId || ""
+                preferredAreaId: data.preferredAreaId || "",
+                driverNumber: data.driverNumber || ""
             });
 
             // Set formatted IBAN
@@ -285,6 +287,10 @@ function DriverEditorForm() {
                     {/* Personal Info */}
                     <div className="space-y-6">
                         <h3 className="text-xs font-black text-blue-600 uppercase tracking-widest border-b border-slate-50 pb-2">Persönliche Daten</h3>
+                        <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Fahrer-ID (Manuell) *</label>
+                            <input type="text" placeholder="F123" required className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-4 focus:border-blue-500 outline-none font-bold text-blue-600" value={formData.driverNumber} onChange={e => setFormData({ ...formData, driverNumber: e.target.value })} />
+                        </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 ml-2">Vorname *</label>
