@@ -194,10 +194,10 @@ export default function AdminRentalsPage() {
                         <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-200">
                             <Key size={20} />
                         </div>
-                        <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Operations</span>
+                        <span className="text-xs font-black uppercase tracking-[0.3em] text-blue-600">Betrieb</span>
                     </div>
-                    <h1 className="text-5xl font-black text-slate-900 tracking-tight">Rent-a-Car System</h1>
-                    <p className="text-slate-500 font-medium">Fuhrparkmanagement und driver-interne Fahrzeugvermietung.</p>
+                    <h1 className="text-5xl font-black text-slate-900 tracking-tight">Fahrzeugvermietung</h1>
+                    <p className="text-slate-500 font-medium">Fuhrparkmanagement und interne Fahrzeugvermietung für Fahrer.</p>
                 </div>
                 <div className="flex gap-4">
                     <button 
@@ -222,7 +222,7 @@ export default function AdminRentalsPage() {
                 {[
                     { id: "ACTIVE", label: "Aktive Mieten", count: activeRentals.length },
                     { id: "VEHICLES", label: "Fuhrpark", count: vehicles.length },
-                    { id: "CALENDAR", label: "Takvim (Belegung)", count: 0 },
+                    { id: "CALENDAR", label: "Belegungsplan", count: 0 },
                     { id: "HISTORY", label: "Historie", count: historyRentals.length }
                 ].map((tab) => (
                     <button
@@ -359,7 +359,7 @@ export default function AdminRentalsPage() {
                                             <div className="w-3 h-3 bg-blue-600 rounded-full" /> Mietvertrag
                                         </div>
                                         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                            <div className="w-3 h-3 bg-red-500 rounded-full" /> Reparatur
+                                            <div className="w-3 h-3 bg-red-500 rounded-full" /> In Reparatur
                                         </div>
                                     </div>
                                 </div>
@@ -509,7 +509,7 @@ export default function AdminRentalsPage() {
                                     </div>
 
                                     <div className="col-span-2">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Fahrer assignment *</label>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Fahrer Zuweisung *</label>
                                         <select 
                                             required
                                             className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-5 focus:border-blue-500 outline-none font-bold text-slate-900 appearance-none"
@@ -589,7 +589,7 @@ export default function AdminRentalsPage() {
 
                                 <form onSubmit={handleCreateVehicle} className="grid grid-cols-2 gap-8">
                                     <div className="col-span-2">
-                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Kennzeichen (License Plate) *</label>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Kennzeichen *</label>
                                         <input 
                                             required
                                             placeholder="W-12345X"
