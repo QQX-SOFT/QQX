@@ -177,6 +177,11 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
                         avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
+                        distanceTotal: (() => {
+                            const pickup = safeFloat(normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance'] || 0) / 1000;
+                            const dropoff = safeFloat(normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance'] || 0) / 1000;
+                            return (pickup + dropoff) * delivered;
+                        })()
                     },
                     update: {
                         deliveredOrders: delivered,
@@ -190,6 +195,11 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
                         acceptanceRate: safeFloat(normalizedRow['acceptance_rate_'] || normalizedRow['acceptance_rate'] || normalizedRow['akzeptanz']),
                         utr: safeFloat(normalizedRow['utr'] || (hours > 0 ? delivered / hours : 0)),
                         avgDeliveryTime: safeFloat(normalizedRow['avg_delivery_time_mins'] || normalizedRow['avg_delivery_time'] || normalizedRow['avg_delivery']),
+                        distanceTotal: (() => {
+                            const pickup = safeFloat(normalizedRow['avg_pickup_distance_in_meters'] || normalizedRow['avg_pickup_distance'] || 0) / 1000;
+                            const dropoff = safeFloat(normalizedRow['avg_dropoff_distance_in_meters'] || normalizedRow['avg_dropoff_distance'] || 0) / 1000;
+                            return (pickup + dropoff) * delivered;
+                        })()
                     }
                 });
                 recordCount++;

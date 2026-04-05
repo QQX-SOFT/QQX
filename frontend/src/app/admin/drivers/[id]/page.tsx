@@ -68,12 +68,16 @@ interface DriverDetails {
     hasWorkPermit: boolean;
     hourlyWage: number;
     orderFee: number;
+    payPerOrder: number | null;
+    payPerKm: number | null;
+    workStyle: string | null;
     imageUrl: string | null;
     user: {
         email: string;
     };
     documents: any[];
     ratings: any[];
+    riderKpis: any[];
 }
 
 export default function DriverProfilePage() {
@@ -232,6 +236,54 @@ export default function DriverProfilePage() {
                              </button>
                          </div>
                     </div>
+
+                    {/* KPI & Gehalt (Monthly Aggregated) */}
+                    {driver.riderKpis && driver.riderKpis.length > 0 && (
+                        <div className="bg-white rounded-[3.5rem] p-10 border-2 border-blue-50 shadow-2xl shadow-blue-200/20 space-y-8">
+                            <div className="flex items-center justify-between border-b border-slate-50 pb-6">
+                                <div className="flex items-center gap-3">
+                                    <Euro className="text-blue-600" size={24} />
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest italic">Abrechnung & KPI</h3>
+                                </div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase">April 2026</span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="p-4 bg-slate-50 rounded-2xl">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Gelieferte Orders</p>
+                                    <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0)}</p>
+                                </div>
+                                <div className="p-4 bg-slate-50 rounded-2xl">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Gefahrene KM (Gesamt)</p>
+                                    <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0).toFixed(1)} km</p>
+                                </div>
+                            </div>
+
+                            <div className="p-8 bg-blue-600 rounded-[2.5rem] shadow-xl shadow-blue-200 text-white relative overflow-hidden">
+                                <Banknote className="absolute -right-6 -bottom-6 text-white/10" size={120} />
+                                <div className="relative z-10">
+                                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Errechnetes Gehalt (April)</p>
+                                    <h4 className="text-4xl font-black italic tracking-tighter">
+                                        € {(() => {
+                                            const totalOrders = driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0);
+                                            const totalKm = driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0);
+                                            const payOrders = totalOrders * (driver.payPerOrder || 0);
+                                            const payKm = totalKm * (driver.payPerKm || 0);
+                                            return (payOrders + payKm).toFixed(2);
+                                        })()}
+                                    </h4>
+                                    <div className="mt-4 flex gap-4 opacity-70">
+                                        <p className="text-[8px] font-bold uppercase tracking-widest">€{driver.payPerOrder || 0}/Order</p>
+                                        <p className="text-[8px] font-bold uppercase tracking-widest">€{driver.payPerKm || 0}/KM</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
+                                DETAILS ANSEHEN
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Main Content Areas */}

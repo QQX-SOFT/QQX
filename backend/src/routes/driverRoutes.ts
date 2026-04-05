@@ -127,6 +127,10 @@ router.get('/:id', async (req: TenantRequest, res: Response) => {
                 ratings: {
                     take: 5,
                     orderBy: { createdAt: 'desc' }
+                },
+                riderKpis: {
+                    orderBy: { dateLocal: 'desc' },
+                    take: 50 // Last 50 days/weeks
                 }
             }
         });
