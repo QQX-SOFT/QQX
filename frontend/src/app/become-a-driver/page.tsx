@@ -563,12 +563,12 @@ export function BecomeADriverForm() {
                                 </div>
                                 <input type="date" required className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-slate-500 uppercase text-[10px] tracking-widest" value={formData.birthday} onChange={e => setFormData({ ...formData, birthday: e.target.value })} />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <SearchableSelect 
-                                        label={t.placeOfBirth}
-                                        value={formData.placeOfBirth}
-                                        options={countries}
-                                        isRtl={isRtl}
-                                        onChange={(val: string) => setFormData({ ...formData, placeOfBirth: val })}
+                                    <input 
+                                        placeholder={t.placeOfBirth} 
+                                        className="w-full bg-slate-50 p-5 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold" 
+                                        value={formData.placeOfBirth} 
+                                        onChange={e => setFormData({ ...formData, placeOfBirth: e.target.value })} 
+                                        required 
                                     />
                                     <SearchableSelect 
                                         label={t.nationality}
