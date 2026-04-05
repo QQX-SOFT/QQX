@@ -23,12 +23,19 @@ import Link from "next/link";
 export default function AccountingPage() {
     const [invoices, setInvoices] = useState<any[]>([]);
     const [drivers, setDrivers] = useState<any[]>([]);
+    const [kpis, setKpis] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
+    const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
 
     useEffect(() => {
         fetchInvoices();
         fetchDrivers();
     }, []);
+
+    useEffect(() => {
+        fetchKpis();
+    }, [selectedMonth, selectedYear]);
 
     const fetchInvoices = async () => {
         try {
@@ -47,6 +54,15 @@ export default function AccountingPage() {
             setDrivers(data);
         } catch (e) {
             console.error("Failed to fetch drivers", e);
+        }
+    };
+
+    const fetchKpis = async () => {
+        try {
+            const { data } = await api.get(`/kpis?month=${selectedMonth}&year=${selectedYear}`);
+            setKpis(data);
+        } catch (e) {
+            console.error("Failed to fetch KPIs", e);
         }
     };
 
@@ -179,6 +195,107 @@ export default function AccountingPage() {
                                     </td>
                                 </tr>
                             ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Monthly Worker Salary Overview */}
+            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-hidden mt-12 mb-20">
+                <div className="p-8 border-b border-slate-200 bg-slate-50/30 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                    <div>
+                        <h3 className="text-xl font-black text-slate-900 tracking-tight italic uppercase">Monatliche Gehalts-Übersicht</h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Errechnet aus Excel-Reports (Bestellungen & KM)</p>
+                    </div>
+                    <div className="flex gap-4">
+                        <select 
+                            className="bg-white p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500 font-bold text-sm min-w-[140px] shadow-sm"
+                            value={selectedMonth}
+                            onChange={e => setSelectedMonth(e.target.value)}
+                        >
+                            {[...Array(12)].map((_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                    {new Date(0, i).toLocaleString('de-DE', { month: 'long' })}
+                                </option>
+                            ))}
+                        </select>
+                        <select 
+                            className="bg-white p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500 font-bold text-sm shadow-sm"
+                            value={selectedYear}
+                            onChange={e => setSelectedYear(e.target.value)}
+                        >
+                            {[2024, 2025, 2026].map(y => (
+                                <option key={y} value={y}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr className="bg-slate-50/50">
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fahrer Name</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rider ID</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Orders</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">KM Gesamt</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Gehalt (Netto)</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {kpis.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                        Keine Report-Daten für diesen Monat gefunden.
+                                    </td>
+                                </tr>
+                            ) : (() => {
+                                const grouped: any = {};
+                                kpis.forEach(k => {
+                                    const id = k.driverId || k.riderId;
+                                    if (!grouped[id]) {
+                                        grouped[id] = {
+                                            driver: k.driver,
+                                            riderId: k.riderId,
+                                            riderName: k.riderName,
+                                            totalOrders: 0,
+                                            totalKm: 0,
+                                            payPerOrder: k.driver?.payPerOrder || 0,
+                                            payPerKm: k.driver?.payPerKm || 0,
+                                        };
+                                    }
+                                    grouped[id].totalOrders += k.deliveredOrders || 0;
+                                    grouped[id].totalKm += k.distanceTotal || 0;
+                                });
+
+                                return Object.values(grouped).map((g: any, i) => {
+                                    const totalWage = (g.totalOrders * g.payPerOrder) + (g.totalKm * g.payPerKm);
+                                    return (
+                                        <tr key={i} className="hover:bg-blue-50/20 transition group border-l-4 border-l-transparent hover:border-l-blue-600">
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-slate-900 group-hover:text-blue-600 transition">
+                                                        {g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName}
+                                                    </span>
+                                                    {g.driver && <span className="text-[8px] font-black text-slate-400 uppercase">Systembestätigt</span>}
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
+                                            <td className="px-8 py-6 text-center">
+                                                <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-center">
+                                                <span className="text-sm font-bold text-slate-600">{g.totalKm.toFixed(1)} km</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {totalWage.toFixed(2)}</span>
+                                                <div className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                    €{g.payPerOrder}/Ord · €{g.payPerKm}/KM
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                });
+                            })()}
                         </tbody>
                     </table>
                 </div>
