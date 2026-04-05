@@ -222,14 +222,29 @@ export default function DriverProfilePage() {
                         </div>
                     </div>
 
-                    {/* Financial Summary */}
+                     {/* Financial Summary */}
                     <div className="bg-slate-900 rounded-[3.5rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-blue-200/20">
                          <TrendingUp className="absolute -right-10 -bottom-10 text-white/5" size={250} />
                          <div className="relative z-10 space-y-8">
-                             <div><p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Gesamtguthaben</p><h3 className="text-5xl font-black italic tracking-tighter">€ {driver.walletBalance.toFixed(2)}</h3></div>
+                             <div>
+                                <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Gesamtguthaben inkl. Reports</p>
+                                <h3 className="text-5xl font-black italic tracking-tighter">
+                                    € {(() => {
+                                        const totalKpiSalary = (driver.riderKpis || []).reduce((acc, k) => {
+                                            const payOrders = k.deliveredOrders * (driver.payPerOrder || driver.orderFee || 0);
+                                            const payKm = (k.distanceTotal || 0) * (driver.payPerKm || 0);
+                                            return acc + payOrders + payKm;
+                                        }, 0);
+                                        return (driver.walletBalance + totalKpiSalary).toFixed(2);
+                                    })()}
+                                </h3>
+                             </div>
                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
-                                 <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-green-400">Stundenlohn</p><p className="font-black text-lg">€ {driver.hourlyWage.toFixed(2)}</p></div>
-                                 <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-blue-400">Bestellpauschale</p><p className="font-black text-lg">€ {driver.orderFee.toFixed(2)}</p></div>
+                                 <div><p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-green-400">Stundenlohn</p><p className="font-black text-lg">€ {(driver.hourlyWage || 0).toFixed(2)}</p></div>
+                                 <div className="group relative">
+                                    <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest mb-1 text-blue-400">Pauschale</p>
+                                    <p className="font-black text-lg">€ {(driver.payPerOrder || driver.orderFee || 0).toFixed(2)}</p>
+                                 </div>
                              </div>
                              <button className="w-full py-5 bg-blue-600 hover:bg-blue-700 rounded-3xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 transition">
                                 <CreditCard size={18} /> Auszahlung
@@ -243,44 +258,43 @@ export default function DriverProfilePage() {
                             <div className="flex items-center justify-between border-b border-slate-50 pb-6">
                                 <div className="flex items-center gap-3">
                                     <Euro className="text-blue-600" size={24} />
-                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest italic">Abrechnung & KPI</h3>
+                                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest italic tracking-tight">Report Abrechnung</h3>
                                 </div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase">April 2026</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase">Aktuelles Monat</span>
                             </div>
                             
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="p-4 bg-slate-50 rounded-2xl">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Gelieferte Orders</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Delivered</p>
                                     <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0)}</p>
                                 </div>
                                 <div className="p-4 bg-slate-50 rounded-2xl">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Gefahrene KM (Gesamt)</p>
-                                    <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0).toFixed(1)} km</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Distanz (KM)</p>
+                                    <p className="text-xl font-black text-slate-900">{driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0).toFixed(1)}</p>
                                 </div>
                             </div>
 
                             <div className="p-8 bg-blue-600 rounded-[2.5rem] shadow-xl shadow-blue-200 text-white relative overflow-hidden">
                                 <Banknote className="absolute -right-6 -bottom-6 text-white/10" size={120} />
                                 <div className="relative z-10">
-                                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Errechnetes Gehalt (April)</p>
+                                    <p className="text-white/60 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Errechneter Verdienst</p>
                                     <h4 className="text-4xl font-black italic tracking-tighter">
                                         € {(() => {
                                             const totalOrders = driver.riderKpis.reduce((acc, k) => acc + k.deliveredOrders, 0);
                                             const totalKm = driver.riderKpis.reduce((acc, k) => acc + (k.distanceTotal || 0), 0);
-                                            const payOrders = totalOrders * (driver.payPerOrder || 0);
+                                            const payOrders = totalOrders * (driver.payPerOrder || driver.orderFee || 0);
                                             const payKm = totalKm * (driver.payPerKm || 0);
                                             return (payOrders + payKm).toFixed(2);
                                         })()}
                                     </h4>
                                     <div className="mt-4 flex gap-4 opacity-70">
-                                        <p className="text-[8px] font-bold uppercase tracking-widest">€{driver.payPerOrder || 0}/Order</p>
-                                        <p className="text-[8px] font-bold uppercase tracking-widest">€{driver.payPerKm || 0}/KM</p>
+                                        <p className="text-[8px] font-bold uppercase tracking-widest">Rate: €{(driver.payPerOrder || driver.orderFee || 0)}/Order</p>
                                     </div>
                                 </div>
                             </div>
 
                             <button className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
-                                DETAILS ANSEHEN
+                                ANALYTIK ÖFFNEN
                             </button>
                         </div>
                     )}
