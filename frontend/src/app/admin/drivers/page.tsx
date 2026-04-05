@@ -72,7 +72,7 @@ export default function DriversPage() {
     // Detailed Filter States
     const [showFiltersModal, setShowFiltersModal] = useState(false);
     const [selectedCities, setSelectedCities] = useState<string[]>([]);
-    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['ACTIVE']);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 
     useEffect(() => {
