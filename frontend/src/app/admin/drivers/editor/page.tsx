@@ -196,9 +196,9 @@ function DriverEditorForm() {
                 password: "",
                 gisaNumber: data.gisaNumber || "",
                 driverNumber: data.driverNumber || "",
-                workStyle: data.workStyle || "PER_ORDER_CUSTOM",
-                payPerOrder: data.payPerOrder ?? 5.5,
-                payPerKm: data.payPerKm ?? 0.3,
+                workStyle: data.workStyle || (data.hourlyWage > 0 ? "HOURLY" : (data.orderFee > 0 ? "ORDER_FEE" : "HOURLY")),
+                payPerOrder: data.payPerOrder || 0,
+                payPerKm: data.payPerKm || 0,
                 nationality: data.nationality || "Österreich",
                 workPermitUntil: data.workPermitUntil ? data.workPermitUntil.split('T')[0] : "",
                 imageUrl: data.imageUrl || "",
@@ -425,16 +425,42 @@ function DriverEditorForm() {
                             <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Vergütung & Finanzen</h3>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Stundenlohn (€)</label>
-                                <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-green-600" value={formData.hourlyWage} onChange={e => setFormData({ ...formData, hourlyWage: parseFloat(e.target.value) || 0 })} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Arbeitsmodell *</label>
+                                <div className="relative">
+                                    <select
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-bold appearance-none cursor-pointer text-slate-700 disabled:opacity-50"
+                                        value={formData.workStyle || "HOURLY"}
+                                        onChange={e => setFormData({ ...formData, workStyle: e.target.value })}
+                                        required
+                                    >
+                                        <option value="HOURLY">Stundenlohn</option>
+                                        <option value="ORDER_FEE">Bestellgebühr + KM Geld</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                                </div>
                             </div>
-                             <div>
-                                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Bestellgebühr (€)</label>
-                                <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-blue-600" value={formData.orderFee} onChange={e => setFormData({ ...formData, orderFee: parseFloat(e.target.value) || 0 })} />
-                            </div>
+                            
+                            {formData.workStyle === "HOURLY" ? (
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Stundenlohn (€)</label>
+                                    <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-green-600" value={formData.hourlyWage} onChange={e => setFormData({ ...formData, hourlyWage: parseFloat(e.target.value) || 0 })} />
+                                </div>
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">Bestellgebühr (€)</label>
+                                        <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-blue-600" value={formData.orderFee} onChange={e => setFormData({ ...formData, orderFee: parseFloat(e.target.value) || 0 })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">KM-Geld (€)</label>
+                                        <input type="number" step="0.01" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 focus:border-blue-500 outline-none font-black text-indigo-600" value={formData.payPerKm} onChange={e => setFormData({ ...formData, payPerKm: parseFloat(e.target.value) || 0 })} />
+                                    </div>
+                                </>
+                            )}
                         </div>
+
 
                         <div>
                              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-2">IBAN *</label>
