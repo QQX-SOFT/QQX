@@ -220,30 +220,46 @@ export default function DriverProfilePage() {
                                 <div><p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Anschrift</p><p className="font-bold text-slate-900 text-sm">{driver.street || "-"}, {driver.zip} {driver.city}</p></div>
                             </div>
                         </div>
-                    </div>
-
-                     {/* Financial Summary */}
+                    </div>                     {/* Financial Summary */}
                     <div className="bg-slate-900 rounded-[3.5rem] p-10 text-white relative overflow-hidden shadow-2xl shadow-blue-200/20">
                          <TrendingUp className="absolute -right-10 -bottom-10 text-white/5" size={250} />
                          <div className="relative z-10 space-y-8">
                              <div>
                                 <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Gesamtguthaben inkl. Reports</p>
-                                <h3 className="text-5xl font-black italic tracking-tighter">
-                                    € {(() => {
+                                <div className="flex items-baseline gap-4">
+                                    <h3 className="text-5xl font-black italic tracking-tighter">
+                                        € {(() => {
+                                            const perOrderIds = ['4530788', '4524536', '4328784', '4468810', '4524892'];
+                                            const isPerOrder = perOrderIds.includes(driver.driverNumber!);
+                                            const totalKpiSalary = (driver.riderKpis || []).reduce((acc, k) => {
+                                                if (isPerOrder) {
+                                                    const payOrders = k.deliveredOrders * (driver.payPerOrder || driver.orderFee || 0);
+                                                    const payKm = (k.distanceTotal || 0) * (driver.payPerKm || 0);
+                                                    return acc + payOrders + payKm;
+                                                } else {
+                                                    return acc + (k.hoursWorked * (driver.hourlyWage || 0));
+                                                }
+                                            }, 0);
+                                            return (driver.walletBalance + totalKpiSalary).toFixed(2);
+                                        })()}
+                                    </h3>
+                                    {(() => {
                                         const perOrderIds = ['4530788', '4524536', '4328784', '4468810', '4524892'];
                                         const isPerOrder = perOrderIds.includes(driver.driverNumber!);
-                                        const totalKpiSalary = (driver.riderKpis || []).reduce((acc, k) => {
-                                            if (isPerOrder) {
-                                                const payOrders = k.deliveredOrders * (driver.payPerOrder || driver.orderFee || 0);
-                                                const payKm = (k.distanceTotal || 0) * (driver.payPerKm || 0);
-                                                return acc + payOrders + payKm;
-                                            } else {
-                                                return acc + (k.hoursWorked * (driver.hourlyWage || 0));
-                                            }
-                                        }, 0);
-                                        return (driver.walletBalance + totalKpiSalary).toFixed(2);
+                                        if (isPerOrder) {
+                                            const totalOrders = driver.riderKpis?.reduce((acc, k) => acc + k.deliveredOrders, 0) || 0;
+                                            const totalKm = driver.riderKpis?.reduce((acc, k) => acc + (k.distanceTotal || 0), 0) || 0;
+                                            return (
+                                                <div className="flex gap-2 text-[10px] font-black text-blue-400 uppercase tracking-widest opacity-80 backdrop-blur-sm bg-white/5 px-3 py-1 rounded-full">
+                                                    <span>{totalOrders} Ord</span>
+                                                    <span className="text-white/20">|</span>
+                                                    <span>{totalKm.toFixed(1)} km</span>
+                                                </div>
+                                            );
+                                        }
+                                        return null;
                                     })()}
-                                </h3>
+                                </div>
                              </div>
                              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
                                  {(() => {
@@ -335,10 +351,6 @@ export default function DriverProfilePage() {
                                     </>
                                 );
                             })()}
-
-                            <button className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all">
-                                ANALYTIK ÖFFNEN
-                            </button>
                         </div>
                     )}
                 </div>
