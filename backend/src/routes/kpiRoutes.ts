@@ -177,6 +177,76 @@ router.post('/upload', upload.single('file'), async (req: TenantRequest, res: Re
     }
 });
 
+router.post('/validate', upload.single('file'), async (req: TenantRequest, res: Response) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        if (!req.tenantId) return res.status(401).json({ error: 'Tenant context missing' });
+
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data: any[] = XLSX.utils.sheet_to_json(sheet);
+
+        const results = [];
+
+        for (const row of data) {
+            const normalizedRow: any = {};
+            Object.keys(row).forEach(key => {
+                normalizedRow[String(key).toLowerCase().replace(/[^a-z0-9]/g, '_')] = row[key];
+            });
+
+            const riderId = String(normalizedRow['rider_id'] || normalizedRow['id'] || normalizedRow['fahrer_nr'] || normalizedRow['riderid'] || '').trim();
+            const riderName = String(normalizedRow['rider_name'] || normalizedRow['name'] || normalizedRow['fahrer_name'] || '').trim();
+
+            let driver = null;
+            let matchType = 'NONE';
+
+            if (riderId) {
+                driver = await prisma.driver.findFirst({
+                    where: { tenantId: req.tenantId!, driverNumber: riderId },
+                    select: { id: true, firstName: true, lastName: true, driverNumber: true }
+                });
+                if (driver) matchType = 'PRIMARY_ID';
+                
+                if (!driver) {
+                    driver = await prisma.driver.findFirst({
+                        where: { tenantId: req.tenantId!, secondaryDriverNumber: riderId },
+                        select: { id: true, firstName: true, lastName: true, driverNumber: true, secondaryDriverNumber: true }
+                    });
+                    if (driver) matchType = 'SECONDARY_ID';
+                }
+            }
+
+            if (!driver && riderName) {
+                const nameParts = riderName.split(' ');
+                const lastName = nameParts[nameParts.length - 1];
+                driver = await prisma.driver.findFirst({
+                    where: {
+                        tenantId: req.tenantId!,
+                        OR: [
+                            { lastName: { contains: lastName, mode: 'insensitive' } },
+                            { firstName: { contains: nameParts[0], mode: 'insensitive' } }
+                        ]
+                    },
+                    select: { id: true, firstName: true, lastName: true, driverNumber: true }
+                });
+                if (driver) matchType = 'FUZZY_NAME';
+            }
+
+            results.push({
+                excelRow: row,
+                riderId,
+                riderName,
+                matchType,
+                matchedDriver: driver ? `${driver.firstName} ${driver.lastName} (#${driver.driverNumber})` : null
+            });
+        }
+
+        res.json(results);
+    } catch (error) {
+        res.status(500).json({ error: (error as Error).message });
+    }
+});
+
 router.get('/', async (req: TenantRequest, res: Response) => {
     const { week } = req.query;
     try {

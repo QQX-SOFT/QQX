@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export default function AdminKpiPage() {
     const [kpis, setKpis] = useState<any[]>([]);
@@ -82,6 +83,10 @@ export default function AdminKpiPage() {
                     <p className="text-slate-500 font-medium font-sans">Importieren und analysieren Sie Rider-Reports für Gehaltsabrechnungen.</p>
                 </div>
                 <div className="flex gap-4">
+                    <Link href="/admin/drivers/kpi/validation" className="px-8 py-4 bg-white border-2 border-slate-100 text-slate-400 rounded-[1.5rem] font-black text-[11px] uppercase tracking-widest flex items-center gap-3 hover:border-blue-600 hover:text-blue-600 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-slate-100/10">
+                        <BarChart3 size={16} />
+                        DEBUG & VALIDIERUNG
+                    </Link>
                     <label className="cursor-pointer">
                         <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={handleFileUpload} disabled={uploading} />
                         <div className={cn(
