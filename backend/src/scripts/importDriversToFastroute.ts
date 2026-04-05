@@ -11,13 +11,28 @@ const CSV_PATH = 'c:\\Users\\IT Admin\\Downloads\\QQX\\Mitarbeiter Datenbank (4)
 const FASTROUTE_TENANT_ID = 'e5e1e871-bfc6-435c-a669-78ab76ecb195';
 const DEFAULT_PASSWORD = bcrypt.hashSync('Turkei.1453', 10);
 
-// Map CSV dates (DD.MM.YYYY) to JS Dates
+// Map CSV dates (DD.MM.YYYY or DDMMYYYY) to JS Dates
 const parseGermanDate = (dateStr: string) => {
     if (!dateStr || dateStr === '...' || dateStr.trim() === '') return null;
-    const parts = dateStr.split('.');
+    let trimmed = dateStr.trim();
+    
+    // Handle formats like "15092025" (8 digits) or "1092025" (7 digits)
+    if (!trimmed.includes('.') && /^\d{7,8}$/.test(trimmed)) {
+        if (trimmed.length === 7) {
+            trimmed = '0' + trimmed; 
+        }
+        // Now it's 8 digits: DDMMYYYY
+        const dd = trimmed.substring(0, 2);
+        const mm = trimmed.substring(2, 4);
+        const yyyy = trimmed.substring(4, 8);
+        trimmed = `${dd}.${mm}.${yyyy}`;
+    }
+
+    const parts = trimmed.split('.');
     if (parts.length !== 3) return null;
-    // Parts: [DD, MM, YYYY]
-    const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+    
+    // Ensure 4 digit year, sometimes people write 25 instead of 2025 but here it's YYYY
+    const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T12:00:00Z`);
     return isNaN(d.getTime()) ? null : d;
 };
 
@@ -71,6 +86,7 @@ async function main() {
     
     fs.createReadStream(CSV_PATH)
         .pipe(csv({
+            separator: ';',
             mapHeaders: ({ header }) => header.replace(/^\uFEFF/, '').replace(/"/g, '').trim()
         }))
         .on('data', (row: any) => {

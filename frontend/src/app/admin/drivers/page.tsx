@@ -50,6 +50,8 @@ interface Driver {
     city: string | null;
     zip: string | null;
     street: string | null;
+    employmentStart: string | null;
+    employmentEnd: string | null;
 }
 
 interface Document {
@@ -284,7 +286,7 @@ export default function DriversPage() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 flex-1">
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-6 flex-1">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Status</p>
                                         <p className={cn(
@@ -305,6 +307,24 @@ export default function DriversPage() {
                                             <span className="font-bold text-[9px] text-slate-400 uppercase italic">
                                                 {driver.employmentModel || "Standard"}
                                             </span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Dienstverhältnis</p>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-bold text-[10px] text-slate-700">
+                                                <span className="text-slate-400 mr-1">Start:</span>
+                                                {driver.employmentStart ? new Date(driver.employmentStart).toLocaleDateString('de-DE') : "-"}
+                                            </span>
+                                            {(driver.employmentEnd || driver.status === "GEKUENDIGT") && (
+                                                <span className={cn(
+                                                    "font-bold text-[10px]",
+                                                    driver.status === "GEKUENDIGT" ? "text-red-500" : "text-slate-700"
+                                                )}>
+                                                    <span className={cn("mr-1", driver.status === "GEKUENDIGT" ? "text-red-400" : "text-slate-400")}>Ende:</span>
+                                                    {driver.employmentEnd ? new Date(driver.employmentEnd).toLocaleDateString('de-DE') : "-"}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-1">
