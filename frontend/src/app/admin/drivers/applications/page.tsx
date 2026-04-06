@@ -20,6 +20,10 @@ import {
     ArrowLeft,
     ExternalLink,
     FileSearch,
+    Trash2,
+    Edit2,
+    Save,
+    X,
     BadgeCheck,
     AlertCircle
 } from "lucide-react";
@@ -34,12 +38,19 @@ export default function AdminApplicationsPage() {
     const [selectedApp, setSelectedApp] = useState<any>(null);
     const [processing, setProcessing] = useState(false);
     const [showStammdaten, setShowStammdaten] = useState(false);
+    
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState<any>(null);
 
     const fetchApplications = async () => {
         try {
             setLoading(true);
             const { data } = await api.get("/applications");
             setApplications(data);
+            if (selectedApp) {
+                const updated = data.find((a: any) => a.id === selectedApp.id);
+                if (updated) setSelectedApp(updated);
+            }
         } catch (e) {
             console.error(e);
         } finally {
@@ -59,6 +70,38 @@ export default function AdminApplicationsPage() {
             setSelectedApp(null);
         } catch (e) {
             alert("Fehler beim Aktualisieren");
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const deleteApplication = async (id: string) => {
+        if (!confirm("Bewerbung wirklich unwiderruflich löschen?")) return;
+        try {
+            setProcessing(true);
+            await api.delete(`/applications/${id}`);
+            fetchApplications();
+            setSelectedApp(null);
+        } catch (e) {
+            alert("Fehler beim Löschen");
+        } finally {
+            setProcessing(false);
+        }
+    }
+
+    const startEditing = () => {
+        setEditForm({ ...selectedApp });
+        setIsEditing(true);
+    };
+
+    const saveEdit = async () => {
+        try {
+            setProcessing(true);
+            const { data } = await api.put(`/applications/${selectedApp.id}`, editForm);
+            setIsEditing(false);
+            fetchApplications();
+        } catch (e: any) {
+            alert(e.response?.data?.error || "Fehler beim Speichern");
         } finally {
             setProcessing(false);
         }
@@ -108,7 +151,7 @@ export default function AdminApplicationsPage() {
                     {applications.map((app) => (
                         <button
                             key={app.id}
-                            onClick={() => setSelectedApp(app)}
+                            onClick={() => { setSelectedApp(app); setIsEditing(false); }}
                             className={cn(
                                 "w-full text-left p-6 rounded-[2rem] border transition-all duration-300",
                                 selectedApp?.id === app.id 
@@ -131,7 +174,7 @@ export default function AdminApplicationsPage() {
                             <h3 className="font-black text-slate-900">{app.firstName} {app.lastName}</h3>
                             <div className="flex items-center gap-2 mt-1">
                                 <Briefcase size={12} className="text-slate-300" />
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{app.employmentType.replace('_', ' ')}</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{app.employmentType?.replace('_', ' ')}</span>
                             </div>
                         </button>
                     ))}
@@ -148,7 +191,22 @@ export default function AdminApplicationsPage() {
                                     </div>
                                     <div className="space-y-4">
                                         <div>
-                                            <h2 className="text-2xl font-black text-slate-900">{selectedApp.firstName} {selectedApp.lastName}</h2>
+                                            <h2 className="text-2xl font-black text-slate-900">
+                                                {isEditing ? (
+                                                    <div className="flex gap-2">
+                                                        <input 
+                                                          className="bg-slate-50 border-none rounded-lg px-2 py-1 text-xl font-black w-32 focus:ring-2 ring-blue-500" 
+                                                          value={editForm.firstName} 
+                                                          onChange={e => setEditForm({...editForm, firstName: e.target.value})}
+                                                        />
+                                                        <input 
+                                                          className="bg-slate-50 border-none rounded-lg px-2 py-1 text-xl font-black w-32 focus:ring-2 ring-blue-500" 
+                                                          value={editForm.lastName} 
+                                                          onChange={e => setEditForm({...editForm, lastName: e.target.value})}
+                                                        />
+                                                    </div>
+                                                ) : `${selectedApp.firstName} ${selectedApp.lastName}`}
+                                            </h2>
                                             <div className="flex items-center gap-2">
                                                 <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">{selectedApp.employmentType}</span>
                                                 <span className="w-1 h-1 bg-slate-200 rounded-full" />
@@ -157,12 +215,12 @@ export default function AdminApplicationsPage() {
                                         </div>
 
                                         {selectedApp.hasWorkPermit ? (
-                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-green-100 shadow-sm">
+                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-green-100 shadow-sm leading-none">
                                                 <BadgeCheck size={14} />
                                                 Arbeitsbewilligung: Ja
                                             </div>
                                         ) : (
-                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm">
+                                            <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-xl text-[10px] font-black uppercase tracking-widest border border-red-100 shadow-sm leading-none">
                                                 <AlertCircle size={14} />
                                                 Arbeitsbewilligung: Nein
                                             </div>
@@ -170,29 +228,65 @@ export default function AdminApplicationsPage() {
                                     </div>
                                 </div>
                                 <div className="flex gap-2">
-                                    <button 
-                                      onClick={() => setShowStammdaten(true)}
-                                      className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-lg shadow-black/20 flex items-center gap-2"
-                                    >
-                                        <FileSearch size={16} />
-                                        Vorschau Stammdaten
-                                    </button>
-                                    {selectedApp.status === "PENDING" && (
+                                    {isEditing ? (
                                         <>
                                             <button 
-                                              onClick={() => updateStatus(selectedApp.id, "REJECTED")}
-                                              className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition"
+                                                onClick={() => setIsEditing(false)}
+                                                className="p-3 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition"
                                             >
-                                                <XCircle size={20} />
+                                                <X size={20} />
                                             </button>
                                             <button 
-                                              onClick={() => convertToDriver(selectedApp)}
-                                              disabled={processing || !selectedApp.hasWorkPermit}
-                                              className="px-6 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-green-700 shadow-lg shadow-green-500/20 flex items-center gap-2 disabled:opacity-50"
+                                                onClick={saveEdit}
+                                                disabled={processing}
+                                                className="px-6 py-3 bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-500/20 flex items-center gap-2 disabled:opacity-50"
                                             >
-                                                {processing ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
-                                                Bestätigen & Erstellen
+                                                {processing ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
+                                                Speichern
                                             </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button 
+                                              onClick={() => deleteApplication(selectedApp.id)}
+                                              className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition"
+                                              title="Löschen"
+                                            >
+                                                <Trash2 size={20} />
+                                            </button>
+                                            <button 
+                                              onClick={startEditing}
+                                              className="p-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition"
+                                              title="Bearbeiten"
+                                            >
+                                                <Edit2 size={20} />
+                                            </button>
+                                            <button 
+                                              onClick={() => setShowStammdaten(true)}
+                                              className="px-6 py-3 bg-slate-900 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-black shadow-lg shadow-black/20 flex items-center gap-2"
+                                            >
+                                                <FileSearch size={16} />
+                                                Vorschau Stammdaten
+                                            </button>
+                                            {selectedApp.status === "PENDING" && (
+                                                <>
+                                                    <button 
+                                                      onClick={() => updateStatus(selectedApp.id, "REJECTED")}
+                                                      className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition"
+                                                      title="Ablehnen"
+                                                    >
+                                                        <XCircle size={20} />
+                                                    </button>
+                                                    <button 
+                                                      onClick={() => convertToDriver(selectedApp)}
+                                                      disabled={processing || !selectedApp.hasWorkPermit}
+                                                      className="px-6 py-3 bg-green-600 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-green-700 shadow-lg shadow-green-500/20 flex items-center gap-2 disabled:opacity-50"
+                                                    >
+                                                        {processing ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
+                                                        Bestätigen & Erstellen
+                                                    </button>
+                                                </>
+                                            )}
                                         </>
                                     )}
                                 </div>
@@ -204,15 +298,25 @@ export default function AdminApplicationsPage() {
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3">
                                             <Mail size={18} className="text-slate-300" />
-                                            <span className="text-sm font-bold text-slate-700">{selectedApp.email}</span>
+                                            <EditableField isEditing={isEditing} value={editForm?.email} label={selectedApp.email} onChange={v => setEditForm({...editForm, email: v})} />
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <Phone size={18} className="text-slate-300" />
-                                            <span className="text-sm font-bold text-slate-700">{selectedApp.phone || 'N/A'}</span>
+                                            <EditableField isEditing={isEditing} value={editForm?.phone} label={selectedApp.phone || 'N/A'} onChange={v => setEditForm({...editForm, phone: v})} />
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <MapPin size={18} className="text-slate-300" />
-                                            <span className="text-sm font-bold text-slate-700">{selectedApp.street}, {selectedApp.zip} {selectedApp.city}</span>
+                                            {isEditing ? (
+                                                <div className="flex flex-col gap-1 w-full">
+                                                    <input className="bg-slate-50 border-none rounded-lg px-2 py-1 text-sm font-bold w-full" value={editForm.street} onChange={e => setEditForm({...editForm, street: e.target.value})} placeholder="Straße" />
+                                                    <div className="flex gap-2">
+                                                        <input className="bg-slate-50 border-none rounded-lg px-2 py-1 text-sm font-bold w-20" value={editForm.zip} onChange={e => setEditForm({...editForm, zip: e.target.value})} placeholder="PLZ" />
+                                                        <input className="bg-slate-50 border-none rounded-lg px-2 py-1 text-sm font-bold flex-1" value={editForm.city} onChange={e => setEditForm({...editForm, city: e.target.value})} placeholder="Ort" />
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-sm font-bold text-slate-700">{selectedApp.street}, {selectedApp.zip} {selectedApp.city}</span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -223,47 +327,71 @@ export default function AdminApplicationsPage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1">
                                                 <p className="text-[9px] font-black text-slate-400 uppercase">Geburtsdatum</p>
-                                                <p className="text-sm font-bold text-slate-700">{selectedApp.birthday ? new Date(selectedApp.birthday).toLocaleDateString() : 'N/A'}</p>
+                                                <EditableField isEditing={isEditing} value={editForm?.birthday} label={selectedApp.birthday ? new Date(selectedApp.birthday).toLocaleDateString() : 'N/A'} onChange={v => setEditForm({...editForm, birthday: v})} type="date" />
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-[9px] font-black text-slate-400 uppercase">Geburtsort</p>
-                                                <p className="text-sm font-bold text-slate-700">{selectedApp.placeOfBirth || 'N/A'}</p>
+                                                <EditableField isEditing={isEditing} value={editForm?.placeOfBirth} label={selectedApp.placeOfBirth || 'N/A'} onChange={v => setEditForm({...editForm, placeOfBirth: v})} />
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-1">
                                                 <p className="text-[9px] font-black text-slate-400 uppercase">Staatsbürgerschaft</p>
-                                                <p className="text-sm font-bold text-slate-700">{selectedApp.nationality || 'N/A'}</p>
+                                                <EditableField isEditing={isEditing} value={editForm?.nationality} label={selectedApp.nationality || 'N/A'} onChange={v => setEditForm({...editForm, nationality: v})} />
                                             </div>
                                             <div className="space-y-1">
                                                 <p className="text-[9px] font-black text-slate-400 uppercase">Familienstand</p>
-                                                <p className="text-sm font-bold text-slate-700">{selectedApp.maritalStatus || 'N/A'}</p>
+                                                <EditableField isEditing={isEditing} value={editForm?.maritalStatus} label={selectedApp.maritalStatus || 'N/A'} onChange={v => setEditForm({...editForm, maritalStatus: v})} />
                                             </div>
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-[9px] font-black text-slate-400 uppercase">Religionszugehörigkeit</p>
-                                            <p className="text-sm font-bold text-slate-700">{selectedApp.religion || 'N/A'}</p>
+                                            <EditableField isEditing={isEditing} value={editForm?.religion} label={selectedApp.religion || 'N/A'} onChange={v => setEditForm({...editForm, religion: v})} />
                                         </div>
                                         <div className="flex items-center gap-3 pt-2">
                                             <ShieldCheck size={18} className="text-slate-300" />
-                                            <span className="text-sm font-bold text-slate-700">SSN: {selectedApp.ssn || 'N/A'}</span>
+                                            <EditableField isEditing={isEditing} value={editForm?.ssn} label={`SSN: ${selectedApp.ssn || 'N/A'}`} onChange={v => setEditForm({...editForm, ssn: v})} />
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <FileText size={18} className="text-slate-300" />
-                                            <span className="text-sm font-bold text-slate-700">UID: {selectedApp.taxId || 'N/A'}</span>
+                                            <EditableField isEditing={isEditing} value={editForm?.taxId} label={`UID: ${selectedApp.taxId || 'N/A'}`} onChange={v => setEditForm({...editForm, taxId: v})} />
                                         </div>
-                                        {selectedApp.gisaNumber && (
-                                            <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                                <p className="text-[9px] font-black text-blue-400 uppercase mb-1">GISA-Zahl</p>
-                                                <p className="text-sm font-black text-blue-700">{selectedApp.gisaNumber}</p>
-                                            </div>
-                                        )}
                                         <div className="flex items-center gap-3">
-                                            <CreditCard size={18} className="text-slate-300" />
-                                            <span className="text-xs font-mono font-bold text-slate-600">{selectedApp.iban} / {selectedApp.bic}</span>
+                                             <CreditCard size={18} className="text-slate-300" />
+                                             {isEditing ? (
+                                                <div className="flex flex-col gap-1 w-full">
+                                                    <input className="bg-slate-50 border-none rounded-lg px-2 py-1 text-[10px] font-mono font-bold w-full" value={editForm.iban} onChange={e => setEditForm({...editForm, iban: e.target.value})} placeholder="IBAN" />
+                                                    <input className="bg-slate-50 border-none rounded-lg px-2 py-1 text-[10px] font-mono font-bold w-full" value={editForm.bic} onChange={e => setEditForm({...editForm, bic: e.target.value})} placeholder="BIC" />
+                                                </div>
+                                             ) : (
+                                                <span className="text-xs font-mono font-bold text-slate-600">{selectedApp.iban} / {selectedApp.bic}</span>
+                                             )}
                                         </div>
                                     </div>
-                                </div>
+                                 </div>
+                             </div>
+
+                             {/* Compensation Section */}
+                             <div className="space-y-6 pt-6 border-t border-slate-50">
+                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Konditionen & Timeline</h4>
+                                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                     <div className="space-y-1">
+                                         <p className="text-[9px] font-black text-slate-400 uppercase">Modell</p>
+                                         <EditableField isEditing={isEditing} value={editForm?.employmentModel} label={selectedApp.employmentModel || 'Bestellbasis'} onChange={v => setEditForm({...editForm, employmentModel: v})} />
+                                     </div>
+                                     <div className="space-y-1">
+                                         <p className="text-[9px] font-black text-slate-400 uppercase">Stundenlohn</p>
+                                         <EditableField isEditing={isEditing} value={editForm?.hourlyWage} label={`${selectedApp.hourlyWage || 0} €`} onChange={v => setEditForm({...editForm, hourlyWage: Number(v)})} type="number" />
+                                     </div>
+                                     <div className="space-y-1">
+                                         <p className="text-[9px] font-black text-slate-400 uppercase">Bestellgebühr</p>
+                                         <EditableField isEditing={isEditing} value={editForm?.orderFee} label={`${selectedApp.orderFee || 0} €`} onChange={v => setEditForm({...editForm, orderFee: Number(v)})} type="number" />
+                                     </div>
+                                     <div className="space-y-1">
+                                         <p className="text-[9px] font-black text-slate-400 uppercase">KM-Geld</p>
+                                         <EditableField isEditing={isEditing} value={editForm?.kmMoney} label={`${selectedApp.kmMoney || 0} €`} onChange={v => setEditForm({...editForm, kmMoney: Number(v)})} type="number" />
+                                     </div>
+                                 </div>
                              </div>
 
                              {/* Documents Section */}
@@ -312,5 +440,17 @@ export default function AdminApplicationsPage() {
                 />
             )}
         </div>
+    );
+}
+
+function EditableField({ isEditing, value, label, onChange, type = "text" }: { isEditing: boolean, value: any, label: string, onChange: (v: string) => void, type?: string }) {
+    if (!isEditing) return <span className="text-sm font-bold text-slate-700">{label}</span>;
+    return (
+        <input 
+            type={type}
+            className="bg-slate-50 border-none rounded-lg px-2 py-1 text-sm font-bold flex-1 w-full focus:ring-2 ring-blue-500" 
+            value={value || ''} 
+            onChange={e => onChange(e.target.value)}
+        />
     );
 }

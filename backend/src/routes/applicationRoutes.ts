@@ -232,4 +232,41 @@ router.post('/:id/approve', async (req: TenantRequest, res: Response) => {
   }
 });
 
+// ADMIN: Update application details
+router.put('/:id', async (req: TenantRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const validatedData = applicationSchema.parse(req.body);
+    const updated = await (prisma as any).driverApplication.update({
+      where: { id },
+      data: {
+        ...validatedData,
+        birthday: validatedData.birthday ? new Date(validatedData.birthday) : null,
+        visaExpiry: validatedData.visaExpiry ? new Date(validatedData.visaExpiry) : null,
+        joinDate: validatedData.joinDate ? new Date(validatedData.joinDate) : null,
+        endDate: validatedData.endDate ? new Date(validatedData.endDate) : null,
+      }
+    });
+    res.json(updated);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ errors: error.errors });
+    }
+    res.status(500).json({ error: 'Fehler beim Aktualisieren' });
+  }
+});
+
+// ADMIN: Delete application
+router.delete('/:id', async (req: TenantRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    await (prisma as any).driverApplication.delete({
+      where: { id }
+    });
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Fehler beim Löschen' });
+  }
+});
+
 export default router;
