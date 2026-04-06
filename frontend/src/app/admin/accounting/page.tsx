@@ -32,6 +32,7 @@ export default function AccountingPage() {
     const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
     const [activeTab, setActiveTab] = useState<'ALL' | 'EMPLOYED' | 'FREELANCE' | 'COMMERCIAL'>('ALL');
     const [basisFilter, setBasisFilter] = useState<'ALL' | 'STUNDENBASIS' | 'BESTELLBASIS'>('ALL');
+    const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
     useEffect(() => {
         fetchInvoices();
@@ -83,6 +84,14 @@ export default function AccountingPage() {
 
     const totalRevenue = invoices.reduce((acc, inv) => acc + (inv.status === 'PAID' ? inv.amount : 0), 0);
     const pendingAmount = invoices.reduce((acc, inv) => acc + (inv.status === 'PENDING' ? inv.amount : 0), 0);
+    
+    const requestSort = (key: string) => {
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        setSortConfig({ key, direction });
+    };
 
     return (
         <div className="space-y-12">
@@ -193,14 +202,33 @@ export default function AccountingPage() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fahrer Name</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Rider ID</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Anstellung</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Satz/Rate</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Orders</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">KM Gesamt</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Gehalt (Netto)</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Aktionen</th>
+                                {[
+                                    { key: 'riderName', label: 'Fahrer Name', center: false },
+                                    { key: 'riderId', label: 'Rider ID', center: false },
+                                    { key: 'basis', label: 'Anstellung', center: false },
+                                    { key: 'rate', label: 'Satz/Rate', center: false },
+                                    { key: 'totalOrders', label: 'Orders', center: true },
+                                    { key: 'totalKm', label: 'KM Gesamt', center: true },
+                                    { key: 'totalWage', label: 'Gehalt (Netto)', center: true },
+                                    { key: null, label: 'Aktionen', center: true }
+                                ].map((h, i) => (
+                                    <th 
+                                        key={i} 
+                                        onClick={() => h.key && requestSort(h.key)}
+                                        className={cn(
+                                            "px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer hover:text-blue-600 transition",
+                                            h.center && "text-center",
+                                            !h.center && h.key === 'totalWage' && "text-right"
+                                        )}
+                                    >
+                                        <div className={cn("flex items-center gap-2", h.center && "justify-center")}>
+                                            {h.label}
+                                            {sortConfig?.key === h.key && (
+                                                sortConfig.direction === 'asc' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />
+                                            )}
+                                        </div>
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -234,33 +262,55 @@ export default function AccountingPage() {
                                     grouped[id].totalHours += k.hoursWorked || 0;
                                 });
 
-                                const filteredRows = Object.values(grouped).filter((g: any) => {
+                                let rows = Object.values(grouped).filter((g: any) => {
                                     const matchesType = activeTab === 'ALL' || g.type === activeTab;
                                     const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
                                     const matchesBasis = basisFilter === 'ALL' || 
                                                         (basisFilter === 'STUNDENBASIS' && !isBestellbasis) || 
                                                         (basisFilter === 'BESTELLBASIS' && isBestellbasis);
                                     return matchesType && matchesBasis;
+                                }).map((g: any) => {
+                                    const orderEarnings = g.totalOrders * g.payPerOrder;
+                                    const kmEarnings = g.totalKm * g.payPerKm;
+                                    const hourlyEarnings = g.totalHours * g.hourlyWage;
+                                    const totalWage = orderEarnings + kmEarnings + hourlyEarnings;
+                                    const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
+                                    
+                                    return { 
+                                        ...g, 
+                                        totalWage, 
+                                        isBestellbasis,
+                                        riderName: g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName
+                                    };
                                 });
 
-                                if (filteredRows.length === 0) {
+                                if (sortConfig !== null) {
+                                    rows.sort((a: any, b: any) => {
+                                        let aVal = a[sortConfig.key];
+                                        let bVal = b[sortConfig.key];
+                                        
+                                        if (sortConfig.key === 'basis') {
+                                            aVal = a.isBestellbasis ? 'B' : 'A';
+                                            bVal = b.isBestellbasis ? 'B' : 'A';
+                                        }
+
+                                        if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                                        if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                                        return 0;
+                                    });
+                                }
+
+                                if (rows.length === 0) {
                                     return (
                                         <tr>
-                                            <td colSpan={7} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                            <td colSpan={8} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
                                                 Keine Einträge für diese Kategorie vorhanden.
                                             </td>
                                         </tr>
                                     );
                                 }
 
-                                return filteredRows.map((g: any, i) => {
-                                    const orderEarnings = g.totalOrders * g.payPerOrder;
-                                    const kmEarnings = g.totalKm * g.payPerKm;
-                                    const hourlyEarnings = g.totalHours * g.hourlyWage;
-                                    const totalWage = orderEarnings + kmEarnings + hourlyEarnings;
-
-                                    const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
-
+                                return rows.map((g: any, i) => {
                                     const employmentLabel = {
                                         'EMPLOYED': 'Dienstnehmer',
                                         'FREELANCE': 'Freier Dienstnehmer',
@@ -272,7 +322,7 @@ export default function AccountingPage() {
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-slate-900 group-hover:text-blue-600 transition truncate max-w-[150px]">
-                                                        {g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName}
+                                                        {g.riderName}
                                                     </span>
                                                 </div>
                                             </td>
@@ -280,9 +330,9 @@ export default function AccountingPage() {
                                             <td className="px-8 py-6">
                                                 <span className={cn(
                                                     "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest leading-none",
-                                                    isBestellbasis ? "bg-blue-900 text-white" : "bg-slate-900 text-white"
+                                                    g.isBestellbasis ? "bg-blue-900 text-white" : "bg-slate-900 text-white"
                                                 )}>
-                                                    {isBestellbasis ? "Bestellbasis" : "Stundenbasis"}
+                                                    {g.isBestellbasis ? "Bestellbasis" : "Stundenbasis"}
                                                 </span>
                                                 <p className="text-[7px] font-black text-slate-300 uppercase mt-1">{employmentLabel}</p>
                                             </td>
@@ -314,13 +364,13 @@ export default function AccountingPage() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {totalWage.toFixed(2)}</span>
+                                                <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {g.totalWage.toFixed(2)}</span>
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 {g.type === 'COMMERCIAL' && (
                                                     <button 
                                                         onClick={() => {
-                                                            alert(`An Info-Mail wurde an ${g.driver?.firstName} ${g.driver?.lastName} gesendet.\n\nInhalt:\n- Gelieferte Bestellungen: ${g.totalOrders}\n- Fahrtstrecke: ${g.totalKm.toFixed(1)} km\n- Nettoverdienst: €${totalWage.toFixed(2)}\n\nBitte senden Sie uns eine Rechnung.`);
+                                                            alert(`An Info-Mail wurde an ${g.riderName} gesendet.\n\nInhalt:\n- Gelieferte Bestellungen: ${g.totalOrders}\n- Fahrtstrecke: ${g.totalKm.toFixed(1)} km\n- Nettoverdienst: €${g.totalWage.toFixed(2)}\n\nBitte senden Sie uns eine Rechnung.`);
                                                         }}
                                                         className="flex items-center gap-2 ml-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition group/btn"
                                                     >
