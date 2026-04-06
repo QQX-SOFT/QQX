@@ -648,6 +648,12 @@ model Contract {
   startDate   DateTime?
   endDate     DateTime?
 
+  // Digital Signature
+  isSigned          Boolean   @default(false)
+  signatureImageUrl String?
+  signedAt          DateTime?
+  shareToken        String?   @unique // For public signing link
+  
   // Optional relations to specific entities
   customerId  String?
   customer    Customer? @relation(fields: [customerId], references: [id])

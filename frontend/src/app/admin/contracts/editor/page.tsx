@@ -18,7 +18,9 @@ import {
     Edit3,
     Printer,
     Download,
-    CheckCircle2
+    CheckCircle2,
+    Mail,
+    Send
 } from "lucide-react";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -52,7 +54,9 @@ function ContractEditorForm() {
         driverId: "",
         customerId: "",
         fileUrl: "",
-        templateId: ""
+        templateId: "",
+        isSigned: false,
+        signatureImageUrl: ""
     });
 
     const [isManuallyEdited, setIsManuallyEdited] = useState(false);
@@ -90,10 +94,24 @@ function ContractEditorForm() {
                 driverId: data.driverId || "",
                 customerId: data.customerId || "",
                 fileUrl: data.fileUrl || "",
-                templateId: data.templateId || ""
+                templateId: data.templateId || "",
+                isSigned: data.isSigned,
+                signatureImageUrl: data.signatureImageUrl || ""
             });
             setIsManuallyEdited(true);
         } catch (error) { console.error(error); } finally { setLoading(false); }
+    };
+
+    const sendContractEmail = async (contractId: string) => {
+        try {
+            setSaving(true);
+            await api.post(`/contracts/${contractId}/share`);
+            alert("Vertrag wurde erfolgreich per E-Mail gesendet!");
+        } catch (error: any) {
+            alert(error.response?.data?.error || "Fehler beim Senden");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const fillPlaceholders = useCallback((templateContent: string, driverId: string, startDate: string) => {
@@ -198,12 +216,45 @@ function ContractEditorForm() {
                             </div>
 
                             {formData.type === "DRIVER" && (
-                                <div>
+                                <div className="space-y-4">
                                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-2">Fahrer auswählen</label>
                                     <select required value={formData.driverId} onChange={(e) => setFormData({ ...formData, driverId: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border-2 border-slate-50 rounded-2xl px-6 py-4 outline-none focus:border-blue-500/20 transition font-black text-xs appearance-none">
                                         <option value="">Bitte Fahrer wählen...</option>
                                         {drivers.map(d => (<option key={d.id} value={d.id}>{d.firstName} {d.lastName}</option>))}
                                     </select>
+                                    
+                                    {driver && (
+                                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-[2rem] border border-blue-100 dark:border-blue-800/30 space-y-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black">{driver.firstName[0]}{driver.lastName[0]}</div>
+                                                <div>
+                                                    <p className="text-[10px] font-black uppercase text-blue-600 tracking-widest">{driver.firstName} {driver.lastName}</p>
+                                                    <p className="text-[9px] font-bold text-blue-400">{driver.email || "Keine E-Mail"}</p>
+                                                </div>
+                                            </div>
+                                            <div className="pt-3 grid grid-cols-2 gap-4 border-t border-blue-100/50">
+                                                <div className="space-y-1">
+                                                    <p className="text-[8px] font-black text-blue-300 uppercase">SSN / GISA</p>
+                                                    <p className="text-[10px] font-bold text-blue-700">{driver.ssn || driver.gisaNumber || "N/A"}</p>
+                                                </div>
+                                                <div className="space-y-1 text-right">
+                                                    <p className="text-[8px] font-black text-blue-300 uppercase">Telefon</p>
+                                                    <p className="text-[10px] font-bold text-blue-700">{driver.phone || "N/A"}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            {id && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => sendContractEmail(id)}
+                                                    className="w-full mt-2 bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800 text-blue-600 py-3 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition flex items-center justify-center gap-2"
+                                                >
+                                                    <Mail size={12} />
+                                                    Per E-Mail zum Signieren senden
+                                                </button>
+                                            )}
+                                        </motion.div>
+                                    )}
                                 </div>
                             )}
 
@@ -309,8 +360,18 @@ function ContractEditorForm() {
                                             <div className="text-[10px] font-black uppercase text-slate-400 text-center tracking-widest">FastRoute GmbH (Auftraggeber)</div>
                                         </div>
                                         <div className="flex-1 space-y-12">
-                                            <div className="h-px w-full bg-slate-200" />
-                                            <div className="text-[10px] font-black uppercase text-slate-400 text-center tracking-widest">Auftragnehmer ({driver ? `${driver.firstName} ${driver.lastName}` : 'Unterschrift'})</div>
+                                            <div className="flex flex-col items-center gap-2">
+                                                {formData.isSigned && formData.signatureImageUrl ? (
+                                                    <img src={formData.signatureImageUrl} alt="Unterschrift" className="max-h-[100px] object-contain animate-in fade-in zoom-in duration-1000" />
+                                                ) : (
+                                                    <div className="h-[100px] flex items-center justify-center text-slate-100 dark:text-slate-800"><Edit3 size={40} /></div>
+                                                )}
+                                                <div className="h-px w-full bg-slate-200" />
+                                            </div>
+                                            <div className="text-[10px] font-black uppercase text-slate-400 text-center tracking-widest">
+                                                Auftragnehmer ({driver ? `${driver.firstName} ${driver.lastName}` : 'Unterschrift'})
+                                                {formData.isSigned && <span className="block text-[8px] text-green-500 mt-1"><CheckCircle2 size={10} className="inline mr-1" /> Digital signiert</span>}
+                                            </div>
                                         </div>
                                     </footer>
                                     
