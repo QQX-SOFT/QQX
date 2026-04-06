@@ -1,0 +1,53 @@
+HEADER COUNT: 26
+[0] A -> Status
+[1] B -> Bild
+[2] C -> rider_id
+[3] D -> Vorname
+[4] E -> Familienname
+[5] F -> Arbeitsort
+[6] G -> Beschäftigungs modell
+[7] H -> Beschäftigungsart
+[8] I -> Bankverbindung
+[9] J -> Telefonnummer
+[10] K -> Adresse
+[11] L -> Arbeitsbewilligung vorhanden?
+[12] M -> Vers.-Nr.
+[13] N -> Geburtsdatum
+[14] O -> Geburtsort
+[15] P -> Familienstand
+[16] Q -> Staatsbürgerschaft
+[17] R -> Beschäftigt als.
+[18] S -> Beginn des Dienstverhältnisses
+[19] T -> Ende des Dienstverhältnisses
+[20] U -> Status Unterschrift
+[21] V -> Visum ablauf
+[22] W -> Bestellgebühr
+[23] X -> Stundenlohn
+[24] Y -> KM Geld
+[25] Z -> GISA-Zahl
+
+MAX COLS: 26
+
+SEARCHING FOR HAMIT:
+Row 115: Hamit  Ünye  (Length: 23)
+  [0] A: Aktif
+  [1] B: 
+  [2] C: 4402679
+  [3] D: Hamit 
+  [4] E: Ünye 
+  [5] F: ["Hohenems/Lustenau"]
+  [6] G: Vollzeit
+  [7] H: Gewerbe
+  [8] I: AT38 2060 4031 0362 2498 
+  [9] J: +43
+  [10] K: Stegenwies 2a, Top 5 6840 Götzis 
+  [11] L: Ja
+  [12] M: 
+  [13] N: 9091998
+  [14] O: 
+  [15] P: Ledig
+  [16] Q: Türkei 
+  [17] R: 
+  [18] S: 19012026
+  [20] U: 
+  [22] W: 5.5

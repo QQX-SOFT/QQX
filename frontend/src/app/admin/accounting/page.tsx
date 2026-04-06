@@ -234,7 +234,6 @@ export default function AccountingPage() {
                                 </tr>
                              ) : (() => {
                                 const grouped: any = {};
-                                const perOrderIds = ['4530788', '4524536', '4328784', '4468810', '4524892'];
 
                                 kpis.forEach(k => {
                                     const id = k.driverId || k.riderId;
@@ -272,10 +271,12 @@ export default function AccountingPage() {
                                 }
 
                                 return filteredRows.map((g: any, i) => {
-                                    const isPerOrder = perOrderIds.includes(g.riderId);
-                                    const totalWage = isPerOrder 
-                                        ? (g.totalOrders * g.payPerOrder) + (g.totalKm * g.payPerKm)
-                                        : (g.totalHours * g.hourlyWage);
+                                    const orderEarnings = g.totalOrders * g.payPerOrder;
+                                    const kmEarnings = g.totalKm * g.payPerKm;
+                                    const hourlyEarnings = g.totalHours * g.hourlyWage;
+                                    const totalWage = orderEarnings + kmEarnings + hourlyEarnings;
+
+                                    const isPerOrder = g.payPerOrder > 0;
 
                                     const employmentLabel = {
                                         'EMPLOYED': 'Angestellt',
@@ -296,26 +297,30 @@ export default function AccountingPage() {
                                             <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
                                             <td className="px-8 py-6">
                                                 <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest leading-none">
-                                                    {isPerOrder ? "Leistung (Pauschal)" : "Stundenbasis"}
+                                                    {g.hourlyWage > 0 && g.payPerOrder > 0 ? "Hybrid Basis" : g.hourlyWage > 0 ? "Stundenbasis" : "Leistung (Pauschal)"}
                                                 </span>
                                                 <p className="text-[7px] font-black text-slate-300 uppercase mt-1">{employmentLabel}</p>
                                             </td>
                                             <td className="px-8 py-6">
                                                 <div className="flex flex-col gap-1">
-                                                    {isPerOrder ? (
-                                                        <>
-                                                            <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Ord</span>
-                                                            <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
-                                                        </>
-                                                    ) : (
+                                                    {g.hourlyWage > 0 && (
                                                         <span className="text-[10px] font-black text-green-600 truncate">€{g.hourlyWage.toFixed(2)} / Std</span>
+                                                    )}
+                                                    {g.payPerOrder > 0 && (
+                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Ord</span>
+                                                    )}
+                                                    {g.payPerKm > 0 && (
+                                                        <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
+                                                    )}
+                                                    {g.hourlyWage === 0 && g.payPerOrder === 0 && (
+                                                        <span className="text-[10px] font-black text-slate-300 italic">Keine Rate</span>
                                                     )}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-center">
                                                 <div className="flex flex-col items-center">
                                                     <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
-                                                    {!isPerOrder && <span className="text-[8px] font-bold text-slate-400 uppercase mt-1">{g.totalHours.toFixed(1)} Std</span>}
+                                                    {g.totalHours > 0 && <span className="text-[8px] font-bold text-slate-400 uppercase mt-1">{g.totalHours.toFixed(1)} Std</span>}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-center">

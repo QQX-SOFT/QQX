@@ -1,0 +1,68 @@
+HEADER COUNT: 26
+[0] A -> Status
+[1] B -> Bild
+[2] C -> rider_id
+[3] D -> Vorname
+[4] E -> Familienname
+[5] F -> Arbeitsort
+[6] G -> Beschäftigungs modell
+[7] H -> Beschäftigungsart
+[8] I -> Bankverbindung
+[9] J -> Telefonnummer
+[10] K -> Adresse
+[11] L -> Arbeitsbewilligung vorhanden?
+[12] M -> Vers.-Nr.
+[13] N -> Geburtsdatum
+[14] O -> Geburtsort
+[15] P -> Familienstand
+[16] Q -> Staatsbürgerschaft
+[17] R -> Beschäftigt als.
+[18] S -> Beginn des Dienstverhältnisses
+[19] T -> Ende des Dienstverhältnisses
+[20] U -> Status Unterschrift
+[21] V -> Visum ablauf
+[22] W -> Bestellgebühr
+[23] X -> Stundenlohn
+[24] Y -> KM Geld
+[25] Z -> GISA-Zahl
+
+SAMPLE DATA (First 40 rows):
+Row 1: Abdalla Alqays | Type: Freiediensnehmer | W:  | X: 
+Row 2: Abdelhamid  Kordi  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 3: Abdulkadir  Cabo | Type: Freiediensnehmer | W:  | X: 
+Row 4: Abdulrahim  Mallouhi | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 5: Abdulrahman  Alhoussen  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 6: Ahmad  Alhasaka  | Type: Freiediensnehmer | W:  | X: 
+Row 7: Ahmed  Aldeeb  | Type: Freiediensnehmer | W:  | X: 
+Row 8: Al Dogem  Hassan  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 9: Khalil Al Mustafa | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 10: Huzafia  Alghani | Type: Freiediensnehmer | W:  | X: 
+Row 11: Ali  Cheikh Salem | Type: Freiediensnehmer | W:  | X: 
+Row 12: Hosam Alomar | Type: Gewerbe | W: 6.08 | X: 
+Row 13: Berat  Altinsoy | Type: Freiediensnehmer | W: 5.8 | X: 
+Row 14: Florian  Berger  | Type: Freiediensnehmer | W:  | X: 
+Row 15:  Bora  Cekic  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 16: Branko  Stankovic  | Type: Freiediensnehmer | W:  | X: 
+Row 17: Bülent  Elmas  | Type: Echte Dienstnehmer | W: 5.5 | X: 
+Row 18: Burak  Acikgöz  | Type: Freiediensnehmer | W:  | X: 
+Row 19: Can  Özsavas | Type: Freiediensnehmer | W:  | X: 
+Row 20: Cengizhan Muhammet  Topkaya  | Type: Freiediensnehmer | W:  | X: 
+Row 21: Duygu  Bozkaya  | Type: Freiediensnehmer | W: 4.8 | X: 
+Row 22: Emel  Cetinkaya  | Type: Freiediensnehmer | W:  | X: 
+Row 23: Emre  Aydin  | Type: Freiediensnehmer | W:  | X: 
+Row 24: Enes  Meral  | Type: Freiediensnehmer | W: 6 | X: 
+Row 25: Erdal  Ergün  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 26: Farah  Abshir  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 27: Fatih  Güler  | Type: Freiediensnehmer | W:  | X: 
+Row 28: Haci Furkan  Degirmenci  | Type: Freiediensnehmer | W:  | X: 
+Row 29: Furkan  Güler | Type: Freiediensnehmer | W:  | X: 
+Row 30: Erdogan  Özyön  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 31: Hani Okla | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 32: Hassan Aras  | Type: Freiediensnehmer | W:  | X: 
+Row 33: Hussein  Almari  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 34: Hussien  Ahmad  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 35: Ibrahim  Alshlash  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 36: Mohamed  Ibrahim Hassan  | Type: Freiediensnehmer | W: 5.5 | X: 
+Row 37: Iclal  Cinar | Type: Freiediensnehmer | W:  | X: 
+Row 38: Ismail  Girisen  | Type: Freiediensnehmer | W: 5.6 | X: 
+Row 39: Ismail Palta  | Type: Freiediensnehmer | W:  | X: 
