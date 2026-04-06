@@ -15,7 +15,8 @@ import {
     Loader2,
     X,
     Euro,
-    Banknote
+    Banknote,
+    Mail
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -115,51 +116,6 @@ export default function AccountingPage() {
                 ))}
             </div>
 
-            <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
-                <div className="p-8 border-b border-slate-50 flex justify-between items-center">
-                    <h3 className="text-xl font-black text-slate-900">Letzte Abrechnungen (Manuell)</h3>
-                    <Receipt className="text-slate-200" size={32} />
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50/50">
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Nr.</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Fahrer</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Zeitraum</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Betrag</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Status</th>
-                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Aktionen</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-50">
-                            {loading ? (
-                                <tr><td colSpan={6} className="py-10 text-center"><Loader2 className="animate-spin mx-auto" /></td></tr>
-                            ) : invoices.length === 0 ? (
-                                <tr><td colSpan={6} className="py-10 text-center text-slate-400">Keine Rechnungen</td></tr>
-                            ) : invoices.map((inv) => (
-                                <tr key={inv.id} className="hover:bg-slate-50/50">
-                                    <td className="px-8 py-6 font-bold">{inv.invoiceNumber || inv.id.slice(0,8)}</td>
-                                    <td className="px-8 py-6 font-bold">{inv.driver?.firstName} {inv.driver?.lastName}</td>
-                                    <td className="px-8 py-6 text-sm">{inv.period}</td>
-                                    <td className="px-8 py-6 font-black">€{inv.amount.toFixed(2)}</td>
-                                    <td className="px-8 py-6">
-                                        <button onClick={() => handleUpdateStatus(inv.id, inv.status)} className={cn("px-3 py-1 rounded-xl text-[10px] font-black uppercase", inv.status === "PAID" ? "bg-green-50 text-green-600" : "bg-yellow-50 text-yellow-600")}>
-                                            {inv.status}
-                                        </button>
-                                    </td>
-                                    <td className="px-8 py-6">
-                                        <div className="flex gap-2">
-                                            <Printer size={18} className="text-slate-300" />
-                                            <Download size={18} className="text-slate-300" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
             {/* Monthly Worker Salary Overview */}
             <div className="bg-white rounded-[3rem] border border-slate-100 shadow-xl overflow-hidden mt-12 mb-20">
@@ -244,6 +200,7 @@ export default function AccountingPage() {
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Orders</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">KM Gesamt</th>
                                 <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Gehalt (Netto)</th>
+                                <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Aktionen</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -358,6 +315,19 @@ export default function AccountingPage() {
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {totalWage.toFixed(2)}</span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right">
+                                                {g.type === 'COMMERCIAL' && (
+                                                    <button 
+                                                        onClick={() => {
+                                                            alert(`An Info-Mail wurde an ${g.driver?.firstName} ${g.driver?.lastName} gesendet.\n\nInhalt:\n- Gelieferte Bestellungen: ${g.totalOrders}\n- Fahrtstrecke: ${g.totalKm.toFixed(1)} km\n- Nettoverdienst: €${totalWage.toFixed(2)}\n\nBitte senden Sie uns eine Rechnung.`);
+                                                        }}
+                                                        className="flex items-center gap-2 ml-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition group/btn"
+                                                    >
+                                                        <Mail size={14} className="group-hover/btn:scale-110 transition" />
+                                                        Mail senden
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     );

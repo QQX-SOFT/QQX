@@ -22,6 +22,7 @@ import {
     MousePointer2
 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function LandingPage() {
   const fadeIn = {
