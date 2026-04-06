@@ -178,6 +178,7 @@ export default function AdminKpiPage() {
                     const existing = map.get(key);
                     
                     // aggregate fields
+                    // aggregate numeric fields
                     Object.keys(k).forEach(field => {
                         if (typeof k[field] === 'number' && field !== 'id') {
                             existing[field] = (existing[field] || 0) + k[field];
@@ -191,6 +192,14 @@ export default function AdminKpiPage() {
                             }
                         });
                     }
+
+                    // Ensure non-numeric fields from DB (Prisma camelCase) are also accessible via snake_case
+                    existing.rider_id = existing.riderId;
+                    existing.city_name = existing.cityName;
+                    existing.created_date_local = existing.dateLocal;
+                    existing.completed_orders = existing.deliveredOrders;
+                    existing.hours_worked = existing.hoursWorked;
+                    existing.rider_name = existing.riderName;
                 }
             });
             return Array.from(map.values());
@@ -385,7 +394,16 @@ export default function AdminKpiPage() {
                                     ) : groupedKpis.map((k) => (
                                         <tr key={k.id || Math.random()} className="hover:bg-slate-50/50 transition-colors group">
                                             {visibleColumns.map(colId => {
-                                                const val = k[colId] ?? k.metrics?.[colId] ?? "-";
+                                                const prismaFields: any = {
+                                                    "rider_id": "riderId",
+                                                    "city_name": "cityName",
+                                                    "created_date_local": "dateLocal",
+                                                    "completed_orders": "deliveredOrders",
+                                                    "hours_worked": "hoursWorked",
+                                                    "rider_name": "riderName"
+                                                };
+                                                const pKey = prismaFields[colId] || colId;
+                                                const val = k[pKey] ?? k[colId] ?? k.metrics?.[colId] ?? "-";
                                                 
                                                 // Specific formatting for certain columns
                                                 if (colId === "rider_name") {
