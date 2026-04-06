@@ -281,11 +281,13 @@ export default function AccountingPage() {
                                     
                                     // IF hourly basis -> total = hours * rate. IF order basis -> total = (order * rate) + (km * rate)
                                     const totalWage = isBestellbasis ? (orderEarnings + kmEarnings) : hourlyEarnings;
+                                    const rate = !isBestellbasis ? (g.payPerOrder > 0 ? g.payPerOrder : g.hourlyWage) : g.payPerOrder;
                                     
                                     return { 
                                         ...g, 
                                         totalWage, 
                                         isBestellbasis,
+                                        rate,
                                         riderName: g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName
                                     };
                                 });
@@ -349,19 +351,19 @@ export default function AccountingPage() {
                                                         <div className="flex flex-col gap-1">
                                                             {!g.isBestellbasis ? (
                                                                 <span className="text-[10px] font-black text-green-600 truncate">
-                                                                    €{(g.payPerOrder > 0 ? g.payPerOrder : g.hourlyWage).toFixed(2)} / Std
+                                                                    €{g.rate.toFixed(2)} / Std
                                                                 </span>
                                                             ) : (
                                                                 <>
-                                                                    {g.payPerOrder > 0 && (
-                                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Best</span>
+                                                                    {g.rate > 0 && (
+                                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.rate.toFixed(2)} / Best</span>
                                                                     )}
                                                                     {g.payPerKm > 0 && (
                                                                         <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
                                                                     )}
                                                                 </>
                                                             )}
-                                                            {g.hourlyWage === 0 && g.payPerOrder === 0 && (
+                                                            {g.rate === 0 && g.payPerKm === 0 && (
                                                                 <span className="text-[10px] font-black text-slate-300 italic">Keine Rate</span>
                                                             )}
                                                         </div>
