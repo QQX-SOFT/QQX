@@ -15,7 +15,9 @@ import {
     ArrowUpRight,
     Coins,
     BarChart3,
-    Trash2
+    Trash2,
+    Settings2,
+    X
 } from "lucide-react";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -30,7 +32,15 @@ export default function AdminKpiPage() {
     const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
     const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [visibleColumns, setVisibleColumns] = useState<string[]>(["rider_name", "city_name", "completed_orders", "hours_worked", "utr"]);
+    const [visibleColumns, setVisibleColumns] = useState<string[]>([
+        "rider_id", 
+        "city_name", 
+        "created_date_local", 
+        "completed_orders", 
+        "hours_worked", 
+        "rider_name"
+    ]);
+    const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
 
     const allColumnOptions = [
         { id: "rider_id", label: "Fahrer-ID" },
@@ -153,9 +163,43 @@ export default function AdminKpiPage() {
         k.driver?.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const totalOrders = filteredKpis.reduce((acc, curr) => acc + curr.deliveredOrders, 0);
-    const totalHours = filteredKpis.reduce((acc, curr) => acc + curr.hoursWorked, 0);
-    const avgUtr = filteredKpis.length ? (filteredKpis.reduce((acc, curr) => acc + (curr.utr || 0), 0) / filteredKpis.length).toFixed(2) : 0;
+    const groupedKpis = React.useMemo(() => {
+        if (selectedWeek) {
+            return filteredKpis;
+        } else {
+            const map = new Map<string, any>();
+            filteredKpis.forEach(k => {
+                const key = k.riderId || k.riderName || k.id;
+                if (!map.has(key)) {
+                    // Deep copy
+                    const clone = { ...k, metrics: { ...(k.metrics || {}) } };
+                    map.set(key, clone);
+                } else {
+                    const existing = map.get(key);
+                    
+                    // aggregate fields
+                    Object.keys(k).forEach(field => {
+                        if (typeof k[field] === 'number' && field !== 'id') {
+                            existing[field] = (existing[field] || 0) + k[field];
+                        }
+                    });
+                    
+                    if (k.metrics) {
+                        Object.keys(k.metrics).forEach(field => {
+                            if (typeof k.metrics[field] === 'number') {
+                                existing.metrics[field] = (existing.metrics[field] || 0) + k.metrics[field];
+                            }
+                        });
+                    }
+                }
+            });
+            return Array.from(map.values());
+        }
+    }, [filteredKpis, selectedWeek]);
+
+    const totalOrders = groupedKpis.reduce((acc, curr) => acc + (curr.deliveredOrders || curr.completed_orders || curr.metrics?.completed_orders || 0), 0);
+    const totalHours = groupedKpis.reduce((acc, curr) => acc + (curr.hoursWorked || curr.hours_worked || curr.metrics?.hours_worked || 0), 0);
+    const avgUtr = groupedKpis.length ? (groupedKpis.reduce((acc, curr) => acc + (curr.utr || curr.metrics?.utr || 0), 0) / groupedKpis.length).toFixed(2) : 0;
 
     return (
         <div className="space-y-10 pb-20">
@@ -286,22 +330,13 @@ export default function AdminKpiPage() {
                             <h3 className="text-lg font-black text-slate-900 tracking-tight">Rider Performance Liste</h3>
                             <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
                                 {/* Column Selector */}
-                                <div className="flex flex-wrap gap-2 mr-4">
-                                    {allColumnOptions.map(col => (
-                                        <button 
-                                            key={col.id}
-                                            onClick={() => toggleColumn(col.id)}
-                                            className={cn(
-                                                "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border",
-                                                visibleColumns.includes(col.id) 
-                                                    ? "bg-slate-900 text-white border-slate-900 shadow-md" 
-                                                    : "bg-white text-slate-400 border-slate-100 hover:border-slate-200"
-                                            )}
-                                        >
-                                            {col.label}
-                                        </button>
-                                    ))}
-                                </div>
+                                <button 
+                                    onClick={() => setIsColumnModalOpen(true)}
+                                    className="px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 transition-all mr-4 shadow-sm"
+                                >
+                                    <Settings2 size={16} />
+                                    SPALTEN ANPASSEN
+                                </button>
                                 <div className="relative flex-1 md:flex-initial">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                                     <input 
@@ -341,14 +376,14 @@ export default function AdminKpiPage() {
                                                 <Loader2 className="animate-spin text-blue-600 mx-auto" size={32} />
                                             </td>
                                         </tr>
-                                    ) : filteredKpis.length === 0 ? (
+                                    ) : groupedKpis.length === 0 ? (
                                         <tr>
                                             <td colSpan={visibleColumns.length + 1} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
                                                 Keine passenden Daten gefunden.
                                             </td>
                                         </tr>
-                                    ) : filteredKpis.map((k) => (
-                                        <tr key={k.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    ) : groupedKpis.map((k) => (
+                                        <tr key={k.id || Math.random()} className="hover:bg-slate-50/50 transition-colors group">
                                             {visibleColumns.map(colId => {
                                                 const val = k[colId] ?? k.metrics?.[colId] ?? "-";
                                                 
@@ -400,6 +435,62 @@ export default function AdminKpiPage() {
                     </div>
                 </div>
             </div>
+
+            {isColumnModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <div>
+                                <h3 className="text-2xl font-black text-slate-900 tracking-tight">Angezeigte Spalten</h3>
+                                <p className="text-slate-500 font-medium text-sm mt-1">Wählen Sie die Spalten aus, die in der Tabelle angezeigt werden sollen.</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsColumnModalOpen(false)}
+                                className="p-3 bg-slate-50 hover:bg-red-50 hover:text-red-500 text-slate-400 rounded-2xl transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                {allColumnOptions.map(col => {
+                                    const isSelected = visibleColumns.includes(col.id);
+                                    return (
+                                        <label 
+                                            key={col.id} 
+                                            className={cn(
+                                                "flex items-start gap-3 p-4 rounded-2xl cursor-pointer border-2 transition-all",
+                                                isSelected ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-300"
+                                            )}
+                                        >
+                                            <input 
+                                                type="checkbox" 
+                                                checked={isSelected} 
+                                                onChange={() => toggleColumn(col.id)}
+                                                className="mt-1 accent-slate-900 w-4 h-4 rounded"
+                                            />
+                                            <span className={cn(
+                                                "text-xs font-bold leading-tight",
+                                                isSelected ? "text-slate-900" : "text-slate-500"
+                                            )}>{col.label}</span>
+                                        </label>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
+                            <button 
+                                onClick={() => setIsColumnModalOpen(false)} 
+                                className="px-8 py-4 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10"
+                            >
+                                SCHLIESSEN & ÜBERNEHMEN
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
