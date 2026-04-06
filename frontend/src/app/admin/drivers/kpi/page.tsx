@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-    Loader2, 
-    Upload, 
-    FileText, 
-    TrendingUp, 
-    Clock, 
-    CheckCircle2, 
+import {
+    Loader2,
+    Upload,
+    FileText,
+    TrendingUp,
+    Clock,
+    CheckCircle2,
     AlertCircle,
     Download,
     Search,
@@ -23,10 +23,10 @@ import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Reorder, AnimatePresence } from "framer-motion";
-import { 
-    Tabs, 
-    TabsList, 
-    TabsTrigger 
+import {
+    Tabs,
+    TabsList,
+    TabsTrigger
 } from "@/components/ui/tabs";
 import {
     Popover,
@@ -49,11 +49,11 @@ export default function AdminKpiPage() {
     const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [visibleColumns, setVisibleColumns] = useState<string[]>([
-        "rider_id", 
-        "city_name", 
-        "created_date_local", 
-        "completed_orders", 
-        "hours_worked", 
+        "rider_id",
+        "city_name",
+        "created_date_local",
+        "completed_orders",
+        "hours_worked",
         "rider_name"
     ]);
     const [filterType, setFilterType] = useState<"week" | "month" | "range">("month");
@@ -110,7 +110,7 @@ export default function AdminKpiPage() {
     ];
 
     const toggleColumn = (id: string) => {
-        setVisibleColumns(prev => 
+        setVisibleColumns(prev =>
             prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
         );
     };
@@ -119,7 +119,7 @@ export default function AdminKpiPage() {
         try {
             setLoading(true);
             const params = new URLSearchParams();
-            
+
             if (filterType === "week" && selectedWeek) {
                 params.append("week", selectedWeek);
             } else if (filterType === "month" && selectedMonth && selectedYear) {
@@ -129,10 +129,10 @@ export default function AdminKpiPage() {
                 params.append("startDate", dateRange.from.toISOString());
                 params.append("endDate", dateRange.to.toISOString());
             }
-            
+
             const { data } = await api.get(`/kpis?${params.toString()}`);
             setKpis(data);
-            
+
             const { data: uploadData } = await api.get('/kpis/uploads');
             setUploads(uploadData);
         } catch (e) {
@@ -179,7 +179,7 @@ export default function AdminKpiPage() {
             alert("Löschvorgang fehlgeschlagen.");
         }
     };
-    const filteredKpis = kpis.filter(k => 
+    const filteredKpis = kpis.filter(k =>
         k.riderName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         k.riderId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         k.driver?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -199,7 +199,7 @@ export default function AdminKpiPage() {
                     map.set(key, clone);
                 } else {
                     const existing = map.get(key);
-                    
+
                     // aggregate fields
                     // aggregate numeric fields
                     Object.keys(k).forEach(field => {
@@ -207,7 +207,7 @@ export default function AdminKpiPage() {
                             existing[field] = (existing[field] || 0) + k[field];
                         }
                     });
-                    
+
                     if (k.metrics) {
                         Object.keys(k.metrics).forEach(field => {
                             if (typeof k.metrics[field] === 'number') {
@@ -285,7 +285,7 @@ export default function AdminKpiPage() {
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monat wählen</label>
                                 <div className="grid grid-cols-1 gap-3">
-                                    <select 
+                                    <select
                                         className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
                                         value={selectedMonth}
                                         onChange={e => setSelectedMonth(e.target.value)}
@@ -296,7 +296,7 @@ export default function AdminKpiPage() {
                                             </option>
                                         ))}
                                     </select>
-                                    <select 
+                                    <select
                                         className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
                                         value={selectedYear}
                                         onChange={e => setSelectedYear(e.target.value)}
@@ -312,7 +312,7 @@ export default function AdminKpiPage() {
                         {filterType === "week" && (
                             <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Woche wählen</label>
-                                <select 
+                                <select
                                     className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
                                     value={selectedWeek}
                                     onChange={e => setSelectedWeek(e.target.value)}
@@ -366,7 +366,7 @@ export default function AdminKpiPage() {
                                 </Popover>
                             </div>
                         )}
-                        
+
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-2">Letzte Uploads</h4>
                             <div className="space-y-3">
@@ -374,7 +374,7 @@ export default function AdminKpiPage() {
                                     <div key={u.id} className="flex flex-col p-4 bg-slate-50 rounded-2xl border border-slate-100 group">
                                         <div className="flex justify-between items-start gap-2">
                                             <p className="text-[10px] font-bold text-slate-900 truncate flex-1">{u.filename}</p>
-                                            <button 
+                                            <button
                                                 onClick={() => handleDeleteUpload(u.id)}
                                                 className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
                                             >
@@ -390,7 +390,7 @@ export default function AdminKpiPage() {
                             </div>
                         </div>
 
-                        <button 
+                        <button
                             onClick={async () => {
                                 if (confirm("ACHTUNG: ALLE KPI-Daten für diesen Mandanten werden unwiderruflich gelöscht. Fortfahren?")) {
                                     await api.delete('/kpis/clear');
@@ -411,7 +411,7 @@ export default function AdminKpiPage() {
                             <h3 className="text-lg font-black text-slate-900 tracking-tight">Rider Performance Liste</h3>
                             <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
                                 {/* Column Selector */}
-                                <button 
+                                <button
                                     onClick={() => setIsColumnModalOpen(true)}
                                     className="px-4 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-[11px] uppercase tracking-widest flex items-center gap-2 hover:bg-slate-50 transition-all mr-4 shadow-sm"
                                 >
@@ -420,9 +420,9 @@ export default function AdminKpiPage() {
                                 </button>
                                 <div className="relative flex-1 md:flex-initial">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                                    <input 
-                                        placeholder="Name veya Rider ID..." 
-                                        className="pl-12 pr-6 py-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-sm w-full md:w-[300px]" 
+                                    <input
+                                        placeholder="Name veya Rider ID..."
+                                        className="pl-12 pr-6 py-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-blue-500 font-bold text-sm w-full md:w-[300px]"
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         list="rider-suggestions"
@@ -476,7 +476,7 @@ export default function AdminKpiPage() {
                                                 };
                                                 const pKey = prismaFields[colId] || colId;
                                                 const val = k[pKey] ?? k[colId] ?? k.metrics?.[colId] ?? "-";
-                                                
+
                                                 // Specific formatting for certain columns
                                                 if (colId === "rider_name") {
                                                     return (
@@ -534,21 +534,21 @@ export default function AdminKpiPage() {
                                 <h3 className="text-2xl font-black text-slate-900 tracking-tight">Angezeigte Spalten</h3>
                                 <p className="text-slate-500 font-medium text-sm mt-1">Wählen Sie die Spalten aus, die in der Tabelle angezeigt werden sollen.</p>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setIsColumnModalOpen(false)}
                                 className="p-3 bg-slate-50 hover:bg-red-50 hover:text-red-500 text-slate-400 rounded-2xl transition-colors"
                             >
                                 <X size={20} />
                             </button>
                         </div>
-                        
+
                         <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
                             <section>
                                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Reihenfolge anpassen (Drag & Drop)</h4>
                                 <Reorder.Group axis="y" values={visibleColumns} onReorder={setVisibleColumns} className="space-y-2">
                                     {visibleColumns.map(colId => (
-                                        <Reorder.Item 
-                                            key={colId} 
+                                        <Reorder.Item
+                                            key={colId}
                                             value={colId}
                                             className="flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl cursor-grab active:cursor-grabbing border border-white/10 shadow-lg"
                                         >
@@ -559,7 +559,7 @@ export default function AdminKpiPage() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <button 
+                                                <button
                                                     onClick={(e) => {
                                                         e.preventDefault();
                                                         toggleColumn(colId);
@@ -579,13 +579,13 @@ export default function AdminKpiPage() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                                     {allColumnOptions.filter(col => !visibleColumns.includes(col.id)).map(col => {
                                         return (
-                                            <label 
-                                                key={col.id} 
+                                            <label
+                                                key={col.id}
                                                 className="flex items-start gap-3 p-4 rounded-2xl cursor-pointer border-2 border-slate-100 hover:border-slate-300 transition-all"
                                             >
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={false} 
+                                                <input
+                                                    type="checkbox"
+                                                    checked={false}
                                                     onChange={() => toggleColumn(col.id)}
                                                     className="mt-1 accent-slate-900 w-4 h-4 rounded"
                                                 />
@@ -598,8 +598,8 @@ export default function AdminKpiPage() {
                         </div>
 
                         <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">
-                            <button 
-                                onClick={() => setIsColumnModalOpen(false)} 
+                            <button
+                                onClick={() => setIsColumnModalOpen(false)}
                                 className="px-8 py-4 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-xl shadow-slate-900/10"
                             >
                                 SCHLIESSEN & ÜBERNEHMEN
