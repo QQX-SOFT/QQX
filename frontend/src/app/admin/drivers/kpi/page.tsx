@@ -22,6 +22,22 @@ import {
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Reorder, AnimatePresence } from "framer-motion";
+import { 
+    Tabs, 
+    TabsList, 
+    TabsTrigger 
+} from "@/components/ui/tabs";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
 
 export default function AdminKpiPage() {
     const [kpis, setKpis] = useState<any[]>([]);
@@ -40,6 +56,8 @@ export default function AdminKpiPage() {
         "hours_worked", 
         "rider_name"
     ]);
+    const [filterType, setFilterType] = useState<"week" | "month" | "range">("month");
+    const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
     const [isColumnModalOpen, setIsColumnModalOpen] = useState(false);
 
     const allColumnOptions = [
@@ -101,10 +119,15 @@ export default function AdminKpiPage() {
         try {
             setLoading(true);
             const params = new URLSearchParams();
-            if (selectedWeek) params.append("week", selectedWeek);
-            if (selectedMonth && selectedYear) {
+            
+            if (filterType === "week" && selectedWeek) {
+                params.append("week", selectedWeek);
+            } else if (filterType === "month" && selectedMonth && selectedYear) {
                 params.append("month", selectedMonth);
                 params.append("year", selectedYear);
+            } else if (filterType === "range" && dateRange?.from && dateRange?.to) {
+                params.append("startDate", dateRange.from.toISOString());
+                params.append("endDate", dateRange.to.toISOString());
             }
             
             const { data } = await api.get(`/kpis?${params.toString()}`);
@@ -121,7 +144,7 @@ export default function AdminKpiPage() {
 
     useEffect(() => {
         fetchKpis();
-    }, [selectedWeek, selectedMonth, selectedYear]);
+    }, [selectedWeek, selectedMonth, selectedYear, filterType, dateRange]);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -164,7 +187,7 @@ export default function AdminKpiPage() {
     );
 
     const groupedKpis = React.useMemo(() => {
-        if (selectedWeek) {
+        if (filterType === "week" && selectedWeek) {
             return filteredKpis;
         } else {
             const map = new Map<string, any>();
@@ -248,52 +271,101 @@ export default function AdminKpiPage() {
                 <aside className="lg:col-span-1 space-y-8">
                     <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl space-y-6">
                         <div className="space-y-4">
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Zeitraum wählen</label>
-                           <div className="grid grid-cols-2 gap-3">
-                                <select 
-                                    className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
-                                    value={selectedMonth}
-                                    onChange={e => {
-                                        setSelectedMonth(e.target.value);
-                                        setSelectedWeek(""); // Clear week if month selected
-                                    }}
-                                >
-                                    {[...Array(12)].map((_, i) => (
-                                        <option key={i + 1} value={i + 1}>
-                                            {new Date(0, i).toLocaleString('de-DE', { month: 'long' })}
-                                        </option>
-                                    ))}
-                                </select>
-                                <select 
-                                    className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
-                                    value={selectedYear}
-                                    onChange={e => setSelectedYear(e.target.value)}
-                                >
-                                    {[2024, 2025, 2026].map(y => (
-                                        <option key={y} value={y}>{y}</option>
-                                    ))}
-                                </select>
-                           </div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Analyse-Modus</label>
+                            <Tabs value={filterType} onValueChange={(v: any) => setFilterType(v)} className="w-full">
+                                <TabsList className="grid grid-cols-3 bg-slate-50 p-1 rounded-xl">
+                                    <TabsTrigger value="week" className="text-[10px] font-bold">Woche</TabsTrigger>
+                                    <TabsTrigger value="month" className="text-[10px] font-bold">Monat</TabsTrigger>
+                                    <TabsTrigger value="range" className="text-[10px] font-bold">Bereich</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
                         </div>
 
-                        <div className="space-y-2">
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Wochenansicht (Optional)</label>
-                           <select 
-                            className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
-                            value={selectedWeek}
-                            onChange={e => {
-                                setSelectedWeek(e.target.value);
-                                if (e.target.value) {
-                                    setSelectedMonth("");
-                                }
-                            }}
-                           >
-                                <option value="">Alle Wochen</option>
-                                {[...new Set(uploads.map(u => u.isoweek))].filter(Boolean).sort((a: any, b: any) => b - a).map(w => (
-                                    <option key={w} value={w}>Woche {w}</option>
-                                ))}
-                           </select>
-                        </div>
+                        {filterType === "month" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monat wählen</label>
+                                <div className="grid grid-cols-1 gap-3">
+                                    <select 
+                                        className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
+                                        value={selectedMonth}
+                                        onChange={e => setSelectedMonth(e.target.value)}
+                                    >
+                                        {[...Array(12)].map((_, i) => (
+                                            <option key={i + 1} value={i + 1}>
+                                                {new Date(0, i).toLocaleString('de-DE', { month: 'long' })}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select 
+                                        className="bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
+                                        value={selectedYear}
+                                        onChange={e => setSelectedYear(e.target.value)}
+                                    >
+                                        {[2024, 2025, 2026].map(y => (
+                                            <option key={y} value={y}>{y}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {filterType === "week" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Woche wählen</label>
+                                <select 
+                                    className="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 outline-none focus:border-blue-500 font-bold"
+                                    value={selectedWeek}
+                                    onChange={e => setSelectedWeek(e.target.value)}
+                                >
+                                    <option value="">Woche auswählen</option>
+                                    {[...new Set(uploads.map(u => u.isoweek))].filter(Boolean).sort((a: any, b: any) => b - a).map(w => (
+                                        <option key={w} value={w}>KW {w}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        {filterType === "range" && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Individueller Bereich</label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant={"outline"}
+                                            className={cn(
+                                                "w-full justify-start text-left font-bold bg-slate-50 border-slate-100 h-14 rounded-2xl",
+                                                !dateRange && "text-slate-400"
+                                            )}
+                                        >
+                                            <Clock className="mr-2 h-4 w-4" />
+                                            {dateRange?.from ? (
+                                                dateRange.to ? (
+                                                    <>
+                                                        {format(dateRange.from, "dd.MM.yy")} -{" "}
+                                                        {format(dateRange.to, "dd.MM.yy")}
+                                                    </>
+                                                ) : (
+                                                    format(dateRange.from, "dd.MM.yy")
+                                                )
+                                            ) : (
+                                                <span>Datum wählen</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0 border-none shadow-2xl" align="start">
+                                        <Calendar
+                                            initialFocus
+                                            mode="range"
+                                            defaultMonth={dateRange?.from}
+                                            selected={dateRange}
+                                            onSelect={setDateRange}
+                                            numberOfMonths={1}
+                                            locale={de}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        )}
                         
                         <div className="space-y-4">
                             <h4 className="text-[10px] font-black text-slate-900 uppercase tracking-widest border-b border-slate-50 pb-2">Letzte Uploads</h4>
@@ -470,32 +542,59 @@ export default function AdminKpiPage() {
                             </button>
                         </div>
                         
-                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                {allColumnOptions.map(col => {
-                                    const isSelected = visibleColumns.includes(col.id);
-                                    return (
-                                        <label 
-                                            key={col.id} 
-                                            className={cn(
-                                                "flex items-start gap-3 p-4 rounded-2xl cursor-pointer border-2 transition-all",
-                                                isSelected ? "border-slate-900 bg-slate-50" : "border-slate-100 hover:border-slate-300"
-                                            )}
+                        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8">
+                            <section>
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Reihenfolge anpassen (Drag & Drop)</h4>
+                                <Reorder.Group axis="y" values={visibleColumns} onReorder={setVisibleColumns} className="space-y-2">
+                                    {visibleColumns.map(colId => (
+                                        <Reorder.Item 
+                                            key={colId} 
+                                            value={colId}
+                                            className="flex items-center justify-between p-4 bg-slate-900 text-white rounded-2xl cursor-grab active:cursor-grabbing border border-white/10 shadow-lg"
                                         >
-                                            <input 
-                                                type="checkbox" 
-                                                checked={isSelected} 
-                                                onChange={() => toggleColumn(col.id)}
-                                                className="mt-1 accent-slate-900 w-4 h-4 rounded"
-                                            />
-                                            <span className={cn(
-                                                "text-xs font-bold leading-tight",
-                                                isSelected ? "text-slate-900" : "text-slate-500"
-                                            )}>{col.label}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <Settings2 size={14} className="text-slate-500" />
+                                                <span className="text-xs font-black uppercase tracking-widest">
+                                                    {allColumnOptions.find(c => c.id === colId)?.label}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button 
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        toggleColumn(colId);
+                                                    }}
+                                                    className="p-1 hover:text-red-400"
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        </Reorder.Item>
+                                    ))}
+                                </Reorder.Group>
+                            </section>
+
+                            <section>
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Weitere Spalten hinzufügen</h4>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                    {allColumnOptions.filter(col => !visibleColumns.includes(col.id)).map(col => {
+                                        return (
+                                            <label 
+                                                key={col.id} 
+                                                className="flex items-start gap-3 p-4 rounded-2xl cursor-pointer border-2 border-slate-100 hover:border-slate-300 transition-all"
+                                            >
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={false} 
+                                                    onChange={() => toggleColumn(col.id)}
+                                                    className="mt-1 accent-slate-900 w-4 h-4 rounded"
+                                                />
+                                                <span className="text-xs font-bold leading-tight text-slate-500">{col.label}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </section>
                         </div>
 
                         <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-3">

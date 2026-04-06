@@ -357,7 +357,12 @@ router.get('/', async (req: TenantRequest, res: Response) => {
         
         if (week) where.isoweek = Number(week);
         
-        if (month && year) {
+        if (req.query.startDate && req.query.endDate) {
+            where.dateLocal = {
+                gte: new Date(String(req.query.startDate)),
+                lte: new Date(String(req.query.endDate))
+            };
+        } else if (month && year) {
             const startDate = new Date(Number(year), Number(month) - 1, 1);
             const endDate = new Date(Number(year), Number(month), 1);
             where.dateLocal = {
