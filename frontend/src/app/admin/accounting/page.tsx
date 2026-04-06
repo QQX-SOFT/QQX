@@ -34,6 +34,8 @@ export default function AccountingPage() {
     const [basisFilter, setBasisFilter] = useState<'ALL' | 'STUNDENBASIS' | 'BESTELLBASIS'>('ALL');
     const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
 
+    const BESTELLBASIS_IDS = ['4530788', '4524536', '4328784', '4468810', '4524892'];
+
     useEffect(() => {
         fetchInvoices();
         fetchDrivers();
@@ -198,7 +200,8 @@ export default function AccountingPage() {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-slate-50/50">
@@ -234,7 +237,7 @@ export default function AccountingPage() {
                         <tbody className="divide-y divide-slate-100">
                             {kpis.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                    <td colSpan={8} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
                                         Keine Report-Daten für diesen Monat gefunden.
                                     </td>
                                 </tr>
@@ -264,17 +267,19 @@ export default function AccountingPage() {
 
                                 let rows = Object.values(grouped).filter((g: any) => {
                                     const matchesType = activeTab === 'ALL' || g.type === activeTab;
-                                    const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
+                                    const isBestellbasis = BESTELLBASIS_IDS.includes(String(g.riderId));
                                     const matchesBasis = basisFilter === 'ALL' || 
                                                         (basisFilter === 'STUNDENBASIS' && !isBestellbasis) || 
                                                         (basisFilter === 'BESTELLBASIS' && isBestellbasis);
                                     return matchesType && matchesBasis;
                                 }).map((g: any) => {
+                                    const isBestellbasis = BESTELLBASIS_IDS.includes(String(g.riderId));
                                     const orderEarnings = g.totalOrders * g.payPerOrder;
                                     const kmEarnings = g.totalKm * g.payPerKm;
                                     const hourlyEarnings = g.totalHours * g.hourlyWage;
-                                    const totalWage = orderEarnings + kmEarnings + hourlyEarnings;
-                                    const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
+                                    
+                                    // IF hourly basis -> total = hours * rate. IF order basis -> total = (order * rate) + (km * rate)
+                                    const totalWage = isBestellbasis ? (orderEarnings + kmEarnings) : hourlyEarnings;
                                     
                                     return { 
                                         ...g, 
@@ -310,81 +315,155 @@ export default function AccountingPage() {
                                     );
                                 }
 
-                                return rows.map((g: any, i) => {
-                                    const employmentLabel = {
-                                        'EMPLOYED': 'Dienstnehmer',
-                                        'FREELANCE': 'Freier Dienstnehmer',
-                                        'COMMERCIAL': 'Gewerbe'
-                                    }[g.type as string] || 'Dienstnehmer';
+                                return (
+                                    <>
+                                        {/* TABLE VERSION (HIDDEN ON MOBILE) */}
+                                        {rows.map((g: any, i) => {
+                                            const employmentLabel = {
+                                                'EMPLOYED': 'Dienstnehmer',
+                                                'FREELANCE': 'Freier Dienstnehmer',
+                                                'COMMERCIAL': 'Gewerbe'
+                                            }[g.type as string] || 'Dienstnehmer';
 
-                                    return (
-                                        <tr key={i} className="hover:bg-blue-50/20 transition group border-l-4 border-l-transparent hover:border-l-blue-600">
-                                            <td className="px-8 py-6">
-                                                <div className="flex flex-col">
-                                                    <span className="font-black text-slate-900 group-hover:text-blue-600 transition truncate max-w-[150px]">
-                                                        {g.riderName}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
-                                            <td className="px-8 py-6">
-                                                <span className={cn(
-                                                    "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest leading-none",
-                                                    g.isBestellbasis ? "bg-blue-900 text-white" : "bg-slate-900 text-white"
-                                                )}>
-                                                    {g.isBestellbasis ? "Bestellbasis" : "Stundenbasis"}
-                                                </span>
-                                                <p className="text-[7px] font-black text-slate-300 uppercase mt-1">{employmentLabel}</p>
-                                            </td>
-                                            <td className="px-8 py-6">
-                                                <div className="flex flex-col gap-1">
-                                                    {g.hourlyWage > 0 && (
-                                                        <span className="text-[10px] font-black text-green-600 truncate">€{g.hourlyWage.toFixed(2)} / Std</span>
-                                                    )}
-                                                    {g.payPerOrder > 0 && (
-                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Best</span>
-                                                    )}
-                                                    {g.payPerKm > 0 && (
-                                                        <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
-                                                    )}
-                                                    {g.hourlyWage === 0 && g.payPerOrder === 0 && (
-                                                        <span className="text-[10px] font-black text-slate-300 italic">Keine Rate</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
-                                                    {g.totalHours > 0 && <span className="text-[8px] font-bold text-slate-400 uppercase mt-1">{g.totalHours.toFixed(1)} Std</span>}
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-center">
-                                                <div className="flex flex-col items-center">
-                                                    <span className="text-sm font-extrabold text-slate-950">{g.totalKm.toFixed(1)} km</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {g.totalWage.toFixed(2)}</span>
-                                            </td>
-                                            <td className="px-8 py-6 text-right">
-                                                {g.type === 'COMMERCIAL' && (
-                                                    <button 
-                                                        onClick={() => {
-                                                            alert(`An Info-Mail wurde an ${g.riderName} gesendet.\n\nInhalt:\n- Gelieferte Bestellungen: ${g.totalOrders}\n- Fahrtstrecke: ${g.totalKm.toFixed(1)} km\n- Nettoverdienst: €${g.totalWage.toFixed(2)}\n\nBitte senden Sie uns eine Rechnung.`);
-                                                        }}
-                                                        className="flex items-center gap-2 ml-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition group/btn"
-                                                    >
-                                                        <Mail size={14} className="group-hover/btn:scale-110 transition" />
-                                                        Mail senden
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    );
-                                });
+                                            return (
+                                                <tr key={i} className="hover:bg-blue-50/20 transition group border-l-4 border-l-transparent hover:border-l-blue-600">
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-black text-slate-900 group-hover:text-blue-600 transition truncate max-w-[150px]">
+                                                                {g.riderName}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
+                                                    <td className="px-8 py-6">
+                                                        <span className={cn(
+                                                            "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest leading-none",
+                                                            g.isBestellbasis ? "bg-blue-900 text-white" : "bg-slate-900 text-white"
+                                                        )}>
+                                                            {g.isBestellbasis ? "Bestellbasis" : "Stundenbasis"}
+                                                        </span>
+                                                        <p className="text-[7px] font-black text-slate-300 uppercase mt-1">{employmentLabel}</p>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex flex-col gap-1">
+                                                            {g.hourlyWage > 0 && (
+                                                                <span className="text-[10px] font-black text-green-600 truncate">€{g.hourlyWage.toFixed(2)} / Std</span>
+                                                            )}
+                                                            {g.payPerOrder > 0 && (
+                                                                <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Best</span>
+                                                            )}
+                                                            {g.payPerKm > 0 && (
+                                                                <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
+                                                            )}
+                                                            {g.hourlyWage === 0 && g.payPerOrder === 0 && (
+                                                                <span className="text-[10px] font-black text-slate-300 italic">Keine Rate</span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
+                                                            {g.totalHours > 0 && <span className="text-[8px] font-bold text-slate-400 uppercase mt-1">{g.totalHours.toFixed(1)} Std</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-sm font-extrabold text-slate-950">{g.totalKm.toFixed(1)} km</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right">
+                                                        <span className="text-lg font-black text-slate-900 italic tracking-tighter">€ {g.totalWage.toFixed(2)}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right">
+                                                        {g.type === 'COMMERCIAL' && (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    alert(`An Info-Mail wurde an ${g.riderName} gesendet.\n\nInhalt:\n- Gelieferte Bestellungen: ${g.totalOrders}\n- Fahrtstrecke: ${g.totalKm.toFixed(1)} km\n- Nettoverdienst: €${g.totalWage.toFixed(2)}\n\nBitte senden Sie uns eine Rechnung.`);
+                                                                }}
+                                                                className="flex items-center gap-2 ml-auto px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-black text-[9px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition group/btn"
+                                                            >
+                                                                <Mail size={14} className="group-hover/btn:scale-110 transition" />
+                                                                Mail senden
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </>
+                                );
                             })()}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View (md:hidden) */}
+                <div className="md:hidden divide-y divide-slate-100">
+                    {(() => {
+                        const grouped: any = {};
+                        kpis.forEach(k => {
+                            const id = k.driverId || k.riderId;
+                            if (!grouped[id]) {
+                                grouped[id] = { driver: k.driver, riderId: k.riderId, riderName: k.riderName, totalOrders: 0, totalKm: 0, totalHours: 0, type: k.driver?.type || 'EMPLOYED', payPerOrder: k.driver?.payPerOrder || 0, payPerKm: k.driver?.payPerKm || 0, hourlyWage: k.driver?.hourlyWage || 0 };
+                            }
+                            grouped[id].totalOrders += k.deliveredOrders || 0;
+                            grouped[id].totalKm += k.distanceTotal || 0;
+                            grouped[id].totalHours += k.hoursWorked || 0;
+                        });
+
+                        const rows = Object.values(grouped).filter((g: any) => {
+                            const matchesType = activeTab === 'ALL' || g.type === activeTab;
+                            const isBestellbasis = BESTELLBASIS_IDS.includes(String(g.riderId));
+                            const matchesBasis = basisFilter === 'ALL' || (basisFilter === 'STUNDENBASIS' && !isBestellbasis) || (basisFilter === 'BESTELLBASIS' && isBestellbasis);
+                            return matchesType && matchesBasis;
+                        }).map((g: any) => {
+                            const isBestellbasis = BESTELLBASIS_IDS.includes(String(g.riderId));
+                            const totalWage = isBestellbasis 
+                                ? (g.totalOrders * g.payPerOrder) + (g.totalKm * g.payPerKm)
+                                : (g.totalHours * g.hourlyWage);
+                            return { ...g, totalWage, riderName: g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName };
+                        });
+
+                        if (rows.length === 0) return <div className="p-10 text-center text-slate-400 uppercase text-[10px] font-black tracking-widest">Keine Daten</div>;
+
+                        return rows.map((g: any, i) => (
+                            <div key={i} className="p-6 space-y-6">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <h4 className="font-black text-slate-900 italic tracking-tight">{g.riderName}</h4>
+                                        <p className="text-[10px] font-bold text-slate-400">ID: #{g.riderId}</p>
+                                    </div>
+                                    <span className="text-xl font-black text-blue-600 italic">€ {g.totalWage.toFixed(2)}</span>
+                                </div>
+                                <div className="flex gap-2">
+                                     <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                        {(g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0)) ? "Bestellbasis" : "Stundenbasis"}
+                                     </span>
+                                     <span className="px-3 py-1 bg-slate-100 text-slate-400 rounded-lg text-[9px] font-black uppercase tracking-widest">
+                                        {g.type}
+                                     </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl">
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Bestellungen</p>
+                                        <p className="font-black text-slate-900">{g.totalOrders}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Distanz</p>
+                                        <p className="font-black text-slate-900">{g.totalKm.toFixed(1)} km</p>
+                                    </div>
+                                </div>
+                                {g.type === 'COMMERCIAL' && (
+                                    <button 
+                                        onClick={() => alert(`Info-Mail an ${g.riderName} gesendet.`)}
+                                        className="w-full py-4 bg-blue-50 text-blue-600 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center justify-center gap-3"
+                                    >
+                                        <Mail size={16} /> Mail senden
+                                    </button>
+                                )}
+                            </div>
+                        ));
+                    })()}
                 </div>
             </div>
         </div>
