@@ -1,6 +1,10 @@
 import { ArrowRight } from 'lucide-react';
 
-export function Hero() {
+interface HeroProps {
+  onOpenDemo: () => void;
+}
+
+export function Hero({ onOpenDemo }: HeroProps) {
   return (
     <section className="relative pt-32 pb-20 px-6 overflow-hidden">
       {/* Background Gradient */}
@@ -32,13 +36,19 @@ export function Hero() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <button className="group px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-all font-medium text-lg flex items-center gap-2 shadow-lg shadow-[#3B82F6]/50">
+            <button 
+              onClick={onOpenDemo}
+              className="group px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-all font-medium text-lg flex items-center gap-2 shadow-lg shadow-[#3B82F6]/50"
+            >
               Jetzt kostenlos testen
               <ArrowRight className="group-hover:translate-x-1 transition-transform" size={20} />
             </button>
-            <button className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors font-medium text-lg border border-white/10">
-              Mehr erfahren
-            </button>
+            <a 
+              href="/driver/login" 
+              className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors font-medium text-lg border border-white/10 text-center flex items-center"
+            >
+              Zur Fahrer-App
+            </a>
           </div>
 
           {/* Trust Indicators */}

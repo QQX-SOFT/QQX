@@ -39,7 +39,11 @@ const features = [
   }
 ];
 
-export function Features() {
+interface FeaturesProps {
+  onOpenDemo: () => void;
+}
+
+export function Features({ onOpenDemo }: FeaturesProps) {
   return (
     <section id="funktionen" className="relative py-20 px-6">
       <div className="max-w-7xl mx-auto">
@@ -89,12 +93,16 @@ export function Features() {
                   </p>
 
                   {/* Learn More Link */}
-                  <div className="mt-6 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: feature.color }}>
+                  <button 
+                    onClick={onOpenDemo}
+                    className="mt-6 flex items-center gap-2 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity" 
+                    style={{ color: feature.color }}
+                  >
                     <span>Mehr erfahren</span>
                     <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                  </div>
+                  </button>
                 </div>
               </div>
             );
@@ -106,7 +114,10 @@ export function Features() {
           <p className="text-gray-400 mb-6">
             Entdecken Sie alle Funktionen in einer persönlichen Demo
           </p>
-          <button className="px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors font-medium shadow-lg shadow-[#3B82F6]/30">
+          <button 
+            onClick={onOpenDemo}
+            className="px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors font-medium shadow-lg shadow-[#3B82F6]/30"
+          >
             Demo anfordern
           </button>
         </div>

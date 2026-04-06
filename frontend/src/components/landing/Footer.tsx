@@ -1,6 +1,10 @@
-import { Mail, Phone, MapPin, Linkedin, Twitter, Github } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 
-export function Footer() {
+interface FooterProps {
+  onOpenLegal: (type: 'impressum' | 'datenschutz' | 'agb' | 'cookies') => void;
+}
+
+export function Footer({ onOpenLegal }: FooterProps) {
   return (
     <footer className="relative bg-[#0F172A] border-t border-white/10 pt-16 pb-8 px-6">
       <div className="max-w-7xl mx-auto">
@@ -17,26 +21,6 @@ export function Footer() {
             <p className="text-gray-400 mb-6 leading-relaxed">
               Die führende Multi-Tenant Flottenmanagement-Plattform für Österreich und den DACH-Raum.
             </p>
-            <div className="flex items-center gap-4">
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg flex items-center justify-center transition-colors"
-              >
-                <Linkedin size={18} className="text-gray-400" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg flex items-center justify-center transition-colors"
-              >
-                <Twitter size={18} className="text-gray-400" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg flex items-center justify-center transition-colors"
-              >
-                <Github size={18} className="text-gray-400" />
-              </a>
-            </div>
           </div>
 
           {/* Product */}
@@ -51,11 +35,6 @@ export function Footer() {
               <li>
                 <a href="#loesungen" className="text-gray-400 hover:text-white transition-colors">
                   Lösungen
-                </a>
-              </li>
-              <li>
-                <a href="#preise" className="text-gray-400 hover:text-white transition-colors">
-                  Preise
                 </a>
               </li>
               <li>
@@ -147,19 +126,19 @@ export function Footer() {
               <p className="mb-1">© 2026 Volkan Meral – FastRoute Kurier & Kleintransporte</p>
               <p>UID-Nummer: ATU71572719</p>
             </div>
-            <div className="flex items-center gap-6">
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">
+            <div className="flex flex-wrap justify-center items-center gap-6">
+              <button onClick={() => onOpenLegal('impressum')} className="text-sm text-gray-500 hover:text-white transition-colors">
                 Impressum
-              </a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">
+              </button>
+              <button onClick={() => onOpenLegal('datenschutz')} className="text-sm text-gray-500 hover:text-white transition-colors">
                 Datenschutz
-              </a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">
+              </button>
+              <button onClick={() => onOpenLegal('agb')} className="text-sm text-gray-500 hover:text-white transition-colors">
                 AGB
-              </a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">
+              </button>
+              <button onClick={() => onOpenLegal('cookies')} className="text-sm text-gray-500 hover:text-white transition-colors">
                 Cookie-Einstellungen
-              </a>
+              </button>
             </div>
           </div>
         </div>

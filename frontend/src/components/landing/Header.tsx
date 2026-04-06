@@ -1,7 +1,11 @@
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
-export function Header() {
+interface HeaderProps {
+  onOpenDemo: () => void;
+}
+
+export function Header({ onOpenDemo }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -24,17 +28,14 @@ export function Header() {
             <a href="#loesungen" className="text-gray-300 hover:text-white transition-colors">
               Lösungen
             </a>
-            <a href="#preise" className="text-gray-300 hover:text-white transition-colors">
-              Preise
-            </a>
           </div>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <button className="px-5 py-2 text-white hover:text-[#3B82F6] transition-colors">
-              Login
-            </button>
-            <button className="px-6 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors font-medium">
+            <button 
+              onClick={onOpenDemo}
+              className="px-6 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors font-medium"
+            >
               Demo anfordern
             </button>
           </div>
@@ -65,18 +66,14 @@ export function Header() {
             >
               Lösungen
             </a>
-            <a
-              href="#preise"
-              className="block text-gray-300 hover:text-white transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Preise
-            </a>
             <div className="flex flex-col gap-3 pt-4">
-              <button className="px-5 py-2 text-white border border-white/20 rounded-xl hover:bg-white/10 transition-colors">
-                Login
-              </button>
-              <button className="px-6 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors font-medium">
+              <button 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenDemo();
+                }}
+                className="px-6 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors font-medium text-center"
+              >
                 Demo anfordern
               </button>
             </div>
