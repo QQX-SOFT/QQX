@@ -21,6 +21,12 @@ export function middleware(req: NextRequest) {
 
     // If it's a subdomain and NOT the main domain
     if (!isMainDomain && subdomain && subdomain !== 'www') {
+        // BLOCK SUPERADMIN on subdomains
+        if (pathname.startsWith('/superadmin')) {
+            url.pathname = '/';
+            return NextResponse.redirect(url);
+        }
+
         const role = req.cookies.get('role')?.value;
 
         // Force login if no role on protected routes
