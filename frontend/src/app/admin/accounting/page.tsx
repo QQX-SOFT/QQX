@@ -161,7 +161,7 @@ export default function AccountingPage() {
                 <div className="px-8 bg-white border-b border-slate-100">
                     <div className="flex gap-6 overflow-x-auto no-scrollbar py-4 border-b border-slate-50">
                         {[
-                            { id: 'ALL', label: 'Alle Sürücüler' },
+                            { id: 'ALL', label: 'Alle Fahrer' },
                             { id: 'EMPLOYED', label: 'Echte Dienstnehmer' },
                             { id: 'FREELANCE', label: 'Freie Dienstnehmer' },
                             { id: 'COMMERCIAL', label: 'Selbstständige' }
@@ -207,7 +207,7 @@ export default function AccountingPage() {
                                     { key: 'riderId', label: 'Rider ID', center: false },
                                     { key: 'basis', label: 'Anstellung', center: false },
                                     { key: 'rate', label: 'Satz/Rate', center: false },
-                                    { key: 'totalOrders', label: 'Orders', center: true },
+                                    { key: 'totalOrders', label: 'Bestellungen', center: true },
                                     { key: 'totalKm', label: 'KM Gesamt', center: true },
                                     { key: 'totalWage', label: 'Gehalt (Netto)', center: true },
                                     { key: null, label: 'Aktionen', center: true }
@@ -342,7 +342,7 @@ export default function AccountingPage() {
                                                         <span className="text-[10px] font-black text-green-600 truncate">€{g.hourlyWage.toFixed(2)} / Std</span>
                                                     )}
                                                     {g.payPerOrder > 0 && (
-                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Ord</span>
+                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Best</span>
                                                     )}
                                                     {g.payPerKm > 0 && (
                                                         <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
