@@ -209,7 +209,8 @@ export default function AccountingPage() {
                                     { key: 'riderName', label: 'Fahrer Name', center: false },
                                     { key: 'riderId', label: 'Rider ID', center: false },
                                     { key: 'basis', label: 'Anstellung', center: false },
-                                    { key: 'rate', label: 'Satz/Rate', center: false },
+                                    { key: 'rate', label: 'Rate / Std', center: false },
+                                    { key: 'totalHours', label: 'Stunden', center: true },
                                     { key: 'totalOrders', label: 'Bestellungen', center: true },
                                     { key: 'totalKm', label: 'KM Gesamt', center: true },
                                     { key: 'totalWage', label: 'Gehalt (Netto)', center: true },
@@ -346,14 +347,19 @@ export default function AccountingPage() {
                                                     </td>
                                                     <td className="px-8 py-6">
                                                         <div className="flex flex-col gap-1">
-                                                            {g.hourlyWage > 0 && (
-                                                                <span className="text-[10px] font-black text-green-600 truncate">€{g.hourlyWage.toFixed(2)} / Std</span>
-                                                            )}
-                                                            {g.payPerOrder > 0 && (
-                                                                <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Best</span>
-                                                            )}
-                                                            {g.payPerKm > 0 && (
-                                                                <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
+                                                            {!g.isBestellbasis ? (
+                                                                <span className="text-[10px] font-black text-green-600 truncate">
+                                                                    €{(g.payPerOrder > 0 ? g.payPerOrder : g.hourlyWage).toFixed(2)} / Std
+                                                                </span>
+                                                            ) : (
+                                                                <>
+                                                                    {g.payPerOrder > 0 && (
+                                                                        <span className="text-[10px] font-black text-blue-600 truncate">€{g.payPerOrder.toFixed(2)} / Best</span>
+                                                                    )}
+                                                                    {g.payPerKm > 0 && (
+                                                                        <span className="text-[10px] font-black text-slate-400 text-[8px]">€{g.payPerKm.toFixed(2)} / KM</span>
+                                                                    )}
+                                                                </>
                                                             )}
                                                             {g.hourlyWage === 0 && g.payPerOrder === 0 && (
                                                                 <span className="text-[10px] font-black text-slate-300 italic">Keine Rate</span>
@@ -361,9 +367,13 @@ export default function AccountingPage() {
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-6 text-center">
+                                                        <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-black text-xs">
+                                                            {g.totalHours.toFixed(1)} Std
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-center">
                                                         <div className="flex flex-col items-center">
                                                             <span className="px-3 py-1 bg-slate-50 text-slate-700 rounded-lg font-black text-xs">{g.totalOrders}</span>
-                                                            {g.totalHours > 0 && <span className="text-[8px] font-bold text-slate-400 uppercase mt-1">{g.totalHours.toFixed(1)} Std</span>}
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-6 text-center">
@@ -437,20 +447,26 @@ export default function AccountingPage() {
                                 </div>
                                 <div className="flex gap-2">
                                      <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">
-                                        {(g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0)) ? "Bestellbasis" : "Stundenbasis"}
+                                        {g.isBestellbasis ? "Bestellbasis" : "Stundenbasis"}
                                      </span>
                                      <span className="px-3 py-1 bg-slate-100 text-slate-400 rounded-lg text-[9px] font-black uppercase tracking-widest">
-                                        {g.type}
+                                        {!g.isBestellbasis 
+                                            ? `€${(g.payPerOrder > 0 ? g.payPerOrder : g.hourlyWage).toFixed(2)}/Std` 
+                                            : `€${g.payPerOrder.toFixed(2)}/Best`}
                                      </span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl">
+                                <div className="grid grid-cols-3 gap-2 bg-slate-50 p-4 rounded-2xl">
                                     <div>
-                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Bestellungen</p>
-                                        <p className="font-black text-slate-900">{g.totalOrders}</p>
+                                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Std</p>
+                                        <p className="text-xs font-black text-slate-900">{g.totalHours.toFixed(1)}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Distanz</p>
-                                        <p className="font-black text-slate-900">{g.totalKm.toFixed(1)} km</p>
+                                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Best</p>
+                                        <p className="text-xs font-black text-slate-900">{g.totalOrders}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">KM</p>
+                                        <p className="text-xs font-black text-slate-900">{g.totalKm.toFixed(1)}</p>
                                     </div>
                                 </div>
                                 {g.type === 'COMMERCIAL' && (
