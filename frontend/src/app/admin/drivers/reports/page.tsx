@@ -48,11 +48,13 @@ export default function DriverReportsPage() {
     const generateArbeitszeitnachweis = async (driverId: string) => {
         setGeneratingId(driverId);
         try {
-            // We need full driver details including riderKpis and tenant
+            // We need full driver details including shiftAssignments and tenant
             const { data: driver } = await api.get(`/drivers/${driverId}`);
             
-            if (!driver || !driver.riderKpis || driver.riderKpis.length === 0) {
-                alert("Keine Zeitaufzeichnungen (KPIs) für diesen Fahrer gefunden.");
+            const assignments = (driver.shiftAssignments || []).filter((sa: any) => sa.status === 'CONFIRMED' || sa.status === 'PENDING');
+
+            if (!driver || assignments.length === 0) {
+                alert("Keine bestätigten Schichten für diesen Fahrer gefunden.");
                 return;
             }
 
@@ -65,8 +67,13 @@ export default function DriverReportsPage() {
             const companyMail = tenant.email || "";
             const companyPhone = tenant.phone || "";
 
-            const kpis = driver.riderKpis;
-            const totalHours = kpis.reduce((acc: number, k: any) => acc + (k.hoursWorked || 0), 0);
+            const totalHours = assignments.reduce((acc: number, sa: any) => {
+                if (!sa.shift) return acc;
+                const start = new Date(sa.shift.startTime);
+                const end = new Date(sa.shift.endTime);
+                return acc + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+            }, 0);
+
             const reportDate = new Date().toISOString().split('T')[0];
             
             // Create temporary container for PDF rendering
@@ -84,7 +91,7 @@ export default function DriverReportsPage() {
                 <div style="border: 2px solid #f1f5f9; padding: 30px; border-radius: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px;">
                         <div>
-                            <h1 style="font-size: 24px; font-weight: 900; margin: 0; color: #1e293b;">Arbeitszeitnachweis</h1>
+                            <h1 style="font-size: 24px; font-weight: 900; margin: 0; color: #1e293b;">Arbeitszeitnachweis (Schicht-Basis)</h1>
                             <p style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 5px;">Legally Required Documentation</p>
                         </div>
                         <div style="text-align: right;">
@@ -103,7 +110,7 @@ export default function DriverReportsPage() {
                         <div style="background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #f1f5f9;">
                             <p style="font-weight: 900; color: #64748b; text-transform: uppercase; font-size: 8px; margin-bottom: 5px;">Arbeitnehmer Info</p>
                             <p style="margin: 2px 0;"><strong>Name:</strong> ${driver.firstName} ${driver.lastName}</p>
-                            <p style="margin: 2px 0;"><strong>Rider-ID:</strong> ${driver.driverNumber || '-'}</p>
+                            <p style="margin: 2px 0;"><strong>İşe Giriş:</strong> ${driver.employmentStart ? new Date(driver.employmentStart).toLocaleDateString('de-DE') : '-'}</p>
                             <p style="margin: 2px 0;"><strong>Berichtsdatum:</strong> ${reportDate}</p>
                         </div>
                     </div>
@@ -112,22 +119,27 @@ export default function DriverReportsPage() {
                         <thead>
                             <tr style="background: #1e293b; color: white;">
                                 <th style="padding: 12px; text-align: left; border-top-left-radius: 8px;">Datum</th>
-                                <th style="padding: 12px; text-align: right;">Pause (h)</th>
+                                <th style="padding: 12px; text-align: left;">Schicht-Zeitraum</th>
                                 <th style="padding: 12px; text-align: right; border-top-right-radius: 8px;">Arbeitsstunden</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${kpis.map((k: any) => `
-                                <tr style="border-bottom: 1px solid #f1f5f9;">
-                                    <td style="padding: 12px; font-weight: bold;">${new Date(k.dateLocal).toLocaleDateString('de-DE')}</td>
-                                    <td style="padding: 12px; text-align: right; color: #94a3b8;">0,00 h</td>
-                                    <td style="padding: 12px; text-align: right; font-weight: 900;">${(k.hoursWorked || 0).toFixed(2).replace('.', ',')} h</td>
-                                </tr>
-                            `).join('')}
+                            ${assignments.map((sa: any) => {
+                                const start = new Date(sa.shift.startTime);
+                                const end = new Date(sa.shift.endTime);
+                                const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                                return `
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 12px; font-weight: bold;">${start.toLocaleDateString('de-DE')}</td>
+                                        <td style="padding: 12px; color: #475569;">${start.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})} - ${end.toLocaleTimeString('de-DE', {hour: '2-digit', minute: '2-digit'})}</td>
+                                        <td style="padding: 12px; text-align: right; font-weight: 900;">${diff.toFixed(2).replace('.', ',')} h</td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                         <tfoot>
                             <tr style="background: #f8fafc;">
-                                <td colspan="2" style="padding: 15px; font-weight: 900; text-align: right; color: #64748b; text-transform: uppercase; font-size: 10px;">Summe Netto:</td>
+                                <td colspan="2" style="padding: 15px; font-weight: 900; text-align: right; color: #64748b; text-transform: uppercase; font-size: 10px;">Gesamtstunden:</td>
                                 <td style="padding: 15px; text-align: right; font-size: 16px; font-weight: 900; color: #1e293b;">${totalHours.toFixed(2).replace('.', ',')} h</td>
                             </tr>
                         </tfoot>
@@ -135,8 +147,8 @@ export default function DriverReportsPage() {
 
                     <div style="margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
                         <p style="font-size: 8px; color: #94a3b8; line-height: 1.5;">
-                            Dieses Dokument dient als Nachweis der geleisteten Arbeitsstunden gemäß nationalen gesetzlichen Bestimmungen. 
-                            Alle Daten wurden systemseitig erfasst und validiert. Digitale Signatur: <strong>${Math.random().toString(36).substring(2, 15).toUpperCase()}</strong>
+                            Dieses Dokument dient als Nachweis der geleisteten Arbeitsstunden gemäß nationalen gesetzlichen Bestimmungen (österreichisches Arbeitsrecht). 
+                            Alle Daten wurden systemseitig erfasst ve validiert. Digitale Signatur: <strong>${Math.random().toString(36).substring(2, 15).toUpperCase()}</strong>
                         </p>
                     </div>
                 </div>
@@ -170,8 +182,10 @@ export default function DriverReportsPage() {
     };
 
     const filteredDrivers = drivers.filter(d => 
-        (d.firstName + " " + d.lastName).toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.driverNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+        d.status === 'ACTIVE' && (
+            (d.firstName + " " + d.lastName).toLowerCase().includes(searchQuery.toLowerCase()) ||
+            d.driverNumber?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
     );
 
     if (loading) {

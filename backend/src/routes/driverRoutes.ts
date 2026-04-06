@@ -132,6 +132,17 @@ router.get('/:id', async (req: TenantRequest, res: Response) => {
                 riderKpis: {
                     orderBy: { dateLocal: 'desc' },
                     take: 50 // Last 50 days/weeks
+                },
+                shiftAssignments: {
+                    include: {
+                        shift: true
+                    },
+                    orderBy: {
+                        shift: {
+                            startTime: 'desc'
+                        }
+                    },
+                    take: 100 // Last 100 shifts
                 }
             }
         });
