@@ -30,18 +30,55 @@ export default function AdminKpiPage() {
     const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
     const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
     const [searchQuery, setSearchQuery] = useState<string>("");
-    const [visibleColumns, setVisibleColumns] = useState<string[]>(["riderId", "riderName", "cityName", "dateLocal", "deliveredOrders", "hoursWorked"]);
+    const [visibleColumns, setVisibleColumns] = useState<string[]>(["rider_name", "city_name", "completed_orders", "hours_worked", "utr"]);
 
     const allColumnOptions = [
-        { id: "riderId", label: "Rider ID" },
-        { id: "riderName", label: "Name" },
-        { id: "cityName", label: "Stadt" },
-        { id: "dateLocal", label: "Datum" },
-        { id: "deliveredOrders", label: "Best." },
-        { id: "hoursWorked", label: "Stunden" },
-        { id: "utr", label: "UTR" },
-        { id: "acceptanceRate", label: "Akzeptanz" },
-        { id: "avgDeliveryTime", label: "Lief. Zeit" }
+        { id: "rider_id", label: "Fahrer-ID" },
+        { id: "city_name", label: "Stadtname" },
+        { id: "created_date_local", label: "Erstellungsdatum lokal" },
+        { id: "completed_orders", label: "Abgeschlossene Bestellungen" },
+        { id: "cancellations_", label: "Stornierungsquote %" },
+        { id: "cancelled_deliveries", label: "Stornierte Lieferungen" },
+        { id: "cancelled_deliveries_after_pickup", label: "Stornierungen nach Abholung" },
+        { id: "utr", label: "Auslastungsrate" },
+        { id: "idle_time_", label: "Leerlaufzeit %" },
+        { id: "avg_delivery_time_mins", label: "Ø Lieferzeit (min)" },
+        { id: "avg_to_vendor_time_mins", label: "Ø Fahrzeit Händler (min)" },
+        { id: "avg_at_vendor_time_mins", label: "Ø Wartezeit Händler (min)" },
+        { id: "avg_to_customer_time_mins", label: "Ø Fahrzeit Kunde (min)" },
+        { id: "avg_at_customer_time_mins", label: "Ø Zeit Kunde (min)" },
+        { id: "avg_pickup_distance_in_meters", label: "Ø Abholentfernung (m)" },
+        { id: "avg_dropoff_distance_in_meters", label: "Ø Lieferentfernung (m)" },
+        { id: "acceptance_rate_", label: "Annahmequote %" },
+        { id: "undisp_aft_acc", label: "Nicht disp. n. Annahme" },
+        { id: "plannedvsactual_", label: "Geplant vs. Tatsächlich %" },
+        { id: "hours_worked", label: "Gearbeitete Std" },
+        { id: "shifts_done", label: "Abgeschl. Schichten" },
+        { id: "late_shifts_5min", label: "Verspätete Schichten > 5m" },
+        { id: "late_shifts_5min_", label: "Verspätungsquote > 5m %" },
+        { id: "no_shows", label: "Nichterscheinen" },
+        { id: "unexcused_no_shows", label: "Unentschuldigtes Nichtersch." },
+        { id: "break_mins", label: "Pausenminuten" },
+        { id: "temp_not_working_mins", label: "Vorübergehende Ausfallzeit" },
+        { id: "weekend_shifts", label: "Wochenendschichten" },
+        { id: "manual_undispatched", label: "Manuell nicht disp." },
+        { id: "contract_name", label: "Vertragsname" },
+        { id: "rider_name", label: "Fahrername" },
+        { id: "notified_orders", label: "Benachrichtigte Best." },
+        { id: "accepted_orders", label: "Angenommene Best." },
+        { id: "comp_notified_rate", label: "Abschl. Benachr.-Rate" },
+        { id: "count_over_25kmh", label: "Anzahl > 25 km/h" },
+        { id: "count_under_25kmh", label: "Anzahl < 25 km/h" },
+        { id: "kmh_avg", label: "Ø KM/H" },
+        { id: "count_dispatch_contact", label: "Disponenten-Kontakte" },
+        { id: "undispatch_request_accident_after_accepted", label: "Disp.-Aufhebung (Unfall)" },
+        { id: "undispatch_request_equipment_issue_after_accepted", label: "Disp.-Aufhebung (Gerät)" },
+        { id: "unable_to_find_cancellations", label: "Storn. (Adr. nicht gef.)" },
+        { id: "order_hijacked_cancellations", label: "Storn. (Übernommen)" },
+        { id: "courier_accident_cancellations", label: "Storn. (Unfall)" },
+        { id: "spilled_order_cancellations", label: "Storn. (Verschüttet)" },
+        { id: "never_delivered_cancellations", label: "Storn. (Nie geliefert)" },
+        { id: "isoweek", label: "ISO-Woche (KW)" }
     ];
 
     const toggleColumn = (id: string) => {
@@ -286,19 +323,15 @@ export default function AdminKpiPage() {
                             </div>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left">
+                            <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-50/50">
                                     <tr>
-                                        {visibleColumns.includes("riderId") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider ID</th>}
-                                        {visibleColumns.includes("riderName") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Rider Name</th>}
-                                        {visibleColumns.includes("cityName") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Stadt</th>}
-                                        {visibleColumns.includes("dateLocal") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Datum</th>}
-                                        {visibleColumns.includes("deliveredOrders") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Best.</th>}
-                                        {visibleColumns.includes("hoursWorked") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">h (Online)</th>}
-                                        {visibleColumns.includes("utr") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">UTR</th>}
-                                        {visibleColumns.includes("acceptanceRate") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Accept.</th>}
-                                        {visibleColumns.includes("avgDeliveryTime") && <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Ø Zeit</th>}
-                                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Aktion</th>
+                                        {visibleColumns.map(colId => (
+                                            <th key={colId} className="px-6 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                                                {allColumnOptions.find(c => c.id === colId)?.label}
+                                            </th>
+                                        ))}
+                                        <th className="px-6 py-5 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right border-b border-slate-100">Aktion</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -316,44 +349,47 @@ export default function AdminKpiPage() {
                                         </tr>
                                     ) : filteredKpis.map((k) => (
                                         <tr key={k.id} className="hover:bg-slate-50/50 transition-colors group">
-                                            {visibleColumns.includes("riderId") && <td className="px-8 py-6 text-sm font-black text-slate-900">{k.riderId}</td>}
-                                            {visibleColumns.includes("riderName") && (
-                                                <td className="px-8 py-6">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-black text-slate-900">
-                                                            {k.driver ? `${k.driver.firstName} ${k.driver.lastName}` : k.riderName}
-                                                        </span>
-                                                        <div className="flex items-center gap-2">
-                                                            {k.driver ? (
-                                                                <span className="text-[8px] font-black text-green-600 uppercase flex items-center gap-1">
-                                                                    Verknüpft <CheckCircle2 size={8} />
+                                            {visibleColumns.map(colId => {
+                                                const val = k[colId] ?? k.metrics?.[colId] ?? "-";
+                                                
+                                                // Specific formatting for certain columns
+                                                if (colId === "rider_name") {
+                                                    return (
+                                                        <td key={colId} className="px-6 py-4">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-black text-slate-900 text-xs truncate max-w-[150px]">
+                                                                    {k.driver ? `${k.driver.firstName} ${k.driver.lastName}` : (k.riderName || val)}
                                                                 </span>
-                                                            ) : (
-                                                                <span className="text-[8px] font-black text-amber-600 uppercase">Unbekannt ❓</span>
-                                                            )}
-                                                            <span className="text-[8px] font-medium text-slate-400 italic">({k.riderName})</span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            )}
-                                            {visibleColumns.includes("cityName") && <td className="px-8 py-6 text-sm font-bold text-slate-600 uppercase">{k.cityName || "-"}</td>}
-                                            {visibleColumns.includes("dateLocal") && (
-                                                <td className="px-8 py-6 text-sm font-bold text-slate-400">
-                                                    {k.dateLocal ? new Date(k.dateLocal).toLocaleDateString('de-DE') : `Woche ${k.isoweek}`}
-                                                </td>
-                                            )}
-                                            {visibleColumns.includes("deliveredOrders") && (
-                                                <td className="px-8 py-6">
-                                                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg font-black text-xs">{k.deliveredOrders}</span>
-                                                </td>
-                                            )}
-                                            {visibleColumns.includes("hoursWorked") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.hoursWorked.toFixed(1)}h</td>}
-                                            {visibleColumns.includes("utr") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.utr?.toFixed(2) || "-"}</td>}
-                                            {visibleColumns.includes("acceptanceRate") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{(k.acceptanceRate * 100).toFixed(0)}%</td>}
-                                            {visibleColumns.includes("avgDeliveryTime") && <td className="px-8 py-6 text-sm font-bold text-slate-600">{k.avgDeliveryTime?.toFixed(1) || "-"} min</td>}
-                                            <td className="px-8 py-6 text-right">
-                                                <button className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-slate-900 hover:text-white transition shadow-sm group-hover:scale-110">
-                                                    <Coins size={16} />
+                                                                <span className="text-[8px] font-medium text-slate-400 italic">({k.riderName || val})</span>
+                                                            </div>
+                                                        </td>
+                                                    );
+                                                }
+
+                                                if (colId === "created_date_local") {
+                                                    return (
+                                                        <td key={colId} className="px-6 py-4 text-xs font-bold text-slate-400">
+                                                            {val !== "-" ? new Date(val).toLocaleDateString('de-DE') : "-"}
+                                                        </td>
+                                                    );
+                                                }
+
+                                                const isNumeric = typeof val === 'number';
+
+                                                return (
+                                                    <td key={colId} className="px-6 py-4">
+                                                        <span className={cn(
+                                                            "text-xs font-bold",
+                                                            isNumeric ? "text-blue-600" : "text-slate-600"
+                                                        )}>
+                                                            {isNumeric ? (Number.isInteger(val) ? val : val.toFixed(2)) : val}
+                                                        </span>
+                                                    </td>
+                                                );
+                                            })}
+                                            <td className="px-6 py-4 text-right">
+                                                <button className="p-2 bg-slate-50 text-slate-400 rounded-lg hover:bg-slate-900 hover:text-white transition shadow-sm group-hover:scale-110">
+                                                    <Coins size={14} />
                                                 </button>
                                             </td>
                                         </tr>
