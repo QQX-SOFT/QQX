@@ -275,13 +275,14 @@ export default function AccountingPage() {
                                     return matchesType && matchesBasis;
                                 }).map((g: any) => {
                                     const isBestellbasis = BESTELLBASIS_IDS.includes(String(g.riderId));
+                                    const rate = !isBestellbasis ? (g.payPerOrder > 0 ? g.payPerOrder : g.hourlyWage) : g.payPerOrder;
+                                    
+                                    const hourlyEarnings = g.totalHours * rate;
                                     const orderEarnings = g.totalOrders * g.payPerOrder;
                                     const kmEarnings = g.totalKm * g.payPerKm;
-                                    const hourlyEarnings = g.totalHours * g.hourlyWage;
                                     
                                     // IF hourly basis -> total = hours * rate. IF order basis -> total = (order * rate) + (km * rate)
                                     const totalWage = isBestellbasis ? (orderEarnings + kmEarnings) : hourlyEarnings;
-                                    const rate = !isBestellbasis ? (g.payPerOrder > 0 ? g.payPerOrder : g.hourlyWage) : g.payPerOrder;
                                     
                                     return { 
                                         ...g, 
