@@ -789,6 +789,17 @@ model DriverApplication {
 
   acceptedTerms Boolean @default(false)
 
+  // Compensation & Timeline (Matching Excel template)
+  employmentModel String?  // STUNDENBASIS, BESTELLBASIS
+  hourlyWage      Float?   @default(0)
+  orderFee        Float?   @default(0)
+  kmMoney         Float?   @default(0)
+  visaExpiry      DateTime?
+  jobTitle        String?  @default("Rider")
+  joinDate        DateTime?
+  endDate         DateTime?
+  workLocation    String?
+
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

@@ -43,6 +43,17 @@ const applicationSchema = z.object({
   svsConfirmationUrl: z.string().optional().nullable(),
   businessRegUrl: z.string().optional().nullable(),
   acceptedTerms: z.boolean().optional(),
+  
+  // New Compensation Fields
+  employmentModel: z.string().optional(),
+  hourlyWage: z.number().optional(),
+  orderFee: z.number().optional(),
+  kmMoney: z.number().optional(),
+  visaExpiry: z.string().optional(),
+  jobTitle: z.string().optional(),
+  joinDate: z.string().optional(),
+  endDate: z.string().optional(),
+  workLocation: z.string().optional(),
 });
 
 // PUBLIC: Submit application
@@ -55,6 +66,9 @@ router.post('/', async (req: Request, res: Response) => {
       data: {
         ...validatedData,
         birthday: validatedData.birthday ? new Date(validatedData.birthday) : null,
+        visaExpiry: validatedData.visaExpiry ? new Date(validatedData.visaExpiry) : null,
+        joinDate: validatedData.joinDate ? new Date(validatedData.joinDate) : null,
+        endDate: validatedData.endDate ? new Date(validatedData.endDate) : null,
         tenantId: tenantId || null,
         acceptedTerms: validatedData.acceptedTerms || false
       }
@@ -165,7 +179,15 @@ router.post('/:id/approve', async (req: TenantRequest, res: Response) => {
         iban: app.iban,
         bic: app.bic,
         type: prismaType,
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        hourlyWage: app.hourlyWage || 0,
+        orderFee: app.orderFee || 0,
+        payPerKm: app.kmMoney || 0,
+        visaExpiry: app.visaExpiry,
+        employmentModel: app.employmentModel,
+        employmentStart: app.joinDate,
+        workLocation: app.workLocation,
+        jobTitle: app.jobTitle || 'Rider'
       }
     });
 
