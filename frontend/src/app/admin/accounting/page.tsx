@@ -30,6 +30,7 @@ export default function AccountingPage() {
     const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
     const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
     const [activeTab, setActiveTab] = useState<'ALL' | 'EMPLOYED' | 'FREELANCE' | 'COMMERCIAL'>('ALL');
+    const [basisFilter, setBasisFilter] = useState<'ALL' | 'STUNDENBASIS' | 'BESTELLBASIS'>('ALL');
 
     useEffect(() => {
         fetchInvoices();
@@ -191,25 +192,45 @@ export default function AccountingPage() {
                     </div>
                 </div>
 
-                {/* Tabs Section */}
-                <div className="px-8 py-4 bg-white border-b border-slate-100 flex gap-6 overflow-x-auto no-scrollbar">
-                    {[
-                        { id: 'ALL', label: 'Alle' },
-                        { id: 'EMPLOYED', label: 'Echte Dienstnehmer' },
-                        { id: 'FREELANCE', label: 'Freie Dienstnehmer' },
-                        { id: 'COMMERCIAL', label: 'Selbstständige' }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={cn(
-                                "text-[10px] font-black uppercase tracking-[0.2em] pb-3 border-b-2 transition-all whitespace-nowrap",
-                                activeTab === tab.id ? "text-blue-600 border-blue-600" : "text-slate-400 border-transparent hover:text-slate-600"
-                            )}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+                {/* Tabs & Filters Section */}
+                <div className="px-8 bg-white border-b border-slate-100">
+                    <div className="flex gap-6 overflow-x-auto no-scrollbar py-4 border-b border-slate-50">
+                        {[
+                            { id: 'ALL', label: 'Alle Sürücüler' },
+                            { id: 'EMPLOYED', label: 'Echte Dienstnehmer' },
+                            { id: 'FREELANCE', label: 'Freie Dienstnehmer' },
+                            { id: 'COMMERCIAL', label: 'Selbstständige' }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={cn(
+                                    "text-[10px] font-black uppercase tracking-[0.2em] pb-3 border-b-2 transition-all whitespace-nowrap",
+                                    activeTab === tab.id ? "text-blue-600 border-blue-600" : "text-slate-400 border-transparent hover:text-slate-600"
+                                )}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex gap-6 overflow-x-auto no-scrollbar py-4">
+                        {[
+                            { id: 'ALL', label: 'Alle Abrechnungsarten' },
+                            { id: 'STUNDENBASIS', label: 'Stundenbasis' },
+                            { id: 'BESTELLBASIS', label: 'Bestellbasis' }
+                        ].map(basis => (
+                            <button
+                                key={basis.id}
+                                onClick={() => setBasisFilter(basis.id as any)}
+                                className={cn(
+                                    "text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-xl transition-all",
+                                    basisFilter === basis.id ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-400 hover:bg-slate-100"
+                                )}
+                            >
+                                {basis.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="overflow-x-auto">
@@ -256,9 +277,14 @@ export default function AccountingPage() {
                                     grouped[id].totalHours += k.hoursWorked || 0;
                                 });
 
-                                const filteredRows = Object.values(grouped).filter((g: any) => 
-                                    activeTab === 'ALL' || g.type === activeTab
-                                );
+                                const filteredRows = Object.values(grouped).filter((g: any) => {
+                                    const matchesType = activeTab === 'ALL' || g.type === activeTab;
+                                    const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
+                                    const matchesBasis = basisFilter === 'ALL' || 
+                                                        (basisFilter === 'STUNDENBASIS' && !isBestellbasis) || 
+                                                        (basisFilter === 'BESTELLBASIS' && isBestellbasis);
+                                    return matchesType && matchesBasis;
+                                });
 
                                 if (filteredRows.length === 0) {
                                     return (
@@ -276,13 +302,13 @@ export default function AccountingPage() {
                                     const hourlyEarnings = g.totalHours * g.hourlyWage;
                                     const totalWage = orderEarnings + kmEarnings + hourlyEarnings;
 
-                                    const isPerOrder = g.payPerOrder > 0;
+                                    const isBestellbasis = g.payPerKm > 0 || (g.payPerOrder > 0 && g.hourlyWage === 0);
 
                                     const employmentLabel = {
-                                        'EMPLOYED': 'Angestellt',
+                                        'EMPLOYED': 'Dienstnehmer',
                                         'FREELANCE': 'Freier Dienstnehmer',
                                         'COMMERCIAL': 'Gewerbe'
-                                    }[g.type as string] || 'Angestellt';
+                                    }[g.type as string] || 'Dienstnehmer';
 
                                     return (
                                         <tr key={i} className="hover:bg-blue-50/20 transition group border-l-4 border-l-transparent hover:border-l-blue-600">
@@ -291,13 +317,15 @@ export default function AccountingPage() {
                                                     <span className="font-black text-slate-900 group-hover:text-blue-600 transition truncate max-w-[150px]">
                                                         {g.driver ? `${g.driver.firstName} ${g.driver.lastName}` : g.riderName}
                                                     </span>
-                                                    {g.driver && <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Systembestätigt</span>}
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-sm font-bold text-slate-400 italic">#{g.riderId}</td>
                                             <td className="px-8 py-6">
-                                                <span className="px-3 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest leading-none">
-                                                    {g.hourlyWage > 0 && g.payPerOrder > 0 ? "Hybrid Basis" : g.hourlyWage > 0 ? "Stundenbasis" : "Leistung (Pauschal)"}
+                                                <span className={cn(
+                                                    "px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest leading-none",
+                                                    isBestellbasis ? "bg-blue-900 text-white" : "bg-slate-900 text-white"
+                                                )}>
+                                                    {isBestellbasis ? "Bestellbasis" : "Stundenbasis"}
                                                 </span>
                                                 <p className="text-[7px] font-black text-slate-300 uppercase mt-1">{employmentLabel}</p>
                                             </td>
