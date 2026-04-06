@@ -29,6 +29,7 @@ export default function AccountingPage() {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState<string>(String(new Date().getMonth() + 1));
     const [selectedYear, setSelectedYear] = useState<string>(String(new Date().getFullYear()));
+    const [activeTab, setActiveTab] = useState<'ALL' | 'EMPLOYED' | 'FREELANCE' | 'COMMERCIAL'>('ALL');
 
     useEffect(() => {
         fetchInvoices();
@@ -189,6 +190,28 @@ export default function AccountingPage() {
                         </select>
                     </div>
                 </div>
+
+                {/* Tabs Section */}
+                <div className="px-8 py-4 bg-white border-b border-slate-100 flex gap-6 overflow-x-auto no-scrollbar">
+                    {[
+                        { id: 'ALL', label: 'Alle' },
+                        { id: 'EMPLOYED', label: 'Echte Dienstnehmer' },
+                        { id: 'FREELANCE', label: 'Freie Dienstnehmer' },
+                        { id: 'COMMERCIAL', label: 'Selbstständige' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={cn(
+                                "text-[10px] font-black uppercase tracking-[0.2em] pb-3 border-b-2 transition-all whitespace-nowrap",
+                                activeTab === tab.id ? "text-blue-600 border-blue-600" : "text-slate-400 border-transparent hover:text-slate-600"
+                            )}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
@@ -234,7 +257,21 @@ export default function AccountingPage() {
                                     grouped[id].totalHours += k.hoursWorked || 0;
                                 });
 
-                                return Object.values(grouped).map((g: any, i) => {
+                                const filteredRows = Object.values(grouped).filter((g: any) => 
+                                    activeTab === 'ALL' || g.type === activeTab
+                                );
+
+                                if (filteredRows.length === 0) {
+                                    return (
+                                        <tr>
+                                            <td colSpan={7} className="py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs">
+                                                Keine Einträge für diese Kategorie vorhanden.
+                                            </td>
+                                        </tr>
+                                    );
+                                }
+
+                                return filteredRows.map((g: any, i) => {
                                     const isPerOrder = perOrderIds.includes(g.riderId);
                                     const totalWage = isPerOrder 
                                         ? (g.totalOrders * g.payPerOrder) + (g.totalKm * g.payPerKm)

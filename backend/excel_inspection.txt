@@ -1,0 +1,79 @@
+COLUMNS FOR MITARBEITER DATENBANK (4).xlsx:
+[0] A -> Status
+[1] B -> Bild
+[2] C -> rider_id
+[3] D -> Vorname
+[4] E -> Familienname
+[5] F -> Arbeitsort
+[6] G -> Beschäftigungs modell
+[7] H -> Beschäftigungsart
+[8] I -> Bankverbindung
+[9] J -> Telefonnummer
+[10] K -> Adresse
+[11] L -> Arbeitsbewilligung vorhanden?
+[12] M -> Vers.-Nr.
+[13] N -> Geburtsdatum
+[14] O -> Geburtsort
+[15] P -> Familienstand
+[16] Q -> Staatsbürgerschaft
+[17] R -> Beschäftigt als.
+[18] S -> Beginn des Dienstverhältnisses
+[19] T -> Ende des Dienstverhältnisses
+[20] U -> Status Unterschrift
+[21] V -> Visum ablauf
+[22] W -> Bestellgebühr
+[23] X -> Stundenlohn
+[24] Y -> KM Geld
+[25] Z -> GISA-Zahl
+
+SAMPLE DATA (Row 1):
+[
+  "Gekündigt",
+  "Reserved_ImageAttachment_[10]_[B_x00e4_ld][32]_[72199f2679164a73b3d28daf70f5f940][1]_[5].png",
+  "4159550",
+  "Abdalla",
+  "Alqays",
+  "[\"Bludenz\"]",
+  "Vollzeit",
+  "Freiediensnehmer",
+  "AT31 1400 0712 1009 7834",
+  "+43 676 4371854",
+  "Forchenwaldstrasse 25 6714 Nüziders",
+  "Ja",
+  "7717 150489",
+  15041989,
+  "Damaskus",
+  "Verheiratet",
+  "Österreich",
+  "Fahrer",
+  1102025,
+  20102025,
+  ""
+]
+
+SAMPLE DATA (Row 2):
+[
+  "Aktif",
+  "Reserved_ImageAttachment_[10]_[B_x00e4_ld][32]_[bcf2202c9b004a5e98f6fc1556b70a75][1]_[1].png",
+  "4157884",
+  "Abdelhamid ",
+  "Kordi ",
+  "[\"Feldkirch/Rankweil\"]",
+  "Vollzeit",
+  "Freiediensnehmer",
+  "AT23 2011 1847 9565 8600",
+  "+43 665 65770220",
+  "Römerweg 17 6840 Götzis ",
+  "Ja",
+  "8195 010896",
+  1081996,
+  "Aleppo",
+  "Ledig",
+  "Österreich ",
+  "Fahrer",
+  24092025,
+  null,
+  "",
+  30052028,
+  5.5
+]
